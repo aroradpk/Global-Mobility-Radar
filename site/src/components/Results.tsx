@@ -1,57 +1,107 @@
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { countryName, languageName, useT, type StringKey } from "../i18n";
 import { COUNTRIES, KNOWLEDGE_AS_OF, TRACK, skillLabel, type Dataset } from "../data";
+import { deleteApplication, fetchMatches, getAlerts, listApplications, saveApplication, setAlerts, type Application, type MatchesResult } from "../api";
 import { rankCountries, type CountryFit } from "../engine/countries";
-import { matchJobs, type JobMatch } from "../engine/jobs";
+import type { JobMatch } from "../engine/jobs";
 import { buildPlan, type ItemKind, type Plan } from "../engine/plan";
-import { MODELS, writePlanWithClaude } from "../engine/claude";
 import { download, planToMarkdown } from "../export";
-import { load, save } from "../store";
 import { flightNo, hub, money } from "../travel";
 import type { Answers, Lang, Market, Profile, Route, Track } from "../types";
-import Markdown from "./Markdown";
 import { Barcode, Plane } from "./Icons";
+import { useAccount } from "./Account";
+import Indispensable from "./Indispensable";
+import KitPanel from "./KitPanel";
+import Tracker from "./Tracker";
+import Paywall from "./Paywall";
 
-type Tab = "overview" | "countries" | "jobs" | "plan" | "claude";
+type Tab = "overview" | "countries" | "jobs" | "plan" | "grow" | "tracker";
+// Countries shown in full to free readers; the rest are listed but closed.
+const FREE_COUNTRIES = 3;
 const EMPTY_MARKET: Market = { generatedAt: "", cells: {} };
 
 export default function Results(props: { cvText: string; profile: Profile; answers: Answers; data: Dataset | null; dataError: string; onBack: () => void }) {
   const { t, lang } = useT();
   const [tab, setTab] = useState<Tab>("overview");
-  const [claudeText, setClaudeText] = useState("");
+  const account = useAccount();
+  const pro = account.tier === "pro";
   const market = props.data?.market ?? EMPTY_MARKET;
   const track = TRACK.get(props.answers.family)!;
 
   const registers = useMemo(() => new Set((props.data?.meta.registers ?? []).map((r) => r.country).filter(Boolean)), [props.data]);
   const fits = useMemo(() => rankCountries(COUNTRIES, market, props.profile, props.answers, registers), [market, props.profile, props.answers, registers]);
-  const matches = useMemo(
-    () => (props.data ? matchJobs(props.data.jobs, props.profile, props.answers, fits.map((f) => f.country.code), registers) : []),
-    [props.data, props.profile, props.answers, fits, registers],
-  );
+  const order = fits.map((f) => f.country.code).join(",");
+  const [result, setResult] = useState<MatchesResult | null>(null);
+  const [matchError, setMatchError] = useState(false);
+  useEffect(() => {
+    if (!props.data) return;
+    const ctl = new AbortController();
+    setMatchError(false);
+    fetchMatches(props.profile, props.answers, order ? order.split(",") : [], ctl.signal).then(setResult, () => {
+      if (!ctl.signal.aborted) setMatchError(true);
+    });
+    return () => ctl.abort();
+    // Signing in or upgrading changes what the API returns, so ask again.
+  }, [props.data, props.profile, props.answers, order, account.userId, account.tier]);
+  const matches = result?.matches ?? [];
+
+  // Pro: the tracker and the alert setting live on the account.
+  const [apps, setApps] = useState<Application[] | null>(null);
+  const [alerts, setAlertsOn] = useState<boolean | null>(null);
+  const [kitFor, setKitFor] = useState<JobMatch | null>(null);
+  useEffect(() => {
+    if (!pro) return setApps(null);
+    listApplications().then(setApps, () => setApps([]));
+    getAlerts().then((r) => setAlertsOn(r.enabled), () => setAlertsOn(false));
+  }, [pro, account.userId]);
+  const saveApp = async (a: Application) => {
+    setApps((xs) => [{ ...a, updated_at: new Date().toISOString() }, ...(xs ?? []).filter((x) => x.job_id !== a.job_id)]);
+    await saveApplication(a);
+  };
+  const deleteApp = async (jobId: string) => {
+    setApps((xs) => (xs ?? []).filter((x) => x.job_id !== jobId));
+    await deleteApplication(jobId);
+  };
+  const toggleAlerts = async (on: boolean) => {
+    setAlertsOn(on);
+    await setAlerts(on, props.profile, props.answers, order ? order.split(",") : []).catch(() => setAlertsOn(!on));
+  };
+  const jobActions: JobActions = {
+    kit: account.enabled ? (m) => (account.userId ? setKitFor(m) : account.openSignIn()) : undefined,
+    saved: new Set((apps ?? []).map((a) => a.job_id)),
+    save: pro ? (m) => saveApp({ job_id: m.job.id, job_title: m.job.title, company: m.job.company, url: m.job.url, status: "saved", notes: "" }).catch(() => {}) : undefined,
+    alerts: pro ? alerts : null,
+    toggleAlerts,
+  };
   const plan = useMemo(() => buildPlan(track, fits, market, props.profile, props.answers, skillLabel), [track, fits, market, props.profile, props.answers]);
   const origin = props.answers.livesIn ? hub(props.answers.livesIn) : "HOME";
 
-  const tabs: [Tab, StringKey][] = [["overview", "tabOverview"], ["countries", "tabCountries"], ["jobs", "tabJobs"], ["plan", "tabPlan"], ["claude", "tabClaude"]];
+  const tabs: [Tab, StringKey][] = [["overview", "tabOverview"], ["countries", "tabCountries"], ["jobs", "tabJobs"], ["plan", "tabPlan"], ["grow", "tabGrow"], ["tracker", "tabTracker"]];
   return (
     <section>
       {!props.data && !props.dataError && <p className="note">{t("loadingData")}</p>}
       {props.dataError && <p className="error">{t("dataError")}</p>}
+      {matchError && <p className="error">{t("matchesError")}</p>}
       <nav className="tabs" role="tablist">
         {tabs.map(([id, k]) => (
           <button key={id} role="tab" aria-selected={tab === id} onClick={() => setTab(id)}>{t(k)}</button>
         ))}
       </nav>
-      {tab === "overview" && <Overview plan={plan} fits={fits} matches={matches} origin={origin} onTab={setTab} />}
-      {tab === "countries" && <Countries fits={fits} origin={origin} track={track} />}
-      {tab === "jobs" && <Jobs matches={matches} fits={fits} />}
-      {tab === "plan" && <PlanView plan={plan} />}
-      {tab === "claude" && (
-        <Claude cvText={props.cvText} profile={props.profile} answers={props.answers} plan={plan} matches={matches} text={claudeText} setText={setClaudeText} />
+      {tab === "overview" && <Overview plan={plan} fits={fits} total={result?.total ?? 0} origin={origin} pro={pro} onTab={setTab} />}
+      {tab === "countries" && <Countries fits={fits} origin={origin} track={track} pro={pro} />}
+      {tab === "jobs" && (result ? <Jobs result={result} fits={fits} actions={jobActions} /> : !matchError && <p className="note">{t("loadingMatches")}</p>)}
+      {tab === "plan" && <PlanView plan={plan} pro={pro} />}
+      {tab === "tracker" && <Tracker apps={apps} onSave={saveApp} onDelete={deleteApp} />}
+      {kitFor && (
+        <KitPanel match={kitFor} family={props.answers.family} cvText={props.cvText} profile={props.profile} citizenships={props.answers.citizenships} onClose={() => setKitFor(null)} />
       )}
+      {tab === "grow" && <Indispensable plan={plan} track={track} market={market} profile={props.profile} result={result} />}
       <div className="nav">
         <button className="btn ghost" onClick={props.onBack}>{t("back")}</button>
         <div className="row">
-          <button className="btn" onClick={() => download(`visa-job-atlas-plan-${lang}.md`, planToMarkdown(plan, matches, lang, claudeText))}>{t("download")}</button>
+          <button className="btn" disabled={!pro} title={pro ? undefined : t("proOnly")} onClick={() => download(`visa-job-atlas-plan-${lang}.md`, planToMarkdown(plan, matches, lang))}>
+            {t("download")}{!pro && " · Pro"}
+          </button>
           <button className="btn" onClick={() => window.print()}>{t("print")}</button>
         </div>
       </div>
@@ -66,7 +116,7 @@ function floorText(r: Route | undefined, lang: Lang, t: (k: StringKey) => string
   return <span className="fare">{money(r.salaryMin.amount, r.salaryMin.currency, lang)}<small>{per}</small></span>;
 }
 
-function Overview({ plan, fits, matches, origin, onTab }: { plan: Plan; fits: CountryFit[]; matches: JobMatch[]; origin: string; onTab: (t: Tab) => void }) {
+function Overview({ plan, fits, total, origin, pro, onTab }: { plan: Plan; fits: CountryFit[]; total: number; origin: string; pro: boolean; onTab: (t: Tab) => void }) {
   const { t, tx, lang } = useT();
   const best = fits[0];
   const thisWeek = plan.phases[0].items.slice(0, 5);
@@ -125,7 +175,7 @@ function Overview({ plan, fits, matches, origin, onTab }: { plan: Plan; fits: Co
         <div className="card">
           <h3>{t("thisWeek")}</h3>
           <ol>{thisWeek.map((it, i) => <li key={i}>{tx(it.text)}</li>)}</ol>
-          <button className="btn small" onClick={() => onTab("jobs")}>{matches.length} {t("matches")} →</button>
+          <button className="btn small" onClick={() => onTab("jobs")}>{total} {t("matches")} →</button>
         </div>
         <div className="card">
           <h3>{t("firstRoles")}</h3>
@@ -133,7 +183,10 @@ function Overview({ plan, fits, matches, origin, onTab }: { plan: Plan; fits: Co
           {plan.gaps.length > 0 && (
             <>
               <h3>{t("gaps")}</h3>
-              <div className="chips">{plan.gaps.slice(0, 6).map((g) => <span key={g.id} className="chip">{skillLabel(g.id)}</span>)}</div>
+              <div className="chips">
+                {plan.gaps.slice(0, pro ? 6 : 1).map((g) => <span key={g.id} className="chip">{skillLabel(g.id)}</span>)}
+                {!pro && plan.gaps.length > 1 && <button className="chip locked-chip" onClick={() => onTab("grow")}>+{plan.gaps.length - 1} Pro</button>}
+              </div>
             </>
           )}
         </div>
@@ -142,11 +195,13 @@ function Overview({ plan, fits, matches, origin, onTab }: { plan: Plan; fits: Co
   );
 }
 
-function Countries({ fits, origin, track }: { fits: CountryFit[]; origin: string; track: Track }) {
+function Countries({ fits, origin, track, pro }: { fits: CountryFit[]; origin: string; track: Track; pro: boolean }) {
   const { t, tx, lang } = useT();
+  const open = pro ? fits : fits.slice(0, FREE_COUNTRIES);
+  const closed = pro ? [] : fits.slice(FREE_COUNTRIES);
   return (
     <div className="countries">
-      {fits.map((f, i) => {
+      {open.map((f, i) => {
         const r0 = f.country.routes[0];
         return (
           <details key={f.country.code} className="ticket country" open={i === 0}>
@@ -213,16 +268,46 @@ function Countries({ fits, origin, track }: { fits: CountryFit[]; origin: string
           </details>
         );
       })}
+      {closed.length > 0 && (
+        <>
+          <div className="closed-countries">
+            {closed.slice(0, 4).map((f, i) => (
+              <div key={f.country.code} className="ticket country closed">
+                <span className="main-part head">
+                  <span className="code">{hub(f.country.code)}</span>
+                  <span className="cname">{tx(f.country.name)}</span>
+                </span>
+                <span className="stub">
+                  <span className="rank">{t("rankLbl")} #{i + 1 + FREE_COUNTRIES}</span>
+                  <span className="score">{f.score}</span>
+                </span>
+              </div>
+            ))}
+          </div>
+          <Paywall title={<><b className="mono">{closed.length}</b> {t("moreCountries")}</>} body={t("countriesPaywall")} />
+        </>
+      )}
     </div>
   );
 }
 
-function Jobs({ matches, fits }: { matches: JobMatch[]; fits: CountryFit[] }) {
+interface JobActions {
+  kit?: (m: JobMatch) => void;
+  saved: Set<string>;
+  save?: (m: JobMatch) => void;
+  /** null: not Pro, so no alert switch. */
+  alerts: boolean | null;
+  toggleAlerts: (on: boolean) => void;
+}
+
+function Jobs({ result, fits, actions }: { result: MatchesResult; fits: CountryFit[]; actions: JobActions }) {
   const { t, lang } = useT();
   const [country, setCountry] = useState("");
   const [showBlocked, setShowBlocked] = useState(false);
   const [limit, setLimit] = useState(40);
+  const matches: JobMatch[] = result.matches;
   const shown = matches.filter((m) => (showBlocked || !m.languageBlock.length) && (!country || m.job.countries.includes(country)));
+  const lockedView = result.lockedCount > 0;
   return (
     <div>
       <div className="filters row">
@@ -234,8 +319,11 @@ function Jobs({ matches, fits }: { matches: JobMatch[]; fits: CountryFit[] }) {
           </select>
         </label>
         <label className="check"><input type="checkbox" checked={showBlocked} onChange={(e) => setShowBlocked(e.target.checked)} /> {t("showLangBlocked")}</label>
+        {actions.alerts !== null && (
+          <label className="check"><input type="checkbox" checked={actions.alerts} onChange={(e) => actions.toggleAlerts(e.target.checked)} /> {t("alertsToggle")}</label>
+        )}
       </div>
-      <p className="muted"><b className="mono">{shown.length}</b> {t("matches")}</p>
+      <p className="muted"><b className="mono">{lockedView ? result.total : shown.length}</b> {t("matches")}</p>
       <div className="joblist">
         {shown.slice(0, limit).map((m) => {
           const good = m.noVisaNeeded || ["explicit", "register", "employer-yes"].includes(m.job.visa);
@@ -245,7 +333,11 @@ function Jobs({ matches, fits }: { matches: JobMatch[]; fits: CountryFit[] }) {
             <article key={m.job.id} className="ticket job">
               <div className="main-part">
                 <a className="job-title" href={m.job.url} target="_blank" rel="noopener">{m.job.title}</a>
-                <p className="muted">{m.job.company}{" · "}{m.job.location || m.job.countries.map((c) => countryName(c, lang)).join(", ")}</p>
+                <p className="muted">
+                  {m.job.company}{" · "}{m.job.location || m.job.countries.map((c) => countryName(c, lang)).join(", ")}
+                  {/* Arbeitnow's API terms ask for a link back. */}
+                  {m.job.id.startsWith("feed:arbeitnow:") && <>{" · "}<a href="https://www.arbeitnow.com/" target="_blank" rel="noopener">via Arbeitnow</a></>}
+                </p>
                 <div className="chips">
                   <span className={"stamp " + stampCls}>
                     {m.noVisaNeeded ? t("noVisa") : m.openMarket ? t("visa_open") : t(("visa_" + m.job.visa) as StringKey)}
@@ -260,6 +352,16 @@ function Jobs({ matches, fits }: { matches: JobMatch[]; fits: CountryFit[] }) {
                     {m.job.salary && <> · <span className="fare">{m.job.salary}</span></>}
                   </p>
                 )}
+                {(actions.kit || actions.save) && (
+                  <div className="row job-actions">
+                    {actions.kit && <button className="btn small primary" onClick={() => actions.kit!(m)}>{t("kitButton")}</button>}
+                    {actions.save && (
+                      <button className="btn small" disabled={actions.saved.has(m.job.id)} onClick={() => actions.save!(m)}>
+                        {actions.saved.has(m.job.id) ? t("savedJob") : t("saveJob")}
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="stub">
                 <span className="lbl">{t("toLbl")}</span>
@@ -271,6 +373,26 @@ function Jobs({ matches, fits }: { matches: JobMatch[]; fits: CountryFit[] }) {
         })}
       </div>
       {shown.length > limit && <button className="btn" onClick={() => setLimit(limit + 40)}>+40</button>}
+      {lockedView && (
+        <>
+          <div className="joblist locked" aria-hidden="true">
+            {result.locked.slice(0, 6).map((m, i) => (
+              <article key={i} className="ticket job">
+                <div className="main-part">
+                  <span className="job-title">{t("lockedRow")} ██████████████</span>
+                  <p className="muted">████████ · {m.countries.length ? m.countries.map((c) => countryName(c, lang)).join(", ") : "Remote"}</p>
+                </div>
+                <div className="stub">
+                  <span className="lbl">{t("toLbl")}</span>
+                  <span className="seat">{m.countries.length ? hub(m.countries[0]) : "REMOTE"}</span>
+                  <span className="lbl">{t("fitLbl")} <b className="mono">{m.score}</b></span>
+                </div>
+              </article>
+            ))}
+          </div>
+          <Paywall title={<><b className="mono">{result.lockedCount}</b> {t("lockedTitle")}</>} body={t("lockedBody")} />
+        </>
+      )}
     </div>
   );
 }
@@ -279,14 +401,16 @@ const KIND: Record<ItemKind, string> = {
   profile: "ID", skill: "SK", cert: "CRT", project: "PRJ", language: "LNG", network: "NET", apply: "APP", visa: "VSA",
 };
 
-function PlanView({ plan }: { plan: Plan }) {
+// Free readers get the first leg of the plan; the next one fades out under the paywall.
+function PlanView({ plan, pro }: { plan: Plan; pro: boolean }) {
   const { t, tx } = useT();
+  const phases = pro ? plan.phases : plan.phases.slice(0, 2);
   return (
     <div className="plan">
       {plan.switchTip && <div className="card" style={{ marginBottom: 16 }}><h3>{t("switchTip")}</h3><p>{tx(plan.switchTip)}</p></div>}
       <div className="itinerary">
-        {plan.phases.map((ph, i) => (
-          <div key={ph.id} className="legrow">
+        {phases.map((ph, i) => (
+          <div key={ph.id} className={"legrow" + (!pro && i > 0 ? " faded" : "")} aria-hidden={!pro && i > 0 ? true : undefined}>
             <div className="rail"><span className="dot">{i + 1}</span><span className="line" /></div>
             <div className="card leg-card">
               <div className="leg-head">
@@ -294,7 +418,7 @@ function PlanView({ plan }: { plan: Plan }) {
                 <span className="flight">{t("legLbl")} {i + 1} · {flightNo(plan.track.id.slice(0, 2).toUpperCase(), i)}</span>
               </div>
               <ul className="items">
-                {ph.items.map((it, j) => (
+                {(!pro && i > 0 ? ph.items.slice(0, 2) : ph.items).map((it, j) => (
                   <li key={j}>
                     <span className="kind" aria-hidden="true">{KIND[it.kind]}</span>
                     <div>
@@ -309,15 +433,16 @@ function PlanView({ plan }: { plan: Plan }) {
           </div>
         ))}
       </div>
+      {!pro && <Paywall title={t("planPaywallTitle")} body={t("planPaywall")} />}
       <div className="grid2">
-        <div className="card">
+        {pro && <div className="card">
           <h3>{t("certsToGet")}</h3>
           <ul>{plan.certs.map((c) => <li key={c.name}><a href={c.url} target="_blank" rel="noopener">{c.name}</a> ({c.provider}, <span className="fare">{c.cost}</span>): {tx(c.why)}</li>)}</ul>
           <h3>{t("weekly")}</h3>
           <ul>{plan.weekly.map((w, i) => <li key={i}>{tx(w)}</li>)}</ul>
-        </div>
+        </div>}
         <div className="card">
-          {plan.gaps.length > 0 && (
+          {pro && plan.gaps.length > 0 && (
             <>
               <h3>{t("gaps")}</h3>
               <ul>{plan.gaps.map((g) => <li key={g.id}>{skillLabel(g.id)} <span className="muted mono small">({g.count} {t("inPostings")})</span></li>)}</ul>
@@ -327,64 +452,6 @@ function PlanView({ plan }: { plan: Plan }) {
           <blockquote>{tx(plan.connectionNote)}</blockquote>
         </div>
       </div>
-    </div>
-  );
-}
-
-function Claude(props: { cvText: string; profile: Profile; answers: Answers; plan: Plan; matches: JobMatch[]; text: string; setText: (s: string) => void }) {
-  const { t, lang } = useT();
-  const [remember, setRemember] = useState(() => !!load("vja.key", ""));
-  const [key, setKey] = useState<string>(() => load("vja.key", "") || load("vja.key", "", true));
-  const [model, setModel] = useState(MODELS[0].id);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const abort = useRef<AbortController | null>(null);
-
-  const run = async () => {
-    save("vja.key", remember ? key : null);
-    save("vja.key", key, true);
-    setBusy(true);
-    setError("");
-    props.setText("");
-    abort.current = new AbortController();
-    let acc = "";
-    try {
-      const { stopReason } = await writePlanWithClaude(
-        key.trim(), model,
-        { cvText: props.cvText, profile: props.profile, answers: props.answers, plan: props.plan, matches: props.matches, lang },
-        (chunk) => { acc += chunk; props.setText(acc); },
-        abort.current.signal,
-      );
-      if (stopReason === "refusal") setError(t("refused"));
-    } catch (e) {
-      if (!abort.current.signal.aborted) setError(`${t("claudeError")}: ${e instanceof Error ? e.message : String(e)}`);
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  return (
-    <div className="claude">
-      <p>{t("claudeIntro")}</p>
-      <div className="row wrap-row">
-        <label className="grow">
-          {t("apiKey")} (<a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">{t("getKey")}</a>)
-          <input id="claude-key" type="password" autoComplete="off" spellCheck={false} value={key} onChange={(e) => setKey(e.target.value)} placeholder="sk-ant-…" />
-        </label>
-        <label>
-          {t("model")}
-          <select id="claude-model" value={model} onChange={(e) => setModel(e.target.value)}>
-            {MODELS.map((m) => <option key={m.id} value={m.id}>{m.label}</option>)}
-          </select>
-        </label>
-      </div>
-      <label className="check"><input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> {t("rememberKey")}</label>
-      <div className="row">
-        <button className="btn primary" disabled={!key.trim() || busy} onClick={run}>{t("writePlan")}</button>
-        {busy && <button className="btn ghost" onClick={() => abort.current?.abort()}>{t("stop")}</button>}
-      </div>
-      {error && <p className="error" role="alert">{error}</p>}
-      {props.text && <div className="card prose"><Markdown text={props.text} /></div>}
     </div>
   );
 }

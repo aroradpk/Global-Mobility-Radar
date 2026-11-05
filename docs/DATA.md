@@ -1,6 +1,6 @@
 # Data contract
 
-Everything the web app reads lives in `site/public/data/` (generated daily by the pipeline) and `knowledge/` (curated by hand, bilingual). The browser never uploads the CV anywhere; all matching runs client-side.
+The pipeline writes `site/public/data/` every day, and `knowledge/` is curated by hand (bilingual). The knowledge files are bundled into the site. The generated files are uploaded to private storage (Cloudflare R2) and served through the API: postings are matched there, so they are never published with the site. The browser never uploads the CV; it sends only the profile extracted from it and the interview answers.
 
 Bilingual text is always an object `{"en": "...", "pt": "..."}` ("L10n" below). Portuguese is Brazilian Portuguese.
 
@@ -87,9 +87,9 @@ One track per job family. Family ids (shared with the pipeline, classified in `p
 ```
 `patterns` are case-insensitive regular-expression fragments matched on word boundaries, in both CV text and job descriptions.
 
-## site/public/data/jobs.json (generated)
+## site/public/data/jobs.json and jobs/<family>.json (generated)
 
-Column-oriented to stay small:
+`jobs.json` holds every posting; `jobs/<family>.json` holds one job family each, in the same format, so the API parses only the family a request needs. Both are uploaded to R2 and left out of the site build. Column-oriented to stay small:
 
 ```jsonc
 {

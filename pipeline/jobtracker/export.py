@@ -3,6 +3,8 @@
     site/public/data/jobs.json    open postings that don't rule sponsorship out
     site/public/data/market.json  demand per country and job family, with top skills
     site/public/data/meta.json    sources, registers and run time
+    site/public/data/jobs/<family>.json  the same postings split by job family,
+                                         which is what the API serves (one family per request)
 """
 
 import datetime as dt
@@ -70,6 +72,19 @@ def build(con, out_dir=OUT_DIR):
                   "loadedAt": r["loaded_at"][:10]} for r in con.execute("SELECT * FROM register_loads ORDER BY source")]
     meta = {"generatedAt": generated, "jobs": len(rows), "sources": sources, "registers": registers}
 
+    def write(path, obj):
+        path.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
     for name, obj in (("jobs.json", jobs), ("market.json", market), ("meta.json", meta)):
-        (out_dir / name).write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+        write(out_dir / name, obj)
+
+    by_family = defaultdict(list)
+    for r in rows:
+        by_family[r[FIELDS.index("family")]].append(r)
+    fam_dir = out_dir / "jobs"
+    fam_dir.mkdir(exist_ok=True)
+    for old in fam_dir.glob("*.json"):
+        old.unlink()
+    for family, fam_rows in by_family.items():
+        write(fam_dir / f"{family}.json", {"generatedAt": generated, "fields": FIELDS, "rows": fam_rows})
     return out_dir, len(rows)

@@ -1,4 +1,4 @@
-// A small Markdown renderer for Claude's answer: headings, lists, bold, italics,
+// A small Markdown renderer for the application kit's CV: headings, lists, bold, italics,
 // inline code and links. It builds React elements (no raw HTML), so model output
 // can't inject markup.
 import { Fragment, type ReactNode } from "react";

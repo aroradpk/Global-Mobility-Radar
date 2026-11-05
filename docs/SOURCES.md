@@ -84,4 +84,18 @@ UK licensed sponsors, Ireland employment permits by company, Netherlands IND rec
 | Engineering, marketing, finance and HR society job boards (IMechE, IET, ICE, CIM, CIPD, ACCA…) | Most return 403 to automated requests or publish no feed |
 | Nature Careers and THE Unijobs RSS | robots.txt blocks the RSS paths (their sitemaps are allowed, see "worth adding later") |
 
+## Commercial use review (3 November 2026)
+
+Visa Job Atlas now has a paid tier, so each polled source's terms were read again for paid display (title, company and a link to the original). This is a reading of public terms, not legal advice.
+
+| Verdict | Sources |
+|---|---|
+| Allowed, with attribution | EURES, NHS Jobs (OGL v3.0; "external recruitment platforms may take a feed"), JobTech (open data, any purpose), Berlin Startup Jobs, Greenhouse and Lever public APIs, and the UK, Netherlands, Canada, US and Ireland registers |
+| Allowed, but the API is meant for the company's own site | Ashby (a partner feed is offered for aggregators), Workable, Recruitee, Personio |
+| Terms forbid it | Bundesagentur für Arbeit (no robots, terms of 8 July 2026); MyCareersFuture (written permission needed even to link); Landing.jobs (no robots); CyberSecurityJobsite (no copying, robots blocks query URLs); ISACA (no robots); Reddit (commercial use needs an agreement, and robots.txt is `Disallow: /`) |
+| Breaks robots.txt as built | Google careers (the `&page=` paging the adapter uses is disallowed); swissdevjobs (snapshot taken past a browser challenge) |
+| No terms found, or non-commercial wording | Jobindex, Arbeitnow (site licence is personal and non-commercial; API asks for a link back), Relocate.me, Japan Dev, TokyoDev, GermanTechJobs, Cyber Ireland, Mastodon, HN (YC's terms forbid selling site content), Microsoft (personal and non-commercial), Amazon (terms unreadable to automated clients), Workday (undocumented API), Denmark SIRI |
+
+Before the paid tier launches, the sources in the "terms forbid it" and "breaks robots.txt" rows need to be dropped or fixed. The ones with no terms need a written OK from the provider.
+
 Attribution: job data from EURES is © European Labour Authority, re-used under the EURES legal notice. NHS Jobs data comes from the NHS Business Services Authority job adverts API.

@@ -7,10 +7,18 @@ import Upload from "./components/Upload";
 import Review from "./components/Review";
 import Interview, { defaultAnswers } from "./components/Interview";
 import Results from "./components/Results";
+import { AccountMenu, AccountProvider } from "./components/Account";
+import Legal, { type LegalDoc } from "./components/Legal";
 import { Plane } from "./components/Icons";
 
 type Step = "upload" | "review" | "interview" | "results";
 const STEPS: Step[] = ["upload", "review", "interview", "results"];
+
+// The legal pages live at #privacidade / #termos (or the English #privacy / #terms).
+function legalFromHash(): LegalDoc | null {
+  const h = location.hash.slice(1);
+  return h === "privacidade" || h === "privacy" ? "privacy" : h === "termos" || h === "terms" ? "terms" : null;
+}
 
 export default function App() {
   const [lang, setLang] = useState<Lang>(() =>
@@ -22,9 +30,15 @@ export default function App() {
   const [answers, setAnswers] = useState<Answers | null>(() => load<Answers | null>("vja.answers", null, true));
   const [data, setData] = useState<Dataset | null>(null);
   const [dataError, setDataError] = useState("");
+  const [legal, setLegal] = useState<LegalDoc | null>(legalFromHash);
 
   useEffect(() => {
     loadDataset().then(setData, (e) => setDataError(String(e)));
+  }, []);
+  useEffect(() => {
+    const onHash = () => setLegal(legalFromHash());
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
   }, []);
   useEffect(() => save("vja.lang", lang), [lang]);
   useEffect(() => save("vja.step", step, true), [step]);
@@ -36,6 +50,10 @@ export default function App() {
     window.scrollTo({ top: 0 });
   }, [lang, step]);
 
+  const closeLegal = () => {
+    history.replaceState(null, "", location.pathname + location.search);
+    setLegal(null);
+  };
   const reset = () => {
     setCvText("");
     setProfile(null);
@@ -48,8 +66,10 @@ export default function App() {
 
   return (
     <LangContext.Provider value={lang}>
+      <AccountProvider>
       <Shell lang={lang} setLang={setLang} idx={idx} onReset={profile ? reset : undefined} dataAsOf={data?.meta.generatedAt}>
-        {current === "upload" && (
+        {legal && <Legal doc={legal} onClose={closeLegal} />}
+        {!legal && current === "upload" && (
           <Upload
             onRead={(text, p) => {
               setCvText(text);
@@ -59,10 +79,10 @@ export default function App() {
             }}
           />
         )}
-        {current === "review" && profile && (
+        {!legal && current === "review" && profile && (
           <Review profile={profile} onChange={setProfile} onBack={reset} onNext={() => setStep("interview")} />
         )}
-        {current === "interview" && profile && effectiveAnswers && (
+        {!legal && current === "interview" && profile && effectiveAnswers && (
           <Interview
             profile={profile}
             answers={effectiveAnswers}
@@ -74,7 +94,7 @@ export default function App() {
             }}
           />
         )}
-        {current === "results" && profile && effectiveAnswers && (
+        {!legal && current === "results" && profile && effectiveAnswers && (
           <Results
             cvText={cvText}
             profile={profile}
@@ -85,6 +105,7 @@ export default function App() {
           />
         )}
       </Shell>
+      </AccountProvider>
     </LangContext.Provider>
   );
 }
@@ -128,6 +149,7 @@ function Shell(props: {
                 {t("startOver")}
               </button>
             )}
+            <AccountMenu />
             <div className="lang" role="group" aria-label="Language">
               {(["en", "pt"] as Lang[]).map((l) => (
                 <button key={l} aria-pressed={props.lang === l} onClick={() => props.setLang(l)}>
@@ -141,6 +163,10 @@ function Shell(props: {
       <main className="wrap main">{props.children}</main>
       <footer className="wrap foot">
         <p><b>{t("safeTravels")}</b> {t("disclaimer")}</p>
+        <p className="muted small">
+          {t("attribution")}{" "}
+          <a href="https://github.com/talls2/visa-job-atlas/blob/main/docs/SOURCES.md" rel="noopener">{t("allSources")}</a>
+        </p>
         <p className="muted">
           {t("footer")}{" "}
           {props.dataAsOf && (
@@ -149,6 +175,7 @@ function Shell(props: {
             </>
           )}{" "}
           <a href="https://github.com/talls2/visa-job-atlas" rel="noopener">GitHub</a>
+          {" · "}<a href="#privacidade">{t("privacyLink")}</a>{" · "}<a href="#termos">{t("termsLink")}</a>
         </p>
       </footer>
     </>

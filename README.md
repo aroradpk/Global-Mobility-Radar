@@ -4,7 +4,7 @@
 
 **Live:** https://talls2.github.io/visa-job-atlas/
 
-Your CV is read inside your browser and never uploaded. The site is static: there is no server and no account.
+Your CV is read inside your browser and never uploaded. Only what is extracted from it (skills, level, years, languages, degree, certifications) and your answers go to the Visa Job Atlas API, which matches them against the day's postings. An account is optional; see the privacy policy on the site for what is kept and why.
 
 ## What it does
 
@@ -30,16 +30,20 @@ Your CV is read inside your browser and never uploaded. The site is static: ther
    - a language plan
    - visa-route steps
    - a weekly routine
-6. **Optional: Claude writes it up.** Paste your own Anthropic API key and Claude turns the results into a written, personal plan. The key and CV go only from your browser to Anthropic.
+6. **Shows what would make you indispensable**: the skills your top countries ask for most that your CV doesn't show, ranked, with the certifications and projects that prove them.
 
-Export the plan as Markdown, or print it to PDF.
+The free plan shows your best 3 jobs, your top 3 countries in full and the first leg of the plan. Pro (R$39.99/month or R$99.99 for 3 months) opens everything and adds a Markdown export. Anyone can print the plan to PDF.
+
+## What is open and what isn't
+
+This repo (the site, the matching engine, the country and career knowledge, and the data pipeline) is open source under the MIT licence. The API that serves postings, checks plans, takes payments through Mercado Pago and writes application kits is in a private repo. It imports the matching engine from here, so the logic is the same.
 
 ## How the data is built
 
 ```
 government sponsor registers ─┐
-employer job boards (230+)  ──┼─► pipeline (Python, stdlib) ─► jobs.json / market.json ─► web app (React, in-browser matching)
-job feeds (19)              ──┘        daily on GitHub Actions             published to GitHub Pages
+employer job boards (230+)  ──┼─► pipeline (Python, stdlib) ─► jobs/<family>.json, market.json ─► API (matching, plans) ─► web app (React)
+job feeds (19)              ──┘        daily on GitHub Actions          uploaded to Cloudflare R2         Cloudflare Workers     Cloudflare Pages
 ```
 
 - **Sponsor registers:**

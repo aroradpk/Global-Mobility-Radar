@@ -4,7 +4,7 @@ import type { Plan } from "./engine/plan";
 import type { JobMatch } from "./engine/jobs";
 import { skillLabel } from "./data";
 
-export function planToMarkdown(plan: Plan, matches: JobMatch[], lang: Lang, claudeText = ""): string {
+export function planToMarkdown(plan: Plan, matches: JobMatch[], lang: Lang): string {
   const x = (v: { en: string; pt: string } | null | undefined) => (v ? v[lang] || v.en : "");
   const pt = lang === "pt";
   const out: string[] = [];
@@ -35,7 +35,6 @@ export function planToMarkdown(plan: Plan, matches: JobMatch[], lang: Lang, clau
     for (const m of matches.slice(0, 20)) out.push(`- [${m.job.title} — ${m.job.company}, ${m.job.location}](${m.job.url})`);
     out.push("");
   }
-  if (claudeText) out.push(`## ${pt ? "Plano escrito pelo Claude" : "Plan written by Claude"}`, "", claudeText, "");
   return out.join("\n");
 }
 
