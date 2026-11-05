@@ -2,7 +2,7 @@
 
 **Upload your CV, answer a few questions, and get the countries, open jobs and 12-month plan most likely to get you a visa-sponsored job.** 18 career fields across tech, engineering, business, health and creative work. English and Brazilian Portuguese.
 
-**Live:** https://talls2.github.io/visa-job-atlas/
+**Live:** https://visa-job-atlas.pages.dev/
 
 Your CV is read inside your browser and never uploaded. Only what is extracted from it (skills, level, years, languages, degree, certifications) and your answers go to the Visa Job Atlas API, which matches them against the day's postings. An account is optional; see the privacy policy on the site for what is kept and why.
 
