@@ -395,6 +395,8 @@ button.price.buy:disabled { opacity: .6; cursor: default; }
 .signin::backdrop { background: rgb(0 0 0 / .4); backdrop-filter: blur(4px); }
 .signin h3 { margin-top: 0; }
 .signin form { display: grid; gap: 12px; }
+.signin .order-claim { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--line); }
+.signin .order-claim h4, .signin .order-claim p { margin: 0; }
 .signin input { width: 100%; }
 .signin > .btn:not(.close) { width: 100%; }
 .signin .or { text-align: center; margin: 12px 0; }

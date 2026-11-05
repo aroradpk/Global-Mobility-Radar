@@ -331,6 +331,26 @@ const STRINGS = {
     en: "You already have a monthly plan that renews, so the code wasn't used. Keep it for later, or cancel the plan first.",
     pt: "Você já tem um plano mensal que renova, então o código não foi usado. Guarde-o para depois ou cancele o plano antes.",
   },
+  ebookDone: {
+    en: "Your ebook's month of Pro is on, until {date}. No card needed, and nothing renews.",
+    pt: "Seu mês de Pro do e-book está ativo até {date}. Sem cartão e sem renovação automática.",
+  },
+  orderTitle: { en: "Bought the ebook with another email?", pt: "Comprou o e-book com outro e-mail?" },
+  orderBody: {
+    en: "Signing in with the email you bought with turns Pro on by itself. On another account, enter the order number from Kiwify's confirmation email and the purchase email.",
+    pt: "Entrando com o e-mail da compra, o Pro é ativado sozinho. Em outra conta, digite o número do pedido que está no e-mail de confirmação da Kiwify e o e-mail da compra.",
+  },
+  orderLabel: { en: "Order number", pt: "Número do pedido" },
+  orderEmail: { en: "Purchase email", pt: "E-mail da compra" },
+  orderNotFound: {
+    en: "We couldn't find that order with that email. Check both. If you just paid, wait a minute and try again.",
+    pt: "Não encontramos esse pedido com esse e-mail. Confira os dois. Se o pagamento acabou de ser aprovado, espere um minuto e tente de novo.",
+  },
+  orderUsed: { en: "That order's month has already been used.", pt: "O mês desse pedido já foi usado." },
+  orderSubscribed: {
+    en: "You already have a monthly plan that renews, so the order wasn't used. Cancel the plan first, or use it later.",
+    pt: "Você já tem um plano mensal que renova, então o pedido não foi usado. Cancele o plano antes ou use depois.",
+  },
 } satisfies Record<string, L10n>;
 
 export type StringKey = keyof typeof STRINGS;

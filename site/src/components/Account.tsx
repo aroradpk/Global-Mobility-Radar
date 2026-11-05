@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { authEnabled, LINK_ERROR, signInWithEmail, signInWithGoogle, signOut, useSession } from "../auth";
-import { ApiError, cancelSubscription, deleteAccount, exportAccount, fetchMe, redeemCode, type Me, type Tier } from "../api";
+import { ApiError, cancelSubscription, deleteAccount, exportAccount, fetchMe, redeemCode, redeemOrder, type Me, type Tier } from "../api";
 import { load, save } from "../store";
 import { download } from "../export";
 import { useT, type StringKey } from "../i18n";
@@ -26,6 +26,8 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const [me, setMe] = useState<Me>({ tier: "anon" });
   const [signingIn, setSigningIn] = useState(LINK_ERROR !== null);
   const [back, setBack] = useState(CHECKOUT_RETURN);
+  // Set when /api/me turns an ebook order bought with this email into Pro.
+  const [ebookUntil, setEbookUntil] = useState("");
   // A code from a #resgatar link waits here through sign-in: the sign-in link
   // drops the hash and often opens in a new tab, hence localStorage.
   const [redeem, setRedeem] = useState<string | null>(() => REDEEM_LINK ?? load<string | null>("vja.redeem", null));
@@ -33,16 +35,20 @@ export function AccountProvider({ children }: { children: ReactNode }) {
   const userId = session?.user.id ?? null;
 
   // The plan comes from the API, which reads it from the entitlements table.
+  const take = (m: Me) => {
+    setMe(m);
+    if (m.ebook) setEbookUntil(m.ebook.periodEnd);
+  };
   const refresh = async () => {
     const m = await fetchMe().catch((): Me => ({ tier: "free" }));
-    setMe(m);
+    take(m);
     return m;
   };
 
   useEffect(() => {
     if (!userId) return setMe({ tier: "anon" });
     let live = true;
-    fetchMe().then((m) => live && setMe(m), () => live && setMe({ tier: "free" }));
+    fetchMe().then((m) => live && take(m), () => live && setMe({ tier: "free" }));
     return () => {
       live = false;
     };
@@ -55,7 +61,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
     let tries = 0;
     const timer = setInterval(async () => {
       const m = await fetchMe().catch(() => null);
-      if (m) setMe(m);
+      if (m) take(m);
       if (m?.tier === "pro") setBack("done");
       else if (++tries >= 10) setBack("slow");
       if (m?.tier === "pro" || tries >= 10) clearInterval(timer);
@@ -78,6 +84,7 @@ export function AccountProvider({ children }: { children: ReactNode }) {
       {children}
       {signingIn && <SignIn notice={LINK_ERROR} onClose={() => setSigningIn(false)} />}
       {back && <CheckoutNotice state={back} onClose={() => setBack(null)} />}
+      {ebookUntil && !back && <EbookNotice until={ebookUntil} onClose={() => setEbookUntil("")} />}
       {redeem !== null && authEnabled && !signingIn && (
         <Redeem initial={redeem} signedIn={!!userId} onSignIn={() => setSigningIn(true)} onDone={refresh} onClose={() => setRedeem(null)} />
       )}
@@ -112,13 +119,17 @@ const REDEEM_LINK = readRedeemLink();
 const REDEEM_ERRORS: Record<string, StringKey> = {
   invalid: "codeInvalid", expired: "codeExpired", used_up: "codeUsedUp", already_redeemed: "codeAlready", subscribed: "codeSubscribed",
 };
+const ORDER_ERRORS: Record<string, StringKey> = { order_not_found: "orderNotFound", order_used: "orderUsed", subscribed: "orderSubscribed" };
 
 function Redeem(props: { initial: string; signedIn: boolean; onSignIn: () => void; onDone: () => Promise<Me>; onClose: () => void }) {
   const { t, lang } = useT();
   const ref = useRef<HTMLDialogElement>(null);
   const [code, setCode] = useState(props.initial);
+  const [order, setOrder] = useState("");
+  const [orderEmail, setOrderEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<StringKey | null>(null);
+  const [orderError, setOrderError] = useState<StringKey | null>(null);
   const [until, setUntil] = useState("");
 
   useEffect(() => {
@@ -135,6 +146,21 @@ function Redeem(props: { initial: string; signedIn: boolean; onSignIn: () => voi
       await props.onDone();
     } catch (err) {
       setError(err instanceof ApiError ? REDEEM_ERRORS[err.code] ?? "accountError" : "accountError");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitOrder = async (e: FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setOrderError(null);
+    try {
+      const res = await redeemOrder(order, orderEmail);
+      setUntil(new Date(res.periodEnd).toLocaleDateString(lang === "pt" ? "pt-BR" : "en"));
+      await props.onDone();
+    } catch (err) {
+      setOrderError(err instanceof ApiError ? ORDER_ERRORS[err.code] ?? "accountError" : "accountError");
     } finally {
       setBusy(false);
     }
@@ -160,8 +186,34 @@ function Redeem(props: { initial: string; signedIn: boolean; onSignIn: () => voi
           {error && <p className="error" role="alert">{t(error)}</p>}
         </form>
       )}
+      {!until && props.signedIn && (
+        <form onSubmit={submitOrder} className="order-claim">
+          <h4>{t("orderTitle")}</h4>
+          <p className="muted small">{t("orderBody")}</p>
+          <label>
+            {t("orderLabel")}
+            <input id="order-number" autoComplete="off" spellCheck={false} value={order} onChange={(e) => setOrder(e.target.value)} />
+          </label>
+          <label>
+            {t("orderEmail")}
+            <input id="order-email" type="email" autoComplete="email" value={orderEmail} onChange={(e) => setOrderEmail(e.target.value)} />
+          </label>
+          <button className="btn" disabled={busy || order.trim().length < 4 || !orderEmail.includes("@")}>{t("redeemButton")}</button>
+          {orderError && <p className="error" role="alert">{t(orderError)}</p>}
+        </form>
+      )}
       <button className="btn ghost small close" onClick={() => { ref.current?.close(); props.onClose(); }}>{t("close")}</button>
     </dialog>
+  );
+}
+
+function EbookNotice({ until, onClose }: { until: string; onClose: () => void }) {
+  const { t, lang } = useT();
+  return (
+    <div className="toast done" role="status">
+      <p>{t("ebookDone").replace("{date}", new Date(until).toLocaleDateString(lang === "pt" ? "pt-BR" : "en"))}</p>
+      <button className="btn ghost small" onClick={onClose}>{t("close")}</button>
+    </div>
   );
 }
 

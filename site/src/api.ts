@@ -29,7 +29,9 @@ export interface MatchesResult {
 export interface Me {
   tier: Tier;
   email?: string;
-  plan?: { name: "monthly" | "quarterly"; status: string; periodEnd: string; renews: boolean } | null;
+  plan?: { name: "monthly" | "quarterly" | "gift"; status: string; periodEnd: string; renews: boolean } | null;
+  /** Present once, on the call that turned an ebook order bought with this email into Pro. */
+  ebook?: { days: number; periodEnd: string };
 }
 
 async function authHeaders(): Promise<Record<string, string>> {
@@ -165,3 +167,7 @@ export const deleteAccount = () => call<{ ok: true }>("DELETE", "/api/account");
 
 /** Uses a gift code (e.g. the month that comes with an ebook). Throws ApiError with the reason. */
 export const redeemCode = (code: string) => call<{ ok: true; days: number; periodEnd: string }>("POST", "/api/redeem", { code });
+
+/** The ebook's month for a buyer signed in with another email: the Kiwify order number and the purchase email. */
+export const redeemOrder = (order: string, email: string) =>
+  call<{ ok: true; days: number; periodEnd: string }>("POST", "/api/redeem/order", { order, email });
