@@ -1,12 +1,13 @@
 name: Refresh jobs and deploy
 
 # Every morning: refresh the sponsor registers (weekly), poll the job boards and
-# feeds, export the data, upload it to the API's R2 bucket, then build the app
+# feeds, export the data, upload it to the API's KV namespace, then build the app
 # and publish it to Cloudflare Pages. Postings are served by the API, not by the
 # static site. A push to main redeploys from the cached database without re-polling.
 #
-# Needs repository secrets CLOUDFLARE_API_TOKEN (R2 edit + Pages edit) and
-# CLOUDFLARE_ACCOUNT_ID, and a repository variable API_URL (the Worker's URL).
+# Needs repository secrets CLOUDFLARE_API_TOKEN (Workers KV edit + Pages edit)
+# and CLOUDFLARE_ACCOUNT_ID, and repository variables KV_NAMESPACE_ID (the
+# Worker's DATA namespace) and API_URL (the Worker's URL).
 
 on:
   schedule:
@@ -28,7 +29,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  BUCKET: visa-job-atlas-data
+  KV: --namespace-id ${{ vars.KV_NAMESPACE_ID }} --remote
   CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
   CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
@@ -50,8 +51,8 @@ jobs:
           cache-dependency-path: site/package-lock.json
 
       # The SQLite history (first-seen dates, closed postings) and the register
-      # downloads live in the Actions cache between runs, with a copy in R2 in
-      # case the cache is evicted.
+      # downloads live in the Actions cache between runs, with a gzipped copy of
+      # the database in KV in case the cache is evicted.
       - name: Restore pipeline state
         uses: actions/cache/restore@v4
         with:
@@ -59,11 +60,16 @@ jobs:
           key: pipeline-data-${{ github.run_id }}
           restore-keys: pipeline-data-
 
-      - name: Restore database from R2 if the cache is gone
+      - name: Restore database from KV if the cache is gone
         if: hashFiles('pipeline/data/atlas.db') == ''
         run: |
           mkdir -p pipeline/data
-          npx --yes wrangler@4 r2 object get "$BUCKET/state/atlas.db" --file pipeline/data/atlas.db --remote || echo "No backup yet; starting fresh."
+          backup="$RUNNER_TEMP/atlas.db.gz"
+          if npx --yes wrangler@4 kv key get state/atlas.db.gz $KV > "$backup" && gunzip -t "$backup"; then
+            gunzip -c "$backup" > pipeline/data/atlas.db
+          else
+            echo "No backup yet; starting fresh."
+          fi
 
       - name: Poll job boards and export
         working-directory: pipeline
@@ -86,14 +92,18 @@ jobs:
           path: pipeline/data
           key: pipeline-data-${{ github.run_id }}
 
-      - name: Upload data to R2
+      - name: Upload data to KV
         working-directory: site/public/data
         run: |
-          put() { npx --yes wrangler@4 r2 object put "$BUCKET/$1" --file "$2" --content-type "${3:-application/json}" --remote; }
+          put() { npx --yes wrangler@4 kv key put "$1" --path "$2" $KV; }
           for f in jobs/*.json; do put "$f" "$f"; done
           put market.json market.json
           put meta.json meta.json
-          put state/atlas.db ../../../pipeline/data/atlas.db application/octet-stream
+          # KV values are capped at 25 MiB; the database compresses to about a quarter.
+          gzip -9 -c ../../../pipeline/data/atlas.db > "$RUNNER_TEMP/atlas.db.gz"
+          put state/atlas.db.gz "$RUNNER_TEMP/atlas.db.gz"
+          # Last: the Worker reloads its cached files when this changes.
+          npx --yes wrangler@4 kv key put version "$(date -u +%s)" $KV
 
       # Postings must not ship with the static site: the API is the only way to them.
       - name: Remove job data from the site build

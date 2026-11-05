@@ -43,7 +43,7 @@ This repo (the site, the matching engine, the country and career knowledge, and 
 ```
 government sponsor registers ─┐
 employer job boards (230+)  ──┼─► pipeline (Python, stdlib) ─► jobs/<family>.json, market.json ─► API (matching, plans) ─► web app (React)
-job feeds (19)              ──┘        daily on GitHub Actions          uploaded to Cloudflare R2         Cloudflare Workers     Cloudflare Pages
+job feeds (19)              ──┘        daily on GitHub Actions          uploaded to Workers KV            Cloudflare Workers     Cloudflare Pages
 ```
 
 - **Sponsor registers:**
