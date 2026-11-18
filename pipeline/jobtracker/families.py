@@ -167,7 +167,7 @@ HEALTHCARE = _rx(
     r"gp\b|surgeon|anaesthet\w*|anesthesi\w*|psychiatrist|radiologist|paediatrician|pediatrician|cardiologist|"
     r"oncologist|dentist|dental (nurse|hygienist|therapist)|pharmacist|pharmacy technician|physiotherapist|"
     r"physical therapist|occupational therapist|speech (and language )?therapist|dietitian|radiographer|sonographer|"
-    r"paramedic|biomedical scientist|medical laboratory|clinical scientist|clinical psychologist|optometrist|"
+    r"paramedic|biomedical scientist|medical laboratory|clinical scientist|psycholog(ist|ists|e|in)|psychotherapist|optometrist|"
     r"care (worker|assistant)|healthcare assistant|support worker|carer|caregiver|veterinar\w*|"
     r"pflegefach\w*|krankenpfleg\w*|gesundheits- und krankenpfleg\w*|altenpfleg\w*|pflegekraft|pflegekr[äa]fte|"
     r"hebamme|arzt|zahnarzt\w*|tierarzt\w*|[äa]rztin|assistenzarzt\w*|facharzt\w*|physiotherapeut\w*|apotheker\w*|"

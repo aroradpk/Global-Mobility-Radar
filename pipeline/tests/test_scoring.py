@@ -64,6 +64,9 @@ class Families(unittest.TestCase):
     def test_families(self):
         f = families.job_family
         self.assertEqual(f("Senior Product Security Engineer"), "security")
+        self.assertEqual(f("Highly Specialist Clinical / Forensic Psychologist"), "healthcare")
+        self.assertEqual(f("Lead Forensic Psychologist"), "healthcare")
+        self.assertEqual(f("Digital Forensics Analyst"), "security")
         self.assertEqual(f("Senior SRE"), "devops")
         self.assertEqual(f("Backend Engineer, Payments"), "software")
         self.assertEqual(f("Senior Data Engineer"), "data")
