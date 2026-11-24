@@ -46,3 +46,5 @@ Baseline: 0 accepted modules / 16; 0 / 100 weighted acceptance points. Earlier 8
 ## Evidence ledger
 - 2026-11-25: baseline static audit and repository access; no module accepted. See docs/fork-acceptance-audit.md. Runtime/dependency/live-source checks outstanding.
 - 2026-11-25: foundation implementation on development branch: inherited deployment/redirect workflows removed; pinned read-only CI, npm lockfile audit and targeted tracked-tree safety guard added. Runtime/audit execution pending; no module accepted. Main unchanged. Next: verify CI and fix failures, then independent local runtime.
+
+- 2026-11-25 verification of 41d99a6: 4/4 new guard unit tests passed locally on exact committed blobs; synthetic clean/unsafe git-tree checks behaved as expected. Static lockfile checks passed (169 entries, 10 direct declarations; not a CVE audit). Draft PR #1 opened; GitHub Actions returned zero runs; inherited suites, build, vulnerability audit and full-tree scan pending. See HANDOVER.md for evidence and blockers. No acceptance points awarded.
