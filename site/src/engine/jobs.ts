@@ -24,12 +24,12 @@ const JOB_STEP: Record<string, number | null> = {
 };
 
 export function matchJobs(
-  jobs: Job[], profile: Profile, answers: Answers, countryOrder: string[], registerCountries: Set<string> = new Set(), limit = 3000,
+  jobs: Job[], profile: Profile, answers: Answers, countryOrder: string[], registerCountries: Set<string> = new Set(), limit = 3000, allCountries = false,
 ): JobMatch[] {
   const mine = new Set(profile.skills);
   const myLangs = new Set(profile.languages.filter((l) => l.level !== "basic").map((l) => l.code));
   const euCitizen = answers.citizenships.some((c) => EU_EEA.has(c));
-  const top = new Set(countryOrder.slice(0, 6));
+  const top = new Set(allCountries ? countryOrder : countryOrder.slice(0, 6));
   const me = LEVEL_STEP[profile.level];
   const today = Date.now();
 

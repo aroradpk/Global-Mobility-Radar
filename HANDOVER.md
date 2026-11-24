@@ -21,8 +21,13 @@ Active branch: development/roadmap-and-hardening
 - GitHub Actions API: no runs returned for implementation commit or repository after PR creation. Actions settings endpoint unavailable to connector; reason for no runs unconfirmed. Full inherited Python tests, npm ci/test/build, npm audit and full repository guard execution are pending. Do not merge until results verified and findings resolved. Enable only safe CI if Actions is disabled; keep original deploy/redirect disabled. No source polling or deployment occurred.
 - Verified release completion stays 0/100, 0/16 accepted; M15 and M16 in progress.
 
+## Independent local preview (implementation; unverified)
+- Main remains unchanged; CI API still reports zero runs. Proceed on isolated branch without merging.
+- App entrypoint now uses in-memory profile onboarding and local results, explicit file import, existing matching engine, and dated country references. No API, authentication, paid-tier, remote CV or third-party font path in active entrypoint. Original backend-bound modules retained disconnected for later cleanup. Local preview English only; no live polling, legal eligibility, verified sponsor evidence or application tracker yet.
+- Added bounded schema validation, HTTPS URL validation, duplicate ID handling, empty/error/stale states and five Vitest cases (execution pending). Removed dev upstream proxy, limited CV size/pages and disabled PDF evaluation. Full npm build/browser/network tests remain blocked pending CI/dependencies.
+
 ## Next goal
-Phase 1: confirm safe CI executes on draft PR #1 (if disabled, owner may need to enable CI only); review results, resolve failures, and keep main unchanged until safe. Then deliver a standalone local data path with no upstream account/API dependency.
+Phase 1: confirm safe CI executes on draft PR #1 (if disabled, owner may need to enable CI only); review results, resolve failures, and keep main unchanged until safe. Verify the independent preview build and browser flow (including no outgoing profile requests), resolve any failures, then implement the approved-source registry and evidence/freshness hardening. See docs/local-preview.md.
 
 ## Blockers and owner actions
 Direct clone is unavailable in this execution environment (DNS resolution failure); GitHub Actions reported no runs; settings could not be read. Full dependency installation must be verified remotely. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.

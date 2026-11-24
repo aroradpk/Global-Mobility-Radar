@@ -5,7 +5,9 @@ import workerUrl from "pdfjs-dist/build/pdf.worker.min.mjs?url";
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
 
 export async function pdfToText(file: File): Promise<string> {
-  const doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  const doc = await pdfjs.getDocument({ data: new Uint8Array(await file.arrayBuffer()), isEvalSupported: false }).promise;
+  try {
+  if (doc.numPages > 100) throw new Error("CV exceeds 100 pages");
   const pages: string[] = [];
   for (let p = 1; p <= doc.numPages; p++) {
     const page = await doc.getPage(p);
@@ -28,6 +30,6 @@ export async function pdfToText(file: File): Promise<string> {
     if (line.trim()) lines.push(line.trim());
     pages.push(lines.filter(Boolean).join("\n"));
   }
-  await doc.destroy();
   return pages.join("\n\n");
+  } finally { await doc.destroy(); }
 }

@@ -14,6 +14,7 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
   const [over, setOver] = useState(false);
 
   const finish = (text: string) => {
+    if (text.length > 500000) { setError("CV text exceeds 500,000 characters"); return; }
     if (text.replace(/\s+/g, " ").trim().length < 200) {
       setError(t("cvTooShort"));
       return;
@@ -23,6 +24,7 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
 
   const readFile = async (file: File) => {
     setError("");
+    if (file.size > 10 * 1024 * 1024) { setError("CV file exceeds 10 MiB"); return; }
     setBusy(true);
     try {
       if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
@@ -67,7 +69,7 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
         <div className="main-part">
           <div className="pass-head">
             <span>{t("passTitle")}</span>
-            <span>VJA 2026</span>
+            <span>GMR PREVIEW</span>
           </div>
           <div className="codes">
             <span>YOU</span>
@@ -102,7 +104,7 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
       <p className="privacy">🔒 {t("privacy")}</p>
       <details className="paste">
         <summary>{t("orPaste")}</summary>
-        <textarea id="cv-paste" value={paste} onChange={(e) => setPaste(e.target.value)} rows={10} />
+        <textarea maxLength={500000} id="cv-paste" value={paste} onChange={(e) => setPaste(e.target.value)} rows={10} />
         <button className="btn primary" disabled={!paste.trim()} onClick={() => finish(paste)}>
           {t("readCv")}
         </button>
