@@ -6,7 +6,7 @@ import json
 import os
 import sys
 
-from . import ats, db, export, pipeline, registers
+from . import db, export, pipeline, source_policy
 
 
 def _split(s):
@@ -34,14 +34,7 @@ def cmd_export(args, con):
 
 def cmd_run(args, con):
     """Refresh stale registers, poll every board, export the site data."""
-    stale = True
-    row = con.execute("SELECT MIN(loaded_at) FROM register_loads").fetchone()[0]
-    loaded = con.execute("SELECT COUNT(*) FROM register_loads").fetchone()[0]
-    if row and loaded >= len(registers.LOADERS):
-        stale = (dt.datetime.now() - dt.datetime.fromisoformat(row)).days >= 6
-    if stale or args.force:
-        args.only = None
-        cmd_registers(args, con)
+    # Register refresh is held pending adapter review.
     args.only = None
     cmd_poll(args, con)
     cmd_export(args, con)
@@ -57,25 +50,7 @@ def cmd_sponsor(args, con):
 
 
 def cmd_discover(args, con):
-    cfg = pipeline.load_config()
-    known = {c["name"].lower() for c in cfg["companies"]}
-    added = []
-    for name in args.names:
-        hits = ats.discover(name)
-        if not hits:
-            print(f"  {name}: no public Greenhouse/Lever/Ashby/SmartRecruiters/Workable/Recruitee/Personio board found")
-            continue
-        for a, slug, n in hits:
-            print(f"  {name}: {a}:{slug} ({n} jobs)")
-        if args.add and name.lower() not in known:
-            a, slug, _ = max(hits, key=lambda h: h[2])
-            cfg["companies"].append({"name": name, "ats": a, "slug": slug, "aliases": [], "sponsorship": None, "notes": "added by discover"})
-            added.append(name)
-    if added:
-        with open(pipeline.CONFIG_PATH, "w", encoding="utf-8") as f:
-            json.dump(cfg, f, indent=2, ensure_ascii=False)
-            f.write("\n")
-        print(f"Added to companies.json: {', '.join(added)}")
+    print("Automatic board discovery disabled. Add a candidate to the review registry after verifying official ownership and source permissions.")
 
 
 def cmd_trend(args, con):
@@ -91,13 +66,25 @@ def cmd_trend(args, con):
 def cmd_fresh(args, con):
     """Print "yes" when the last poll is recent and covered most sources, else "no"."""
     cfg = pipeline.load_config()
-    expected = sum(1 for c in cfg["companies"] if c.get("enabled", True)) + sum(1 for f in cfg["feeds"] if f.get("enabled", True))
-    row = con.execute("SELECT run_at, COUNT(*) n FROM snapshots GROUP BY run_at ORDER BY run_at DESC LIMIT 1").fetchone()
-    if not row:
+    approved = source_policy.approved_companies(cfg, source_policy.read_reviews())
+    labels = {c["name"] for c in approved}
+    last = con.execute("SELECT MAX(run_at) FROM snapshots").fetchone()[0]
+    if not labels or not last:
         print("no")
         return
-    age_h = (dt.datetime.fromisoformat(db.now()) - dt.datetime.fromisoformat(row["run_at"])).total_seconds() / 3600
-    print("yes" if age_h < args.max_age and row["n"] >= 0.9 * expected else "no")
+    success = {r["company"] for r in con.execute("SELECT company FROM snapshots WHERE run_at = ? AND ok = 1", (last,))}
+    age_h = (dt.datetime.fromisoformat(db.now()) - dt.datetime.fromisoformat(last)).total_seconds() / 3600
+    print("yes" if 0 <= age_h < args.max_age and len(success & labels) >= 0.9 * len(labels) else "no")
+
+
+def cmd_sources(args, con):
+    cfg = pipeline.load_config()
+    reviews = source_policy.read_reviews()
+    approved = {source_policy.source_id(c) for c in source_policy.approved_companies(cfg, reviews)}
+    print(json.dumps({"approved": len(approved), "companies": [
+        {"id": source_policy.source_id(c), "name": c["name"], "config_sha256": source_policy.fingerprint(c),
+         "status": "approved" if source_policy.source_id(c) in approved else "review_required"}
+        for c in cfg["companies"]], "feeds": len(cfg["feeds"]), "feeds_enabled": 0, "registers_enabled": 0}, indent=2))
 
 
 def cmd_test(args, con):
@@ -150,6 +137,9 @@ def main(argv=None):
     s = sub.add_parser("fresh", help='print "yes" if the last poll is recent and complete')
     s.add_argument("--max-age", type=float, default=20, help="hours")
     s.set_defaults(fn=cmd_fresh)
+
+    s = sub.add_parser("sources", help="list approval status without network access")
+    s.set_defaults(fn=cmd_sources)
 
     s = sub.add_parser("test", help="run the regression tests")
     s.set_defaults(fn=cmd_test)
