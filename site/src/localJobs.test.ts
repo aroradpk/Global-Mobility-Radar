@@ -22,3 +22,18 @@ describe("local job import", () => {
   });
   it("rejects oversized files", () => expect(() => parseLocalJobs(" ".repeat(MAX_FILE_BYTES + 1))).toThrow());
 });
+
+describe("imported observation evidence", () => {
+  const entry = {sourceId:"company:greenhouse:synthetic",sourceUrl:row[5],observedAt:"2026-01-01T00:00:00Z",descriptionCheckedAt:"2026-01-01T00:00:00Z",positive:"Visa support",negative:"",relocation:"",status:"unverified_lead"};
+  const withEvidence = (e: unknown) => JSON.stringify({...JSON.parse(fixture()),evidence:e});
+  it("reads optional evidence without certifying it", () => {
+    expect(parseLocalJobs(withEvidence({"synthetic:1":entry})).evidence.get("synthetic:1")?.status).toBe("unverified_lead");
+    expect(parseLocalJobs(fixture()).evidence.size).toBe(0);
+  });
+  it("rejects detached evidence and false verification claims", () => {
+    expect(() => parseLocalJobs(withEvidence({"other":entry}))).toThrow();
+    expect(() => parseLocalJobs(withEvidence({"synthetic:1":{...entry,status:"confirmed"}}))).toThrow();
+    expect(() => parseLocalJobs(withEvidence({"synthetic:1":{...entry,sourceUrl:"https://example.org/job"}}))).toThrow();
+    expect(() => parseLocalJobs(withEvidence({"synthetic:1":{...entry,descriptionCheckedAt:""}}))).toThrow();
+  });
+});

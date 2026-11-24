@@ -122,8 +122,8 @@ def poll(con, cfg, only=None, workers=8, log=print):
                 totals["failed"] += 1
                 log(f"  ! {label_name}: {e}")
                 with con:
-                    con.execute("INSERT OR REPLACE INTO snapshots VALUES (?,?,?,?,?,?)",
-                                (run_at, label_name, 0, 0, 0, str(e)[:300]))
+                    con.execute("INSERT OR REPLACE INTO snapshots (run_at, company, total_open, kept, ok, error, source_id, source_fingerprint) VALUES (?,?,?,?,?,?,?,?)",
+                                (run_at, label_name, 0, 0, 0, str(e)[:300], source_policy.source_id(src), source_policy.fingerprint(src)))
                 continue
 
             seen, new_here = set(), 0
@@ -167,8 +167,8 @@ def poll(con, cfg, only=None, workers=8, log=print):
                 # A partial/capped listing is not authoritative closure evidence.
                 # Missing records retain last_seen; export filters by observation age.
                 gone = []
-                con.execute("INSERT OR REPLACE INTO snapshots VALUES (?,?,?,?,?,?)", (
-                    run_at, label_name, len(jobs), len(seen), 1, None))
+                con.execute("INSERT OR REPLACE INTO snapshots (run_at, company, total_open, kept, ok, error, source_id, source_fingerprint) VALUES (?,?,?,?,?,?,?,?)", (
+                    run_at, label_name, len(jobs), len(seen), 1, None, source_policy.source_id(src), source_policy.fingerprint(src)))
             totals["relevant"] += len(seen)
             totals["new"] += new_here
             log(f"  {label_name:<30} {len(jobs):>4} listed, {len(seen):>3} relevant, {new_here:>3} new, {len(gone):>3} closed")

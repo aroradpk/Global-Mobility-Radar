@@ -32,14 +32,16 @@ Active branch: development/roadmap-and-hardening
 ## Phase 3 source trust slice (implemented, integration unverified)
 - Default-deny reviews for inherited companies; initial eligible connector types Greenhouse/Lever/Ashby only, no approved source yet. All feed, register refresh and automatic discovery network paths disabled in CLI/poll. Candidate employer research links in docs/source-trust.md.
 - SQLite additive source identity/fingerprint and description observation columns; polling does not infer closure from absence; no cached register/fuzzy evidence boosts; export excludes unapproved/legacy/stale rows, deduplicates canonical URLs and carries per-row evidence. Freshness CLI only counts successful approved source labels. No live network collection.
-- 10 new pure Python source-policy cases passed in reconstructed local files before commit; integration tests and exact blob comparison still pending, full CI remains blocked. Do not merge.
-- Phase 3 is partial: UI evidence, integration tests, actual source approvals, live smoke tests, exact entity/current register validation, salary and scam checks remain outstanding.
+- 10/10 pure Python source-policy cases passed locally (Python 3.13.5, python -m unittest discover -s tests -v); exact Git blobs match local files: bf986864800c8975fa26e2b6415eae72aac7860d and 61531bff0a74542c66c4e325184d7e048f4eda66 at ea7b8c56. Added six mocked pipeline/SQLite/export integration cases and two UI parser evidence cases; these are not yet executed. Full CI remains blocked. Do not merge.
+- Phase 3 is partial: UI evidence import now implemented (unverified); integration execution, actual source approvals, live smoke tests, exact entity/current register validation, salary and scam checks remain outstanding.
 
 ## Next goal
-Verify safe CI and full preview build; on isolated branch add mocked poll/export integration regression tests and surface per-vacancy evidence in the local dashboard. Then review a small set of official boards for permission and live connector smoke tests. Main unchanged, all 16 modules retained.
+Verify safe CI and full preview build; on isolated branch execute the new mocked poll/export/SQLite integration regressions and evidence parser tests; verify the local dashboard and fix failures. Then review a small set of official boards for permission and live connector smoke tests. Main unchanged, all 16 modules retained.
 
 ## Blockers and owner actions
 Direct clone is unavailable in this execution environment (DNS resolution failure); GitHub Actions reported no runs; settings could not be read. Full dependency installation must be verified remotely. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.
 
 ## Continuation procedure
 Read AGENTS.md, roadmap and fork audit. Check latest branch/commit and CI. Implement the next dependency-ready gate; update status and evidence in this file and roadmap. Preserve all required modules until the acceptance score reaches 100, with final end-to-end release verification. Do not assume background execution or scheduled services exist.
+
+- Additional Phase 3 changes: observation provenance also attached to snapshot health; freshness only counts successful matching source IDs and fingerprints. Export cutoff applied before deduplication. Optional evidence parsed and shown as unverified, with missing/stale warnings. Imported visa signals are excluded from active ranking boosts. No live jobs collected or sponsors approved.

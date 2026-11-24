@@ -66,7 +66,8 @@ CREATE TABLE IF NOT EXISTS snapshots (
 
 
 # Columns added after the first release; connect() adds any that are missing.
-MIGRATIONS = {"jobs": {"source_id": "TEXT", "source_fingerprint": "TEXT", "description_checked_at": "TEXT"}}
+MIGRATIONS = {"jobs": {"source_id": "TEXT", "source_fingerprint": "TEXT", "description_checked_at": "TEXT"},
+              "snapshots": {"source_id": "TEXT", "source_fingerprint": "TEXT"}}
 
 
 def connect(path=DB_PATH):

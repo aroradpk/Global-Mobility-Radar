@@ -51,6 +51,8 @@ def build(con, out_dir=OUT_DIR):
             continue
         if not source_policy.recently_observed(j["last_seen"]):
             continue
+        if j["posted_at"] and j["posted_at"][:10] < cutoff:
+            continue
         key = source_policy.canonical_url(j["url"])
         if key is None or key in seen_urls:
             continue
@@ -61,8 +63,6 @@ def build(con, out_dir=OUT_DIR):
                              "descriptionCheckedAt": _iso(j["description_checked_at"]) if checked else "",
                              "positive": _trim(j["visa_pos"], 500) if checked else "", "negative": _trim(j["visa_neg"], 500) if checked else "",
                              "relocation": _trim(j["visa_reloc"], 500) if checked else "", "status": "unverified_lead"}
-        if j["posted_at"] and j["posted_at"][:10] < cutoff:
-            continue
         ctry, skills = _split(j["countries"]), _split(j["skills"])
         rows.append([
             j["uid"], _trim(j["title"], 140), _trim(j["company"], 60), _trim(j["location"], 90), ctry,
@@ -88,7 +88,9 @@ def build(con, out_dir=OUT_DIR):
     country_of = {r["source"]: r["country"] for r in con.execute("SELECT source, MIN(country) country FROM sponsors GROUP BY source")}
     registers = [{"source": r["source"], "country": country_of.get(r["source"], ""), "rows": r["rows"],
                   "loadedAt": r["loaded_at"][:10]} for r in con.execute("SELECT * FROM register_loads ORDER BY source")]
-    meta = {"generatedAt": generated, "jobs": len(rows), "sources": sources, "registers": registers}
+    for register in registers:
+        register["evidenceKind"] = source_policy.register_kind(register["source"])
+    meta = {"generatedAt": generated, "jobs": len(rows), "sources": sources, "registers": registers, "approvedCompanyCount": len(approved), "verification": "unverified_leads"}
 
     def write(path, obj):
         path.write_text(json.dumps(obj, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

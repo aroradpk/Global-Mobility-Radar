@@ -54,3 +54,5 @@ Baseline: 0 accepted modules / 16; 0 / 100 weighted acceptance points. Earlier 8
 - 2026-11-25: local parser strict TypeScript compile with equivalent minimal types and five Node assertion scenarios passed against exact committed parser blob; actual Vitest, full build, browser network checks and CI remain pending. Vite public data publishing disabled; no release points awarded.
 
 - 2026-11-25: Phase 3 initial default-deny source review, observation freshness, conservative sponsorship evidence and export controls implemented. No approved sources or live polling. Pure policy regression cases passed locally before commit; integration and full CI not verified. M05/M06/M07/M14 in progress, zero new acceptance points.
+
+- Phase 3 verification: source-policy unit tests 10/10 passed locally and exact blob hashes verified against ea7b8c56. Added mocked integration and UI evidence tests (not run), evidence display and conservative scoring; no live source approvals. No module acceptance changes.

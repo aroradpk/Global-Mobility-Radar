@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { COUNTRIES, KNOWLEDGE_AS_OF, skillLabel } from "../data";
 import { matchJobs } from "../engine/jobs";
-import { MAX_FILE_BYTES, parseLocalJobs, type LocalJobs } from "../localJobs";
+import { MAX_FILE_BYTES, parseLocalJobs, isRecentObservation, type LocalJobs } from "../localJobs";
 import type { Answers, Profile } from "../types";
 
 const SIGNAL: Record<string, string> = {
@@ -19,9 +19,10 @@ export default function LocalResults({ profile, answers, onBack }: { profile: Pr
   const order = useMemo(() => answers.targets.length ? answers.targets : COUNTRIES.map(c => c.code), [answers.targets]);
   const countrySet = useMemo(() => new Set(order), [order]);
   const matches = useMemo(() => matchJobs(
-    (snapshot?.jobs ?? []).filter(j => !["blocked", "employer-no"].includes(j.visa) && j.countries.some(c => countrySet.has(c))),
+    (snapshot?.jobs ?? []).filter(j => !["blocked", "employer-no"].includes(j.visa) && j.countries.some(c => countrySet.has(c))).map(j => ({...j, visa: "unknown" as const, registerIn: []})),
     profile, answers, order, new Set(), 30000, true,
   ), [snapshot, profile, answers, order, countrySet]);
+  const originalSignals = useMemo(() => new Map(snapshot?.jobs.map(j => [j.id, j.visa]) ?? []), [snapshot]);
   const filtered = matches.filter(m => (m.job.title + " " + m.job.company + " " + m.job.location).toLowerCase().includes(query.toLowerCase()));
   async function read(file: File) {
     setError(""); setBusy(true);
@@ -54,16 +55,29 @@ export default function LocalResults({ profile, answers, onBack }: { profile: Pr
     </div>
     <div className="card stack">
       <h2>Job leads ({filtered.length})</h2>
-      <p>Ranking is an inherited heuristic, not an approval or hiring probability. Salary and visa requirements need independent checks. All labels are imported and unverified.</p>
+      <p>Ranking is an inherited heuristic, not an approval or hiring probability. Imported sponsorship labels do not increase the ranking. Salary and visa requirements need independent checks. All labels are imported and unverified.</p>
       <label>Filter title, employer or location<input value={query} onChange={e => {setQuery(e.target.value); setLimit(40);}}/></label>
       {snapshot && !filtered.length && <p>No matching leads in this snapshot.</p>}
-      {filtered.slice(0, limit).map(m => <article className="card" key={m.job.id}>
+      {filtered.slice(0, limit).map(m => {
+        const e = snapshot?.evidence.get(m.job.id);
+        const originalSignal = originalSignals.get(m.job.id) ?? "unknown";
+        const descriptionRecent = !!e && isRecentObservation(e.descriptionCheckedAt);
+        const observationRecent = !!e && isRecentObservation(e.observedAt);
+        return <article className="card" key={m.job.id}>
         <h3><a href={m.job.url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{m.job.title}</a></h3>
         <p>{m.job.company} · {m.job.location || m.job.countries.join(", ")} · Rank score: {m.score}</p>
-        <p>{SIGNAL[m.job.visa] ?? "Unknown"} — not verified · Salary: {m.job.salary || "Unknown"}</p>
+        <p>{descriptionRecent ? SIGNAL[originalSignal] ?? "Unknown" : "Unknown / stale evidence"} — not verified · Salary: {m.job.salary || "Unknown"}</p>
+        {e ? <details><summary>Imported source evidence</summary>
+          <p>Source: {e.sourceId} · Listing observation: {e.observedAt} ({observationRecent ? "recent" : "stale or invalid"})</p>
+          <p>Description observation: {e.descriptionCheckedAt || "Unknown"}</p>
+          <p>Evidence is supplied by the imported file, not independently checked by the browser.</p>
+          {e.positive && <p>Positive wording: {e.positive}</p>}
+          {e.negative && <p>Restrictive wording: {e.negative}</p>}
+          {e.relocation && <p>Relocation wording: {e.relocation}</p>}
+        </details> : <p>No per-vacancy observation evidence supplied.</p>}
         <p>Matched skills: {m.matchedSkills.map(skillLabel).join(", ") || "None recorded"} · Missing: {m.missingSkills.map(skillLabel).join(", ") || "None recorded"}</p>
         {m.languageBlock.length > 0 && <p>Language requirement not met or unknown: {m.languageBlock.join(", ")}</p>}
-      </article>)}
+      </article>; })}
       {filtered.length > limit && <button className="btn" onClick={() => setLimit(n => n + 40)}>Show more</button>}
     </div>
     <div className="card stack">

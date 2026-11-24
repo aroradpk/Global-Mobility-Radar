@@ -3,4 +3,4 @@ Use synthetic or individually authorised JSON exports only. Do not run inherited
 
 Vite binds to loopback, disables publicDir (no automatic inclusion of generated job snapshots in builds), and limits its filesystem allow list to the site and bundled knowledge. Manual import remains the only active job-data path.
 
-Phase 3 exports now carry optional evidence metadata. The preview still treats imported data as unverified leads; it does not yet show evidence details. No sources approved by default.
+Phase 3 exports now carry optional evidence metadata. The preview still treats imported data as unverified leads; it now displays imported evidence details and observation dates without certifying them. No sources approved by default.

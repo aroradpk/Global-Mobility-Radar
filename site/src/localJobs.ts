@@ -5,7 +5,11 @@ export const MAX_FILE_BYTES = 10 * 1024 * 1024;
 export const MAX_ROWS = 30000;
 const FIELDS = ["id", "title", "company", "location", "countries", "url", "posted", "firstSeen", "family", "seniority", "remote", "visa", "registerIn", "skills", "langs", "salary"] as const;
 const VISAS: Visa[] = ["explicit", "conditional", "register", "employer-yes", "relocation", "unknown", "blocked", "employer-no"];
-export interface LocalJobs { generatedAt: string; jobs: Job[]; duplicateCount: number }
+export interface LocalEvidence {
+  sourceId: string; sourceUrl: string; observedAt: string; descriptionCheckedAt: string;
+  positive: string; negative: string; relocation: string; status: "unverified_lead";
+}
+export interface LocalJobs { generatedAt: string; jobs: Job[]; duplicateCount: number; evidence: Map<string, LocalEvidence> }
 
 function text(value: unknown, max = 500): string {
   if (typeof value !== "string" || value.length > max) throw new Error("Invalid text field");
@@ -22,6 +26,28 @@ export function safeJobUrl(value: string): boolean {
     const url = new URL(value);
     return url.protocol === "https:" && !!url.hostname && !url.username && !url.password;
   } catch { return false; }
+}
+export function isRecentObservation(value: string, now = Date.now()): boolean {
+  const age = now - Date.parse(value);
+  return Number.isFinite(age) && age >= 0 && age <= 48 * 3600000;
+}
+function parseEvidence(value: unknown, jobs: Job[], generatedAt: string): Map<string, LocalEvidence> {
+  const evidence = new Map<string, LocalEvidence>();
+  if (value === undefined) return evidence; // legacy exports never gain a verification claim
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid evidence map");
+  const index = new Map(jobs.map(j => [j.id, j]));
+  for (const [id, entry] of Object.entries(value)) {
+    const job = index.get(id);
+    if (!job || !entry || typeof entry !== "object" || Array.isArray(entry)) throw new Error("Evidence without matching job");
+    const e = entry as Record<string, unknown>;
+    const sourceId = text(e.sourceId), sourceUrl = text(e.sourceUrl, 2048), observedAt = text(e.observedAt, 40), descriptionCheckedAt = text(e.descriptionCheckedAt, 40);
+    const positive = text(e.positive), negative = text(e.negative), relocation = text(e.relocation);
+    const observed = Date.parse(observedAt), checked = Date.parse(descriptionCheckedAt);
+    if (e.status !== "unverified_lead" || !sourceId.trim() || sourceUrl !== job.url || !Number.isFinite(observed) || observed > Date.parse(generatedAt) + 300000 ||
+        (descriptionCheckedAt ? !Number.isFinite(checked) || checked > observed : !!(positive || negative || relocation))) throw new Error("Invalid observation evidence");
+    evidence.set(id, {sourceId, sourceUrl, observedAt, descriptionCheckedAt, positive, negative, relocation, status: "unverified_lead"});
+  }
+  return evidence;
 }
 export function parseLocalJobs(raw: string): LocalJobs {
   if (new TextEncoder().encode(raw).length > MAX_FILE_BYTES) throw new Error("Job file exceeds 10 MiB");
@@ -47,5 +73,5 @@ export function parseLocalJobs(raw: string): LocalJobs {
     if (ids.has(id)) { duplicateCount++; continue; }
     ids.add(id); jobs.push(job);
   }
-  return { generatedAt, jobs, duplicateCount };
+  return { generatedAt, jobs, duplicateCount, evidence: parseEvidence(d.evidence, jobs, generatedAt) };
 }

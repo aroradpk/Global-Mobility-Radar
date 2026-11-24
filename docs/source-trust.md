@@ -14,4 +14,6 @@ Poll observations record source ID, exact configuration fingerprint and last-see
 - Zurich: https://www.zurich.com/en/careers
 - ING: https://careers.ing.com/en/search-jobs
 
-Next: integration fixtures for poll/export/SQLite migrations, UI evidence import, source-specific live permission and identity review, current register provenance, salary and scam checks. No live coverage or verification claim yet.
+Next: integration fixtures for poll/export/SQLite migrations, UI evidence import implemented; verify it in browser, source-specific live permission and identity review, current register provenance, salary and scam checks. No live coverage or verification claim yet.
+
+Snapshot health includes source ID and config fingerprint; only successful matching observations count toward freshness. Dashboard parses optional per-job evidence, warns on missing/stale observations, and does not use imported sponsorship labels to boost ranking.
