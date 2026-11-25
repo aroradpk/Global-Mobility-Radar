@@ -3,6 +3,7 @@ import { COUNTRIES, KNOWLEDGE_AS_OF, skillLabel } from "../data";
 import { matchJobs } from "../engine/jobs";
 import { MAX_FILE_BYTES, parseLocalJobs, isRecentObservation, type LocalJobs } from "../localJobs";
 import type { Answers, Profile } from "../types";
+import JobScreeningPanel from "./JobScreeningPanel";
 
 const SIGNAL: Record<string, string> = {
   explicit: "Imported explicit wording", conditional: "Imported conditional signal",
@@ -80,6 +81,7 @@ export default function LocalResults({ profile, answers, onBack }: { profile: Pr
       </article>; })}
       {filtered.length > limit && <button className="btn" onClick={() => setLimit(n => n + 40)}>Show more</button>}
     </div>
+    <JobScreeningPanel />
     <div className="card stack">
       <h2>Immigration references</h2>
       <p>Inherited information dated {KNOWLEDGE_AS_OF || "unknown"}. Not validated current rules. No eligibility calculation is active yet.</p>

@@ -35,8 +35,14 @@ Active branch: development/roadmap-and-hardening
 - 10/10 pure Python source-policy cases passed locally (Python 3.13.5, python -m unittest discover -s tests -v); exact Git blobs match local files: bf986864800c8975fa26e2b6415eae72aac7860d and 61531bff0a74542c66c4e325184d7e048f4eda66 at ea7b8c56. Added six mocked pipeline/SQLite/export integration cases and two UI parser evidence cases; these are not yet executed. Full CI remains blocked. Do not merge.
 - Phase 3 is partial: UI evidence import now implemented (unverified); integration execution, actual source approvals, live smoke tests, exact entity/current register validation, salary and scam checks remain outstanding.
 
+## Phase 3B manual screening (2026-11-25)
+- Added dated 2026 Germany/NL salary-only checks (7 criteria), conservative manual exact Dutch legal-name/KvK comparison, local recruitment scam wording flags, and a dashboard panel usable without a job export. No automatic sponsor or visa approval claims.
+- Official sources and design limits: docs/job-screening.md. Reviewed public ATS docs; no employer-specific collection permission established, registry stays empty. No live polling.
+- Shared TS screening cases compiled using global tsc strict/noUnused and executed with Node: 13/13 passed locally. Verify committed blob hashes against docs/job-screening.md. Vitest wrapper and UI not executed; inherited integration fixtures remain pending. Direct clone still DNS blocked, Actions zero runs.
+- No module accepted. Phase 3B partial; automated salary extraction, actual register retrieval and live source approval/validation outstanding.
+
 ## Next goal
-Verify safe CI and full preview build; on isolated branch execute the new mocked poll/export/SQLite integration regressions and evidence parser tests; verify the local dashboard and fix failures. Then review a small set of official boards for permission and live connector smoke tests. Main unchanged, all 16 modules retained.
+Resolve CI activation safely (disable inherited deployment workflows on main before enabling); execute full tests/build, mocked integration tests and browser preview. Complete first source-specific permission review, live smoke test and independent sponsor evidence adapter. Extend salary/scam checks to approved job data. Continue Phase 4 PR rules separately if external blockers persist; no acceptance or merge without verification.
 
 ## Blockers and owner actions
 Direct clone is unavailable in this execution environment (DNS resolution failure); GitHub Actions reported no runs; settings could not be read. Full dependency installation must be verified remotely. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.

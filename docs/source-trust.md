@@ -17,3 +17,5 @@ Poll observations record source ID, exact configuration fingerprint and last-see
 Next: integration fixtures for poll/export/SQLite migrations, UI evidence import implemented; verify it in browser, source-specific live permission and identity review, current register provenance, salary and scam checks. No live coverage or verification claim yet.
 
 Snapshot health includes source ID and config fingerprint; only successful matching observations count toward freshness. Dashboard parses optional per-job evidence, warns on missing/stale observations, and does not use imported sponsorship labels to boost ranking.
+
+Phase 3B manual screening is documented in [job-screening.md](job-screening.md). No automated sponsor approval or source activation.
