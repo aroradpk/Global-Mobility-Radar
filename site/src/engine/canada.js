@@ -11,6 +11,7 @@ export function assessCanada(input,today){
   if(edu>0&&input.credential!=="canadian"&&!fresh(input.credential,5))common.push("education credential / ECA date");
   const kind=opt("firstKind",["english","french"],common),first=lang("first",common),second=lang("second",common);
   mf.push(...common);mc.push(...common);
+  if (input.first === "none") mc.push("At least one approved language test required for Express Entry");
   const min1=Math.min(...first),min2=Math.min(...second),years=integer("fswYears",0,10,mf);
   const offer=opt("validOffer",["no","yes"],mf),adapt=Number(opt("otherAdaptability",["0","5","10"],mf));
   const ff={age:age>=18&&age<=35?12:age>=36&&age<=46?47-age:0,education:[0,5,15,19,21,22,23,25][edu],language:first.reduce((s,n)=>s+(n>=9?6:n===8?5:n===7?4:0),0)+(min2>=5?4:0),experience:years>=6?15:years>=4?13:years>=2?11:years>=1?9:0,arrangedEmployment:offer==="yes"?10:0,adaptability:Math.min(10,adapt+(offer==="yes"?5:0))};

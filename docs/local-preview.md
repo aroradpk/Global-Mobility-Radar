@@ -10,3 +10,5 @@ The manual vacancy screening panel works without a dataset: dated salary floor, 
 Optional open-data preview: see [phase3c.md](phase3c.md) for the explicit Swedish JobSearch command. Live access unverified; use synthetic data until smoke tests pass. Advertised salary comparisons are indicative only.
 
 Canada PR calculator accessible from header without CV. Local self-reported scenarios; see [Canada rules](canada-rules.md). No official decision or live monitoring.
+
+Jobs, Canada and Australia sections now keep in-memory state while switching; confirmed Clear all local data resets all sections. Australia points screen is current-date self-reported only, see [Australia rules](australia-rules.md). Browser verification pending.

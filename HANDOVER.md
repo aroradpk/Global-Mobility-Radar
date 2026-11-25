@@ -1,6 +1,6 @@
 # Development handover
 
-Updated: 2026-11-25
+Updated: 2026-11-26
 Repository: aroradpk/Global-Mobility-Radar
 Review baseline: 7df403c5545c5704227ed75561f5ec4a08f5db9c
 Active branch: development/roadmap-and-hardening
@@ -51,8 +51,13 @@ Active branch: development/roadmap-and-hardening
 - Safety-only CI bootstrap PR #2 created separately on maintenance/safe-ci-bootstrap (444a17d). Owner review/merge, then enable Actions and manually run Safe CI baseline on development branch. Main not modified. See docs/ci-unblock.md. No live or deployment permissions requested.
 - No module accepted; PNP/draw monitoring, evidence qualification, funds and NOC mapping outstanding. Phase 3 gates retained.
 
+## Phase 4B Australia and quality review (2026-11-26)
+- Implemented 189/190/491 current-date self-reported points screening and route comparison, conditional nomination points, evidence date/mandatory checks, private UI independent of CV. 28/28 pure JS cases passed on serialised function before commit. Full Vitest, browser and official parity pending. See docs/australia-rules.md.
+- Added owner-required continuous code/UX review in AGENTS.md and docs/quality-review.md. Fixed navigation unmount/data loss across Jobs/Canada/Australia and added explicit confirmed clear-all; browser validation pending. Fixed Canada CRS no-test total, added targeted regression not executed. No accepted module.
+- PR #2 still open/unmerged; Actions zero runs. Do not merge PR #1. No live source approvals or deployment.
+
 ## Next goal
-Phase 4B: Australia 189/190/491 points and mandatory screening; validate Canada against official calculator, complete outstanding Phase 3 and CI gates. No deferred gate removed.
+Priority: resolve CI via safety PR #2 and run full tests/build; official Canada/Australia parity and navigation/mobile/accessibility regression. Phase 4C: Germany Opportunity Card and EU Blue Card/settlement screening, then remaining target countries. Keep outstanding Phase 3 and policy monitoring gates. No deferred gate removed.
 
 ## Blockers and owner actions
 Direct clone is unavailable in this execution environment (DNS resolution failure); GitHub Actions reported no runs; settings could not be read. Full dependency installation must be verified remotely. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.

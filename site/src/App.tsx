@@ -6,30 +6,35 @@ import Review from "./components/Review";
 import Interview, { defaultAnswers } from "./components/Interview";
 import LocalResults from "./components/LocalResults";
 import CanadaPanel from "./components/CanadaPanel";
+import AustraliaPanel from "./components/AustraliaPanel";
 
 type Step = "upload" | "review" | "interview" | "results";
 
 export default function App() {
-  const [canadaOpen, setCanadaOpen] = useState(false);
+  const [view, setView] = useState<"jobs" | "canada" | "australia">("jobs");
+  const [resetKey, setResetKey] = useState(0);
   const [step, setStep] = useState<Step>("upload");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [answers, setAnswers] = useState<Answers | null>(null);
   const effective = useMemo(() => profile ? answers ?? defaultAnswers(profile) : null, [profile, answers]);
-  useEffect(() => { document.documentElement.lang = "en"; window.scrollTo({ top: 0 }); }, [step]);
-  const reset = () => { setCanadaOpen(false); setProfile(null); setAnswers(null); setStep("upload"); };
+  useEffect(() => { document.documentElement.lang = "en"; window.scrollTo({ top: 0 }); }, [step, view]);
+  const reset = () => { setView("jobs"); setResetKey(k=>k+1); setProfile(null); setAnswers(null); setStep("upload"); };
   return <LangContext.Provider value="en">
     <header className="top"><div className="wrap top-in">
       <strong>Global Mobility Radar</strong>
-      <span className="muted">Local preview · {step}</span><button className="btn small" onClick={()=>setCanadaOpen(v=>!v)}>{canadaOpen?"Back to job dashboard":"Canada PR calculator"}</button>
-      {profile && <button className="btn ghost small" onClick={reset}>Clear profile and start over</button>}
+      <span className="muted">Local preview</span>
+      <nav aria-label="Application sections" style={{display:"flex",flexWrap:"wrap",gap:8}}>{(["jobs","canada","australia"] as const).map(v=><button type="button" className="btn small" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v==="jobs"?"Jobs":v==="canada"?"Canada PR":"Australia skilled visas"}</button>)}</nav>
+      <button type="button" className="btn ghost small" onClick={()=>{if(window.confirm("Clear all local profiles, job imports and immigration scenarios?"))reset();}}>Clear all local data</button>
     </div></header>
     <main className="wrap main">
-      {canadaOpen ? <CanadaPanel/> : <>
+      <div key={"jobs-"+resetKey} hidden={view!=="jobs"}>
       {step === "upload" && <Upload onRead={(_text, p) => { setProfile(p); setAnswers(null); setStep("review"); }}/>}
       {step === "review" && profile && <Review profile={profile} onChange={setProfile} onBack={reset} onNext={() => setStep("interview")}/>}
       {step === "interview" && profile && effective && <Interview profile={profile} answers={effective} onChange={setAnswers} onBack={() => setStep("review")} onNext={() => {setAnswers(effective); setStep("results");}}/>}
       {step === "results" && profile && effective && <LocalResults profile={profile} answers={effective} onBack={() => setStep("interview")}/>}
-      </>}
+      </div>
+      <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel/></div>
+      <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel/></div>
     </main>
     <footer className="wrap foot">
       <p>Local preview: profile and imported job data are held in memory, cleared on reload or reset. No profile uploads, paid features or accounts. Opening a link visits an external site.</p>
