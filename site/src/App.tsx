@@ -8,12 +8,15 @@ import LocalResults from "./components/LocalResults";
 import CanadaPanel from "./components/CanadaPanel";
 import AustraliaPanel from "./components/AustraliaPanel";
 import GermanyPanel from "./components/GermanyPanel";
+import EuropePermitPanel from "./components/EuropePermitPanel";
 import { useAssessmentDate } from "./useAssessmentDate";
 
 type Step = "upload" | "review" | "interview" | "results";
+const SECTIONS = {jobs:"Jobs",canada:"Canada PR",australia:"Australia skilled visas",germany:"Germany visas",ireland:"Ireland permits",netherlands:"Netherlands permits"} as const;
+type View = keyof typeof SECTIONS;
 
 export default function App() {
-  const [view, setView] = useState<"jobs" | "canada" | "australia" | "germany">("jobs");
+  const [view, setView] = useState<View>("jobs");
   const today = useAssessmentDate();
   const [resetKey, setResetKey] = useState(0);
   const [step, setStep] = useState<Step>("upload");
@@ -28,7 +31,7 @@ export default function App() {
     <header className="top"><div className="wrap top-in">
       <strong>Global Mobility Radar</strong>
       <span className="muted">Local preview</span>
-      <nav aria-label="Application sections" className="section-nav">{(["jobs","canada","australia","germany"] as const).map(v=><button type="button" className="btn small" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v==="jobs"?"Jobs":v==="canada"?"Canada PR":v==="australia"?"Australia skilled visas":"Germany visas"}</button>)}</nav>
+      <nav aria-label="Application sections" className="section-nav">{(Object.keys(SECTIONS) as View[]).map(v=><button type="button" className="btn small" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{SECTIONS[v]}</button>)}</nav>
       <button type="button" className="btn ghost small" onClick={()=>{if(window.confirm("Clear all local profiles, job imports and immigration scenarios?"))reset();}}>Clear all local data</button>
     </div></header>
     <main className="wrap main">
@@ -42,6 +45,8 @@ export default function App() {
       <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today}/></div>
       <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today}/></div>
       <div key={"germany-"+resetKey} hidden={view!=="germany"}><GermanyPanel today={today}/></div>
+      <div key={"ireland-"+resetKey} hidden={view!=="ireland"}><EuropePermitPanel country="ireland" today={today}/></div>
+      <div key={"netherlands-"+resetKey} hidden={view!=="netherlands"}><EuropePermitPanel country="netherlands" today={today}/></div>
     </main>
     <footer className="wrap foot">
       <p>Local preview: profile, imported job data and immigration scenarios are held in memory, cleared on reload or Clear all local data. No profile uploads, paid features or accounts. Opening a link visits an external site.</p>

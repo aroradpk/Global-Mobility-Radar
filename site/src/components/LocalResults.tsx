@@ -69,7 +69,7 @@ export default function LocalResults({ profile, answers, onBack }: { profile: Pr
         return <article className="card" key={m.job.id}>
         <h3><a href={m.job.url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{m.job.title}</a></h3>
         <p>{m.job.company} · {m.job.location || m.job.countries.join(", ")} · Rank score: {m.score}</p>
-        <p>{descriptionRecent ? SIGNAL[originalSignal] ?? "Unknown" : "Unknown / stale evidence"} — not verified · Salary: {m.job.salary || "Unknown"}</p>
+        <p>{descriptionRecent && observationRecent ? SIGNAL[originalSignal] ?? "Unknown" : "Unknown / stale evidence"} — not verified · Salary: {m.job.salary || "Unknown"}</p>
         {salaryChecks.length ? <details><summary>Indicative advertised salary comparison (not eligibility)</summary><ul>{salaryChecks.map(({rule,status}) => <li key={rule.id}>{rule.label}: {status === "advertised_at_or_above" ? "advertised amount at or above floor" : status === "advertised_below" ? "advertised range below floor" : "advertised range crosses floor"} — <a href={rule.source} target="_blank" rel="noopener noreferrer">official criteria</a></li>)}</ul><p>Unverified advertisement only. Confirm contract, qualifying pay components and applicable criterion separately.</p></details> : <p>Automatic salary comparison: unknown or unsupported; manual review required.</p>}
         {e?.sourceId === "government:se:jobsearch" && <p>Source: <a href="https://data.arbetsformedlingen.se/dataservice/jobsearch/" target="_blank" rel="noopener noreferrer">Swedish Public Employment Service JobSearch (CC0)</a>. Government-portal lead, not direct employer verification.</p>}
         {e ? <details><summary>Imported source evidence</summary>
@@ -88,7 +88,7 @@ export default function LocalResults({ profile, answers, onBack }: { profile: Pr
     <JobScreeningPanel />
     <div className="card stack">
       <h2>Immigration references</h2>
-      <p>Inherited information dated {KNOWLEDGE_AS_OF || "unknown"}. Not validated current rules. Use the Canada, Australia and Germany sections for versioned screening; remaining routes are dated references.</p>
+      <p>Inherited information dated {KNOWLEDGE_AS_OF || "unknown"}. Not validated current rules. Use the Canada, Australia, Germany, Ireland and Netherlands sections for versioned screening; remaining routes are dated references.</p>
       {COUNTRIES.filter(c => countrySet.has(c.code)).map(c => <details key={c.code}>
         <summary>{c.name.en}</summary>
         {c.routes.map(r => <p key={r.id}><strong>{r.name.en}</strong> — {r.summary.en} {r.source.startsWith("https://") && <a href={r.source} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Official source (verify)</a>}</p>)}

@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useT } from "../i18n";
 import { parseCv } from "../cv/parse";
 import { SKILLS } from "../data";
@@ -8,12 +8,16 @@ import { Barcode, FlightArc, Plane } from "./Icons";
 export default function Upload({ onRead }: { onRead: (text: string, profile: Profile) => void }) {
   const { t } = useT();
   const input = useRef<HTMLInputElement>(null);
+  const mounted = useRef(true);
+  const reading = useRef(false);
+  useEffect(()=>{mounted.current=true;return ()=>{mounted.current=false;};},[]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [paste, setPaste] = useState("");
   const [over, setOver] = useState(false);
 
   const finish = (text: string) => {
+    if (!mounted.current) return;
     if (text.length > 500000) { setError("CV text exceeds 500,000 characters"); return; }
     if (text.replace(/\s+/g, " ").trim().length < 200) {
       setError(t("cvTooShort"));
@@ -25,6 +29,8 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
   const readFile = async (file: File) => {
     setError("");
     if (file.size > 10 * 1024 * 1024) { setError("CV file exceeds 10 MiB"); return; }
+    if (reading.current) return;
+    reading.current=true;
     setBusy(true);
     try {
       if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
@@ -34,9 +40,10 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
         finish(await file.text());
       }
     } catch (e) {
-      setError(String(e));
+      if(mounted.current) setError(String(e));
     } finally {
-      setBusy(false);
+      reading.current=false;
+      if(mounted.current) setBusy(false);
     }
   };
 

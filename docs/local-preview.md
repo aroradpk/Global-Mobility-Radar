@@ -18,3 +18,5 @@ Germany section: independent Opportunity Card, Blue Card and settlement screens.
 Job snapshot and filters are retained when editing preferences. Restarting the job profile discards them; global clear also clears other sections. Keyboard chooser and narrow-screen changes verified in candidate Chromium at 1280/320/390px; standard promoted CI pending.
 
 Browser regression: see [browser-quality.md](browser-quality.md). The first live Swedish source smoke returned 8 unverified leads from 20 records; no live file is bundled or scheduled.
+
+Ireland and Netherlands sections use the shared permit form; separate pathway inputs stay in memory, cleared by global reset. See [Ireland/Netherlands rules](ireland-netherlands-rules.md). Candidate verification pending.
