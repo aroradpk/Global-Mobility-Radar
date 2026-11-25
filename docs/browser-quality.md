@@ -1,0 +1,2 @@
+# Browser quality candidate
+Uses synthetic-only Playwright Chromium tests against a loopback production preview. Three viewport widths, access/validation, state retention, reset and request/storage checks. Not full accessibility or cross-browser certification. Candidate workflow resolves and audits isolated test tooling; production app manifest unchanged. A temporary bounded source smoke logs counts only, no dataset. Promote browser test and reviewed lock only, not the source job or dynamic lock generation.

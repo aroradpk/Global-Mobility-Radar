@@ -17,11 +17,12 @@ export default function App() {
   const today = useAssessmentDate();
   const [resetKey, setResetKey] = useState(0);
   const [step, setStep] = useState<Step>("upload");
+  const [hasResults, setHasResults] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [answers, setAnswers] = useState<Answers | null>(null);
   const effective = useMemo(() => profile ? answers ?? defaultAnswers(profile) : null, [profile, answers]);
   useEffect(() => { document.documentElement.lang = "en"; window.scrollTo({ top: 0 }); }, [step, view]);
-  const restartProfile = () => { setProfile(null); setAnswers(null); setStep("upload"); };
+  const restartProfile = () => { setHasResults(false); setProfile(null); setAnswers(null); setStep("upload"); };
   const reset = () => { setView("jobs"); setResetKey(k=>k+1); restartProfile(); };
   return <LangContext.Provider value="en">
     <header className="top"><div className="wrap top-in">
@@ -34,8 +35,9 @@ export default function App() {
       <div key={"jobs-"+resetKey} hidden={view!=="jobs"}>
       {step === "upload" && <Upload onRead={(_text, p) => { setProfile(p); setAnswers(null); setStep("review"); }}/>}
       {step === "review" && profile && <Review profile={profile} onChange={setProfile} onBack={restartProfile} onNext={() => setStep("interview")}/>}
-      {step === "interview" && profile && effective && <Interview profile={profile} answers={effective} onChange={setAnswers} onBack={() => setStep("review")} onNext={() => {setAnswers(effective); setStep("results");}}/>}
-      {step === "results" && profile && effective && <LocalResults profile={profile} answers={effective} onBack={() => setStep("interview")}/>}
+      {step === "interview" && profile && effective && <Interview profile={profile} answers={effective} onChange={setAnswers} onBack={() => setStep("review")} onNext={() => {setAnswers(effective); setHasResults(true); setStep("results");}}/>}
+      {/* Keep the imported snapshot, filters and screening work while editing preferences. */}
+      {hasResults && profile && effective && <div hidden={step!=="results"}><LocalResults profile={profile} answers={effective} onBack={() => setStep("interview")}/></div>}
       </div>
       <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today}/></div>
       <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today}/></div>

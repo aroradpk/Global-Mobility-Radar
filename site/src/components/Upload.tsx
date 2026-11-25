@@ -52,8 +52,15 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
         role="button"
         tabIndex={0}
         aria-label={t("dropCv")}
-        onClick={() => input.current?.click()}
-        onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && input.current?.click()}
+        aria-disabled={busy}
+        aria-busy={busy}
+        onClick={() => { if (!busy) input.current?.click(); }}
+        onKeyDown={(e) => {
+          if (e.target === e.currentTarget && (e.key === "Enter" || e.key === " ")) {
+            e.preventDefault();
+            if (!busy) input.current?.click();
+          }
+        }}
         onDragOver={(e) => {
           e.preventDefault();
           setOver(true);
@@ -63,7 +70,7 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
           e.preventDefault();
           setOver(false);
           const f = e.dataTransfer.files[0];
-          if (f) readFile(f);
+          if (f && !busy) void readFile(f);
         }}
       >
         <div className="main-part">
@@ -97,15 +104,22 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
           type="file"
           accept="application/pdf,.pdf,.txt,.md"
           hidden
-          onChange={(e) => e.target.files?.[0] && readFile(e.target.files[0])}
+          disabled={busy}
+          onClick={e => e.stopPropagation()}
+          onChange={e => {
+            const file = e.currentTarget.files?.[0];
+            e.currentTarget.value = "";
+            if (file && !busy) void readFile(file);
+          }}
         />
       </div>
 
       <p className="privacy">🔒 {t("privacy")}</p>
       <details className="paste">
         <summary>{t("orPaste")}</summary>
+        <label htmlFor="cv-paste">CV text</label>
         <textarea maxLength={500000} id="cv-paste" value={paste} onChange={(e) => setPaste(e.target.value)} rows={10} />
-        <button className="btn primary" disabled={!paste.trim()} onClick={() => finish(paste)}>
+        <button className="btn primary" disabled={busy || !paste.trim()} onClick={() => finish(paste)}>
           {t("readCv")}
         </button>
       </details>

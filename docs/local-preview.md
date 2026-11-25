@@ -14,3 +14,5 @@ Canada PR calculator accessible from header without CV. Local self-reported scen
 Jobs, Canada and Australia sections now keep in-memory state while switching; confirmed Clear all local data resets all sections. Australia points screen is current-date self-reported only, see [Australia rules](australia-rules.md). Browser verification pending.
 
 Germany section: independent Opportunity Card, Blue Card and settlement screens. Shared assessment date refresh re-evaluates submitted country scenarios when the UTC day changes or browser resumes. See [Germany rules](germany-rules.md). Browser validation pending.
+
+Job snapshot and filters are retained when editing preferences. Restarting the job profile discards them; global clear also clears other sections. Keyboard chooser and narrow-screen changes; browser candidate tests pending.
