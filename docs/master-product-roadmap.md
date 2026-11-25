@@ -85,3 +85,5 @@ Baseline: 0 accepted modules / 16; 0 / 100 weighted acceptance points. Earlier 8
 
 
 Candidate run 45707512256: live Swedish source smoke passed (20 raw hits, 8 retained, unknown sponsorship only; no saved payload). Existing site/pipeline/safety/audit jobs passed; browser tool audit reported 0 vulnerabilities. Desktop keyboard file chooser, short CV rejection, job import/dedupe/malformed replacement and preference snapshot/filter retention passed; browser run stopped locating Germany Qualification route by exact label. Explicit accessible select names added in all country panels and test timeout shortened; rerun pending. Removed temporary live-source job to avoid repeat requests. Not yet promoted.
+
+Candidate run 45707791691: complete desktop (1280px) browser scenario passed, including section state, cancel/confirm clear, reload, storage and request checks. 320px CV/import/preferences retention passed; Canada form overflow detected (340px scroll vs 320px viewport). Added shrinkable grid/form tracks and controls, overflow diagnostics and pre-reset storage checks. Rerun required; no mobile pass claimed yet.

@@ -435,3 +435,9 @@ input[type="file"], input[type="date"] { max-width: 100%; min-width: 0; }
 .pass:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 .pass[aria-disabled="true"] { cursor: wait; }
 @media (max-width: 360px) { .card, .interview .q { padding: 16px; } .top-in { gap: 12px; } .pass .codes { gap: 8px; } }
+
+/* Grid items and native selects must be allowed to shrink below intrinsic option widths. */
+.stack { grid-template-columns: minmax(0, 1fr); }
+.card details, .card fieldset, .card label, .card .stack { min-width: 0; max-width: 100%; }
+.card label > select, .card label > input:not([type="checkbox"]):not([type="radio"]), .card label > textarea { min-width: 0; width: 100%; max-width: 100%; }
+.card details > summary { min-width: 0; overflow-wrap: anywhere; }

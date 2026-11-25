@@ -23,7 +23,7 @@ async function ready() {
   throw Error("Preview server did not start");
 }
 async function noOverflow(page, label) {
-  const widths = await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,client:document.documentElement.clientWidth}));
+  const widths = await page.evaluate(()=>{ const client=document.documentElement.clientWidth; const scroll=document.documentElement.scrollWidth; const offenders=scroll>client+1?Array.from(document.querySelectorAll("body *")).filter(el=>el.getBoundingClientRect().right>client+1).slice(0,12).map(el=>({tag:el.tagName,cls:typeof el.className==="string"?el.className:"",right:Math.round(el.getBoundingClientRect().right)})):[]; return {scroll,client,offenders}; });
   assert.ok(widths.scroll <= widths.client+1, label+" horizontal overflow: "+JSON.stringify(widths));
 }
 async function visible(locator){await locator.waitFor({state:"visible"});}
@@ -109,6 +109,9 @@ async function run(viewport) {
     await inputValue(panel(page).getByLabel("Age in completed years at application"),"32");
     await openSection(page,"Jobs");
     await visible(page.getByRole("link",{name:"Synthetic Software Engineer",exact:true}));
+    const activeStorage = await page.evaluate(async()=>({local:localStorage.length,session:sessionStorage.length,databases:(await indexedDB.databases()).length,caches:(await caches.keys()).length}));
+    assert.deepEqual(activeStorage,{local:0,session:0,databases:0,caches:0});
+    assert.deepEqual(await context.cookies(),[]);
     pass(viewport.width+" navigation retains independent scenario and job state");
     page.once("dialog",dialog=>dialog.dismiss());
     await page.getByRole("button",{name:"Clear all local data",exact:true}).click();
