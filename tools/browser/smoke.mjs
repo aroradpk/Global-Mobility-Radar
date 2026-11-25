@@ -129,6 +129,25 @@ async function run(viewport) {
     await openSection(page,"Netherlands permits");
     await inputValue(panel(page).getByLabel(/Confirmed relevant experience months/),"36");
     pass(viewport.width+" Ireland and Netherlands route navigation, results and retention");
+    await openSection(page,"New Zealand visas");
+    await visible(page.getByRole("heading",{name:"New Zealand — employment and residence pathways"}));
+    await panel(page).getByRole("button",{name:"Skilled Migrant — points",exact:true}).click();
+    await panel(page).getByRole("combobox",{name:"Single skill category"}).selectOption("qualification");
+    await panel(page).getByRole("combobox",{name:"Recognised highest qualification"}).selectOption("foreignBachelor");
+    await panel(page).getByLabel("Qualifying NZ skilled work months in applicable look-back window").fill("18");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByRole("heading",{name:"Review required"}));
+    await noOverflow(page,"NZ points");
+    await panel(page).getByRole("button",{name:"Permanent Resident Visa",exact:true}).click();
+    await panel(page).getByLabel("Continuous qualifying resident visa months from first arrival or onshore grant").fill("24");
+    await panel(page).getByLabel("Days in NZ as resident in most recent 12-month period").fill("184");
+    await noOverflow(page,"NZ permanent residence");
+    await openSection(page,"Canada PR");
+    await openSection(page,"New Zealand visas");
+    await inputValue(panel(page).getByLabel("Days in NZ as resident in most recent 12-month period"),"184");
+    await panel(page).getByRole("button",{name:"Skilled Migrant — points",exact:true}).click();
+    await inputValue(panel(page).getByLabel("Qualifying NZ skilled work months in applicable look-back window"),"18");
+    pass(viewport.width+" NZ pathway input retention and missing evidence");
     await openSection(page,"Canada PR");
     await inputValue(panel(page).getByLabel("Age in completed years",{exact:true}),"30");
     await openSection(page,"Australia skilled visas");
@@ -159,6 +178,10 @@ async function run(viewport) {
     await openSection(page,"Netherlands permits");
     await panel(page).getByRole("button",{name:"EU Blue Card",exact:true}).click();
     await inputValue(panel(page).getByRole("combobox",{name:"Qualifying education or experience"}),"");
+    await openSection(page,"Jobs");
+    await openSection(page,"New Zealand visas");
+    await panel(page).getByRole("button",{name:"Skilled Migrant — points",exact:true}).click();
+    await inputValue(panel(page).getByRole("combobox",{name:"Single skill category"}),"");
     await openSection(page,"Jobs");
     // Delay only this synthetic file read, then release it after a confirmed reset.
     await page.evaluate(()=>{const original=File.prototype.text;File.prototype.text=function(){if(this.name!=="delayed-cv.txt")return original.call(this);return new Promise(resolve=>{globalThis.__releaseSyntheticCv=()=>{File.prototype.text=original;resolve("Synthetic applicant. Software engineer. JavaScript React Node.js. ".repeat(6));delete globalThis.__releaseSyntheticCv;};});};});
