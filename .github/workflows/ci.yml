@@ -89,6 +89,10 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
+      - name: Pin npm 11 resolver on disposable runner
+        run: |
+          npm install --global --ignore-scripts --no-audit --no-fund npm@11.21.3
+          test "$(npm --version)" = "11.21.3"
       - name: Resolve candidate from a fresh lock on the disposable runner
         run: |
           npm pkg set devDependencies.vite=7.3.8 devDependencies.vitest=4.1.12 devDependencies.@vitejs/plugin-react=5.1.4
