@@ -160,6 +160,16 @@ async function run(viewport) {
     await panel(page).getByRole("button",{name:"EU Blue Card",exact:true}).click();
     await inputValue(panel(page).getByRole("combobox",{name:"Qualifying education or experience"}),"");
     await openSection(page,"Jobs");
+    // Delay only this synthetic file read, then release it after a confirmed reset.
+    await page.evaluate(()=>{const original=File.prototype.text;File.prototype.text=function(){if(this.name!=="delayed-cv.txt")return original.call(this);return new Promise(resolve=>{globalThis.__releaseSyntheticCv=()=>{File.prototype.text=original;resolve("Synthetic applicant. Software engineer. JavaScript React Node.js. ".repeat(6));delete globalThis.__releaseSyntheticCv;};});};});
+    await panel(page).locator('input[type="file"]').setInputFiles({name:"delayed-cv.txt",mimeType:"text/plain",buffer:Buffer.from("synthetic")});
+    await page.waitForFunction(()=>typeof globalThis.__releaseSyntheticCv==="function");
+    page.once("dialog",dialog=>dialog.accept());
+    await page.getByRole("button",{name:"Clear all local data",exact:true}).click();
+    await page.evaluate(async()=>{globalThis.__releaseSyntheticCv();await Promise.resolve();await Promise.resolve();});
+    await visible(page.getByRole("heading",{name:/Where are you flying/}));
+    assert.equal(await page.getByRole("heading",{name:/Here\x27s what we read/}).count(),0);
+    pass(viewport.width+" delayed CV read cannot restore cleared profile");
     await page.reload();
     await visible(page.getByRole("heading",{name:/Where are you flying/}));
     const storage=await page.evaluate(()=>({local:localStorage.length,session:sessionStorage.length}));

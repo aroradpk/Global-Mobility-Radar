@@ -126,7 +126,7 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
         <summary>{t("orPaste")}</summary>
         <label htmlFor="cv-paste">CV text</label>
         <textarea maxLength={500000} id="cv-paste" value={paste} onChange={(e) => setPaste(e.target.value)} rows={10} />
-        <button className="btn primary" disabled={busy || !paste.trim()} onClick={() => finish(paste)}>
+        <button className="btn primary" disabled={busy || !paste.trim()} onClick={() => {if(!reading.current)finish(paste);}}>
           {t("readCv")}
         </button>
       </details>

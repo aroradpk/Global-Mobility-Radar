@@ -62,6 +62,12 @@ const cases:Case[]=[
 ["Invalid amount","netherlands","blue",blue,{salary:"1e5"},unknown],
 ["Unknown facts","netherlands","blue",{}, {},unknown],
 ["Outdated pack","ireland","critical",ie,{},unknown,"2026-12-27"],
-["Invalid date","netherlands","hsm",nl,{},unknown,"2026-11-31"]
+["Invalid date","netherlands","hsm",nl,{},unknown,"2026-11-31"],
+["CSEP exact anniversary manual","ireland","critical",ie,{tier:"graduate",degreeDate:"2025-11-26",salary:"36848"},unknown],
+["Blue Card exact anniversary manual","netherlands","blue",blue,{tier:"reduced",salary:"4754",degreeDate:"2023-11-26",reduced:"yes"},unknown],
+["Impossible IT work duration","netherlands","blue",blue,{experience:"85"},unknown],
+["HSM minor outside scope","netherlands","hsm",nl,{age:"17"},unknown]
 ];
 describe("Ireland and Netherlands ordinary permit screens",()=>{for(const [name,country,id,base,patch,expected,date] of cases)it(name,()=>expect(assessPermit(country,id,{...base,...patch},date??day).status).toBe(expected));});
+
+it("does not report ordinary salary failures for unsupported hours",()=>{const r=assessPermit("ireland","critical",{...ie,pay:"no",salary:"100"},day);expect(r.status).toBe(unknown);expect(r.failed).toEqual([]);expect(r.details).toEqual([]);});

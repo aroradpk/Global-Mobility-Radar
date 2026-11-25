@@ -51,7 +51,8 @@ function salary(input:Facts,amount:number,unit:string,out:Checks,strict=false) {
 function recentYears(raw:string,today:string,years:number):boolean {
   if(dateValue(raw)===null||raw>today)return false;
   const boundary=String(Number(raw.slice(0,4))+years)+raw.slice(4);
-  return today <= (dateValue(boundary)===null?boundary.slice(0,8)+"28":boundary);
+  // Exact anniversary needs manual review rather than assuming a reduced criterion.
+  return today < (dateValue(boundary)===null?boundary.slice(0,8)+"28":boundary);
 }
 const nlAmount=(id:string)=>SALARY_RULES.find(rule=>rule.id===id)!.amount;
 const ieCommon:Field[]=[
@@ -65,7 +66,7 @@ const ieCommon:Field[]=[
   yes("general","Remaining permit conditions, start-date filing window and entry/registration requirements reviewed and met"),
 ];
 const nlCommon:Field[]=[
-  yes("scope","Ordinary first application for a non-EU/EEA/Swiss skilled worker; no special mobility, research, medical training or renewal rules",true),
+  yes("scope","Ordinary first application for an adult non-EU/EEA/Swiss skilled worker; no special mobility, research, medical training or renewal rules",true),
   yes("offer","Qualifying employment contract with an employer in the Netherlands"),
   field("salary","Qualifying gross monthly salary in EUR (excluding holiday allowance)","money"),
   yes("pay","Contractual pay components, monthly payment and applicable income rules verified"),
@@ -126,7 +127,7 @@ const nlRoutes:Route[]=[
       yes("market","Agreed pay meets the market rate for this role"),...sponsorFields],
     check:(i,t,o)=>{
       const age=number(i.age);
-      if(i.tier==="age"&&age!==null){if(age>120)o.missing.push("Enter a plausible age");else salary(i,nlAmount(age<30?"nl-under30":"nl-30plus"),"month",o);}
+      if(i.tier==="age"&&age!==null){if(age<18||age>120)o.missing.push("Confirm adult age within supported scope");else salary(i,nlAmount(age<30?"nl-under30":"nl-30plus"),"month",o);}
       if(i.tier==="reduced")salary(i,nlAmount("nl-reduced"),"month",o);
       const result=compareDutchSponsor({employerName:i.employerName??"",employerKvk:i.employerKvk??"",registerName:i.registerName??"",registerKvk:i.registerKvk??"",publicationDate:i.publicationDate??"",checkedDate:i.checkedDate??"",sourceConfirmed:i.sourceConfirmed==="yes"},t);
       if(result==="mismatch")o.failed.push("Hiring legal entity or KvK number differs from the register entry");
@@ -149,6 +150,8 @@ const nlRoutes:Route[]=[
       minimum(i,"contract",6,"Employment contract must last at least six months",o);
       if(i.qualification==="none")o.failed.push("Qualifying education or experience is required");
       if(i.qualification==="it"||i.qualification==="other")minimum(i,"experience",i.qualification==="it"?36:60,"Insufficient qualifying professional experience",o);
+      const experience=number(i.experience);
+      if(i.qualification==="it"&&experience!==null&&experience>84)o.missing.push("IT experience within seven years cannot exceed 84 non-overlapping months");
       if(i.tier==="standard")salary(i,nlAmount("nl-blue"),"month",o);
       if(i.tier==="reduced"){salary(i,nlAmount("nl-blue-reduced"),"month",o);if(i.degreeDate&&!recentYears(i.degreeDate,t,3))o.missing.push("Reduced Blue Card criterion needs a qualifying recent graduation/defence date");}
     }},
@@ -184,7 +187,8 @@ export function assessPermit(country:Country,id:string,input:Facts,today:string)
     route.check(input,today,out);
   }
   // Out-of-scope or unsupported pay/permit cases cannot be definitively failed by ordinary thresholds.
-  const scopeReview=route?.fields.some(f=>f.manual&&input[f.key]==="no")??false;
+  const scopeReview=route?.fields.some(f=>["scope","standard","pay"].includes(f.key)&&f.manual&&input[f.key]==="no")??false;
+  if(scopeReview){out.failed=[];out.details=[];}
   const status:Status=scopeReview||!route||dateValue(today)===null||today<REVIEWED||today>REVIEW_BY?"review_required":out.failed.length?"requirements_not_met":out.missing.length?"review_required":"meets_self_reported_screen";
   return {status,missing:[...new Set(out.missing)],failed:[...new Set(out.failed)],details:out.details};
 }
