@@ -64,3 +64,5 @@ Baseline: 0 accepted modules / 16; 0 / 100 weighted acceptance points. Earlier 8
 - 2026-11-25 Phase 4A: Canada FSW/CRS self-reported scenario including LMI, 25 synthetic JavaScript regressions passed; full Vitest/browser/official calculator parity pending. Safety-only CI bootstrap PR #2 open, owner action pending. No acceptance points. See docs/canada-rules.md and docs/ci-unblock.md.
 
 - 2026-11-26 Phase 4B: Australian 189/190/491 points and mandatory self-reported screening, conditional nomination comparison; 28 synthetic JS regressions passed, full Vitest/browser/official parity pending. Continuous review owner requirement added; navigation retention and Canada first-test issue addressed with unexecuted integration regression. See docs/australia-rules.md and docs/quality-review.md. All modules retained; zero acceptance points. CI PR #2 open.
+
+- Phase 4B follow-up static review: separated profile restart and global reset; improved navigation state/focus styles and mobile touch targets. No browser acceptance claim.

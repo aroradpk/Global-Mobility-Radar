@@ -66,3 +66,5 @@ Direct clone is unavailable in this execution environment (DNS resolution failur
 Read AGENTS.md, roadmap and fork audit. Check latest branch/commit and CI. Implement the next dependency-ready gate; update status and evidence in this file and roadmap. Preserve all required modules until the acceptance score reaches 100, with final end-to-end release verification. Do not assume background execution or scheduled services exist.
 
 - Additional Phase 3 changes: observation provenance also attached to snapshot health; freshness only counts successful matching source IDs and fingerprints. Export cutoff applied before deduplication. Optional evidence parsed and shown as unverified, with missing/stale warnings. Imported visa signals are excluded from active ranking boosts. No live jobs collected or sponsors approved.
+
+- Phase 4B follow-up: separate profile restart from global reset; selected/focus navigation styles, mobile touch targets and explicit hidden wrappers. Static integration review only; browser tests pending.
