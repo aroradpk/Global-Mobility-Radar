@@ -74,3 +74,41 @@ jobs:
           node-version: "22"
       - name: Audit locked dependencies (high/critical gate)
         run: npm audit --package-lock-only --audit-level=high
+
+  dependency-upgrade-candidate:
+    if: github.ref == 'refs/heads/development/security-dependency-candidate'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: site
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Resolve exact candidate versions without lifecycle scripts
+        run: npm install --save-dev --save-exact --package-lock-only --ignore-scripts --no-audit --no-fund vite@7.3.8 vitest@4.1.12 @vitejs/plugin-react@5.1.4
+      - name: Audit candidate lock
+        run: npm audit --package-lock-only --audit-level=high
+      - run: npm ci --ignore-scripts --no-audit --no-fund
+      - run: npm test
+      - run: npm run build
+      - name: Print validated candidate manifests for review
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync } from 'node:fs';
+          for (const name of ['package.json', 'package-lock.json']) {
+            const data = JSON.parse(readFileSync(name, 'utf8'));
+            if (name === 'package-lock.json') {
+              for (const entry of Object.values(data.packages)) {
+                if (entry.resolved && (!entry.resolved.startsWith('https://registry.npmjs.org/') || !entry.integrity)) throw new Error('Unexpected lock provenance');
+              }
+            }
+            console.log('CANDIDATE_BEGIN ' + name);
+            for (const line of JSON.stringify(data, null, 2).split('\n')) console.log('CANDIDATE_LINE ' + line);
+            console.log('CANDIDATE_END ' + name);
+          }
+          NODE
