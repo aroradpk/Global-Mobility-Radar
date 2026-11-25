@@ -41,8 +41,13 @@ Active branch: development/roadmap-and-hardening
 - Shared TS screening cases compiled using global tsc strict/noUnused and executed with Node: 13/13 passed locally. Verify committed blob hashes against docs/job-screening.md. Vitest wrapper and UI not executed; inherited integration fixtures remain pending. Direct clone still DNS blocked, Actions zero runs.
 - No module accepted. Phase 3B partial; automated salary extraction, actual register retrieval and live source approval/validation outstanding.
 
+## Phase 3C bounded source preview (2026-11-25)
+- Official Swedish JobSearch CC0/public/no-key source reviewed; separate on-demand bounded connector and UI attribution implemented. Default no requests; runtime robots gate. Germany Arbeitnow API reachable through web research, but not approved for automated use; exact direct employer vacancy not verified. Existing ATS registry still empty.
+- 8/8 new Python adapter tests and 6/6 advertised-salary TS cases passed locally in isolated reconstruction; strict TS compile passed. Exact expected blob hashes, commands and limitations in docs/phase3c.md. Live connector attempt failed DNS on robots request; no snapshot created. CI still zero runs; full previous pipeline integration and UI build/browser tests outstanding.
+- Indicative salary comparison now attached to imported job cards when strict format and fresh observation criteria hold, otherwise unknown. No ranking or eligibility claim. No live sponsor check, no deployment, no accepted module.
+
 ## Next goal
-Resolve CI activation safely (disable inherited deployment workflows on main before enabling); execute full tests/build, mocked integration tests and browser preview. Complete first source-specific permission review, live smoke test and independent sponsor evidence adapter. Extend salary/scam checks to approved job data. Continue Phase 4 PR rules separately if external blockers persist; no acceptance or merge without verification.
+Phase 4A: independently implement Canada's FSW/CRS rules from official current sources while Phase 3 live smoke tests, direct employer verification, broader salary extraction and sponsor adapters remain blocked/pending. Before any merge, resolve CI safely, execute full pipeline and UI checks and validate live source schema/permissions. No deferred gate removed.
 
 ## Blockers and owner actions
 Direct clone is unavailable in this execution environment (DNS resolution failure); GitHub Actions reported no runs; settings could not be read. Full dependency installation must be verified remotely. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.

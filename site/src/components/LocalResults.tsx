@@ -4,6 +4,7 @@ import { matchJobs } from "../engine/jobs";
 import { MAX_FILE_BYTES, parseLocalJobs, isRecentObservation, type LocalJobs } from "../localJobs";
 import type { Answers, Profile } from "../types";
 import JobScreeningPanel from "./JobScreeningPanel";
+import { advertisedSalary } from "../engine/advertisedSalary";
 
 const SIGNAL: Record<string, string> = {
   explicit: "Imported explicit wording", conditional: "Imported conditional signal",
@@ -64,10 +65,13 @@ export default function LocalResults({ profile, answers, onBack }: { profile: Pr
         const originalSignal = originalSignals.get(m.job.id) ?? "unknown";
         const descriptionRecent = !!e && isRecentObservation(e.descriptionCheckedAt);
         const observationRecent = !!e && isRecentObservation(e.observedAt);
+        const salaryChecks = advertisedSalary(m.job.countries, m.job.salary, observationRecent && descriptionRecent, new Date().toISOString().slice(0,10));
         return <article className="card" key={m.job.id}>
         <h3><a href={m.job.url} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">{m.job.title}</a></h3>
         <p>{m.job.company} · {m.job.location || m.job.countries.join(", ")} · Rank score: {m.score}</p>
         <p>{descriptionRecent ? SIGNAL[originalSignal] ?? "Unknown" : "Unknown / stale evidence"} — not verified · Salary: {m.job.salary || "Unknown"}</p>
+        {salaryChecks.length ? <details><summary>Indicative advertised salary comparison (not eligibility)</summary><ul>{salaryChecks.map(({rule,status}) => <li key={rule.id}>{rule.label}: {status === "advertised_at_or_above" ? "advertised amount at or above floor" : status === "advertised_below" ? "advertised range below floor" : "advertised range crosses floor"} — <a href={rule.source} target="_blank" rel="noopener noreferrer">official criteria</a></li>)}</ul><p>Unverified advertisement only. Confirm contract, qualifying pay components and applicable criterion separately.</p></details> : <p>Automatic salary comparison: unknown or unsupported; manual review required.</p>}
+        {e?.sourceId === "government:se:jobsearch" && <p>Source: <a href="https://data.arbetsformedlingen.se/dataservice/jobsearch/" target="_blank" rel="noopener noreferrer">Swedish Public Employment Service JobSearch (CC0)</a>. Government-portal lead, not direct employer verification.</p>}
         {e ? <details><summary>Imported source evidence</summary>
           <p>Source: {e.sourceId} · Listing observation: {e.observedAt} ({observationRecent ? "recent" : "stale or invalid"})</p>
           <p>Description observation: {e.descriptionCheckedAt || "Unknown"}</p>
