@@ -40,6 +40,7 @@ async function run(viewport) {
     await route.continue();
   });
   const page=await context.newPage();
+  page.setDefaultTimeout(10000);
   page.on("pageerror",err=>errors.push(err.message));
   page.on("websocket",()=>unexpected.push("websocket"));
   await page.clock.setFixedTime(date);
@@ -96,7 +97,8 @@ async function run(viewport) {
     await visible(panel(page).getByText(/Base points: Unknown/));
     await noOverflow(page,"Australia");
     await openSection(page,"Germany visas");
-    await panel(page).getByLabel("Qualification route",{exact:true}).selectOption("foreign");
+    await visible(page.getByRole("heading",{name:"Germany — job search, employment and settlement"}));
+    await panel(page).getByRole("combobox",{name:"Qualification route",exact:true}).selectOption("foreign");
     await panel(page).getByLabel("Age in completed years at application").fill("32");
     await noOverflow(page,"Germany");
     await openSection(page,"Canada PR");

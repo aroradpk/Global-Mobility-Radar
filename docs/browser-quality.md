@@ -1,2 +1,5 @@
 # Browser quality candidate
 Uses synthetic-only Playwright Chromium tests against a loopback production preview. Three viewport widths, access/validation, state retention, reset and request/storage checks. Not full accessibility or cross-browser certification. Candidate workflow resolves and audits isolated test tooling; production app manifest unchanged. A temporary bounded source smoke logs counts only, no dataset. Promote browser test and reviewed lock only, not the source job or dynamic lock generation.
+
+
+Candidate run 45707512256: live Swedish source smoke passed (20 raw hits, 8 retained, unknown sponsorship only; no saved payload). Existing site/pipeline/safety/audit jobs passed; browser tool audit reported 0 vulnerabilities. Desktop keyboard file chooser, short CV rejection, job import/dedupe/malformed replacement and preference snapshot/filter retention passed; browser run stopped locating Germany Qualification route by exact label. Explicit accessible select names added in all country panels and test timeout shortened; rerun pending. Removed temporary live-source job to avoid repeat requests. Not yet promoted.

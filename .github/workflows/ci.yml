@@ -117,26 +117,3 @@ jobs:
           console.log('BROWSER_LOCK_END');
           NODE
 
-  government-source-smoke:
-    if: github.ref == 'refs/heads/development/browser-quality-candidate' && github.event_name == 'push'
-    runs-on: ubuntu-latest
-    timeout-minutes: 3
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          persist-credentials: false
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
-        with:
-          python-version: "3.12"
-      - name: One bounded Swedish government search (counts only)
-        working-directory: pipeline
-        run: |
-          python - <<'PY'
-          import datetime as dt
-          from jobtracker import jobsearch_preview as preview
-          payload = preview.fetch_search('javascript')
-          result = preview.snapshot(payload,dt.datetime.now(dt.timezone.utc))
-          assert len(result['rows']) <= 20
-          assert all(row[result['fields'].index('visa')] == 'unknown' for row in result['rows'])
-          print('GOVERNMENT_SMOKE_OK hits=' + str(len(payload['hits'])) + ' retained=' + str(len(result['rows'])))
-          PY
