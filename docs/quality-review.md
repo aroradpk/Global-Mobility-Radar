@@ -11,3 +11,10 @@
 Review evidence: static inspection of App, Canada engine and fixtures, strict TS settings and package manifest; Australia pure arithmetic cases executed in JS runtime. No visual browser or complete build evidence. No changes to main. Safety PR #2 remains open, zero Actions runs. Follow-up: first resolve CI, execute all previous tests, validate official calculator parity, then mobile/accessibility E2E. Review each increment, retain blockers in roadmap. 
 
 Post-commit review: Review.onBack originally called the new global reset; separated restartProfile so returning to CV upload cannot erase Canada/Australia scenarios. Added visible active/focus navigation state, mobile hit-target sizing, and explicit hidden wrapper rule. Static review only; browser regression pending. 
+
+## Phase 4C review (2026-11-26)
+- Re-executed 26 Canada and 28 Australia existing fixture projections from committed JS, including no-language-test case; 54/54 passed. This is not a Vitest run.
+- High correctness: results retained after rules/credentials expire in long-lived tabs. Shared assessment date refresh + derived submitted results across all three country panels; browser regression pending.
+- Medium correctness: advertisedSalary accepted impossible calendar dates; reused dateValue validation and added regression fixture (not yet run in Vitest). German salary thresholds now share one source; no duplicate hard-coded salary figures in screening engine.
+- Medium UX: references described only Canada; updated route navigation/copy. Germany route-specific forms avoid requiring all three sets of inputs. State retained locally and explicit reset. Browser/a11y checks pending.
+- Germany official sources reviewed; age birthday wording discrepancy explicitly noted, operational bands used. No official calculator parity, source monitoring or automated qualification mapping. Existing shared profile/job retention on preference editing and typed migration remain open. CI PR #2 open, 0 workflow runs. No acceptance awarded.

@@ -88,7 +88,7 @@ export default function LocalResults({ profile, answers, onBack }: { profile: Pr
     <JobScreeningPanel />
     <div className="card stack">
       <h2>Immigration references</h2>
-      <p>Inherited information dated {KNOWLEDGE_AS_OF || "unknown"}. Not validated current rules. Use the separate Canada screening panel for new versioned rules; other routes remain reference-only.</p>
+      <p>Inherited information dated {KNOWLEDGE_AS_OF || "unknown"}. Not validated current rules. Use the Canada, Australia and Germany sections for versioned screening; remaining routes are dated references.</p>
       {COUNTRIES.filter(c => countrySet.has(c.code)).map(c => <details key={c.code}>
         <summary>{c.name.en}</summary>
         {c.routes.map(r => <p key={r.id}><strong>{r.name.en}</strong> — {r.summary.en} {r.source.startsWith("https://") && <a href={r.source} target="_blank" rel="noopener noreferrer" referrerPolicy="no-referrer">Official source (verify)</a>}</p>)}

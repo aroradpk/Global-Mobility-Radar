@@ -3,10 +3,11 @@ import { assessCanada } from "../engine/canada.js";
 const ROOT="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/";
 const education=["Less than secondary","Secondary","One-year postsecondary","Two-year postsecondary","Bachelor / 3+ year credential","Two or more, one 3+ years","Master / eligible professional degree","Doctorate"].map((l,i)=>[String(i),l] as const);
 const yn=[["yes","Yes — confirmed"],["no","No"]] as const;
-export default function CanadaPanel(){
+export default function CanadaPanel({today}:{today:string}){
   const [input,setInput]=useState<Record<string,string>>({});
-  const [result,setResult]=useState<ReturnType<typeof assessCanada>|null>(null);
-  const set=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setResult(null);};
+  const [submitted,setSubmitted]=useState(false);
+  const result=submitted?assessCanada(input,today):null;
+  const set=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
   const field=(key:string,label:string,placeholder="",type="text")=><label key={key}>{label}<input type={type} value={input[key]??""} placeholder={placeholder} maxLength={40} onChange={e=>set(key,e.target.value)}/></label>;
   const select=(key:string,label:string,opts:readonly (readonly [string,string])[])=><label key={key}>{label}<select value={input[key]??""} onChange={e=>set(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
   return <div className="card stack">
@@ -47,8 +48,8 @@ export default function CanadaPanel(){
       {select("sibling","Eligible adult Canadian citizen/PR sibling living in Canada",yn)}
       {select("canadianStudy","Independently confirmed Canadian education bonus",[["0","0 — none"],["15","15 — eligible 1–2 year credential"],["30","30 — eligible 3+ year or graduate credential"]])}
     </details>
-    <button className="btn primary" onClick={()=>setResult(assessCanada(input,new Date().toISOString().slice(0,10)))}>Calculate local scenario</button>
-    <button className="btn ghost" onClick={()=>{setInput({});setResult(null);}}>Clear Canada inputs</button>
+    <button className="btn primary" onClick={()=>setSubmitted(true)}>Calculate local scenario</button>
+    <button className="btn ghost" onClick={()=>{setInput({});setSubmitted(false);}}>Clear Canada inputs</button>
     {result&&<div role="status" className="stack"><h3>FSW selection: {result.fsw.score??"Unknown"} / 100 (67 threshold)</h3><p>{result.fsw.status==="meets_screen"?"Meets self-reported screening requirements only":result.fsw.status==="does_not_meet_screen"?"Does not meet one or more screening requirements":"Unknown — missing or expired evidence"}</p>{Object.entries(result.fsw.factors).map(([k,v])=><p key={k}>{k}: {v}</p>)}{result.fsw.failed.length>0&&<p>Failed: {result.fsw.failed.join("; ")}</p>}{result.fsw.missing.length>0&&<p>Review: {result.fsw.missing.join("; ")}</p>}
       <h3>CRS scenario: {result.crs.score??"Unknown"} / 1270</h3>{Object.entries(result.crs.factors).map(([k,v])=><p key={k}>{k}: {v}</p>)}{result.crs.missing.length>0&&<p>Review: {result.crs.missing.join("; ")}</p>}<p>CRS is not proof of pool eligibility or invitation. Compare with the <a href={ROOT+"check-score.html"} target="_blank" rel="noopener noreferrer">official calculator</a>. Draw tracking and PNP eligibility pending.</p></div>}
   </div>;

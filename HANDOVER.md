@@ -56,8 +56,13 @@ Active branch: development/roadmap-and-hardening
 - Added owner-required continuous code/UX review in AGENTS.md and docs/quality-review.md. Fixed navigation unmount/data loss across Jobs/Canada/Australia and added explicit confirmed clear-all; browser validation pending. Fixed Canada CRS no-test total, added targeted regression not executed. No accepted module.
 - PR #2 still open/unmerged; Actions zero runs. Do not merge PR #1. No live source approvals or deployment.
 
+## Phase 4C Germany and continuing review (2026-11-26)
+- Germany Opportunity Card (recognised and points routes), initial EU Blue Card (degree and IT experience routes), settlement pathway screen added. 34 synthetic JS regressions passed before commit. Re-executed 54 earlier Canada/Australia fixture projections directly from committed code; all passed. See docs/germany-rules.md.
+- Shared date refresh for all country calculators; German salary constants reused in salary screening; impossible advertised assessment date guard and fixture added. German navigation retains local scenario data; browser, Vitest, full build and official parity pending.
+- Continuous review log updated. CI safety PR #2 still open and no runs; no live data or production deployment. No module accepted.
+
 ## Next goal
-Priority: resolve CI via safety PR #2 and run full tests/build; official Canada/Australia parity and navigation/mobile/accessibility regression. Phase 4C: Germany Opportunity Card and EU Blue Card/settlement screening, then remaining target countries. Keep outstanding Phase 3 and policy monitoring gates. No deferred gate removed.
+Priority: resolve CI via safety PR #2 and run full tests/build; official Canada/Australia parity and navigation/mobile/accessibility regression. Phase 4D: Ireland Critical Skills/general permits and Netherlands highly skilled migrant/Blue Card, after prioritising CI, official parity and regression verification. Keep outstanding Phase 3 and policy monitoring gates. No deferred gate removed.
 
 ## Blockers and owner actions
 Direct clone is unavailable in this execution environment (DNS resolution failure); GitHub Actions reported no runs; settings could not be read. Full dependency installation must be verified remotely. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.

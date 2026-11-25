@@ -7,11 +7,14 @@ import Interview, { defaultAnswers } from "./components/Interview";
 import LocalResults from "./components/LocalResults";
 import CanadaPanel from "./components/CanadaPanel";
 import AustraliaPanel from "./components/AustraliaPanel";
+import GermanyPanel from "./components/GermanyPanel";
+import { useAssessmentDate } from "./useAssessmentDate";
 
 type Step = "upload" | "review" | "interview" | "results";
 
 export default function App() {
-  const [view, setView] = useState<"jobs" | "canada" | "australia">("jobs");
+  const [view, setView] = useState<"jobs" | "canada" | "australia" | "germany">("jobs");
+  const today = useAssessmentDate();
   const [resetKey, setResetKey] = useState(0);
   const [step, setStep] = useState<Step>("upload");
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -24,7 +27,7 @@ export default function App() {
     <header className="top"><div className="wrap top-in">
       <strong>Global Mobility Radar</strong>
       <span className="muted">Local preview</span>
-      <nav aria-label="Application sections" className="section-nav">{(["jobs","canada","australia"] as const).map(v=><button type="button" className="btn small" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v==="jobs"?"Jobs":v==="canada"?"Canada PR":"Australia skilled visas"}</button>)}</nav>
+      <nav aria-label="Application sections" className="section-nav">{(["jobs","canada","australia","germany"] as const).map(v=><button type="button" className="btn small" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{v==="jobs"?"Jobs":v==="canada"?"Canada PR":v==="australia"?"Australia skilled visas":"Germany visas"}</button>)}</nav>
       <button type="button" className="btn ghost small" onClick={()=>{if(window.confirm("Clear all local profiles, job imports and immigration scenarios?"))reset();}}>Clear all local data</button>
     </div></header>
     <main className="wrap main">
@@ -34,8 +37,9 @@ export default function App() {
       {step === "interview" && profile && effective && <Interview profile={profile} answers={effective} onChange={setAnswers} onBack={() => setStep("review")} onNext={() => {setAnswers(effective); setStep("results");}}/>}
       {step === "results" && profile && effective && <LocalResults profile={profile} answers={effective} onBack={() => setStep("interview")}/>}
       </div>
-      <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel/></div>
-      <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel/></div>
+      <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today}/></div>
+      <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today}/></div>
+      <div key={"germany-"+resetKey} hidden={view!=="germany"}><GermanyPanel today={today}/></div>
     </main>
     <footer className="wrap foot">
       <p>Local preview: profile, imported job data and immigration scenarios are held in memory, cleared on reload or Clear all local data. No profile uploads, paid features or accounts. Opening a link visits an external site.</p>

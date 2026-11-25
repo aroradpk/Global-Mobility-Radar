@@ -1,3 +1,5 @@
+import { DE_THRESHOLDS } from "./germany.js";
+
 // Dated salary-only checks; no legal eligibility or sponsorship determination.
 export const RULES_VERSION = "2026-11-25";
 export const DE_SOURCE = "https://www.make-it-in-germany.com/en/visa-recognition/visa-types/eu-blue-card";
@@ -5,8 +7,8 @@ export const NL_SOURCE = "https://ind.nl/en/required-amounts-income-requirements
 export const NL_REGISTER = "https://ind.nl/en/public-register-recognised-sponsors/public-register-work";
 export const SCAM_SOURCE = "https://consumer.ftc.gov/articles/job-scams";
 export const SALARY_RULES = [
-  { id: "de-standard", label: "Germany Blue Card — standard", amount: 50700, period: "year", source: DE_SOURCE },
-  { id: "de-reduced", label: "Germany Blue Card — reduced (if independently qualified)", amount: 45934.20, period: "year", source: DE_SOURCE },
+  { id: "de-standard", label: "Germany Blue Card — standard", amount: DE_THRESHOLDS.standard, period: "year", source: DE_SOURCE },
+  { id: "de-reduced", label: "Germany Blue Card — reduced (if independently qualified)", amount: DE_THRESHOLDS.reduced, period: "year", source: DE_SOURCE },
   { id: "nl-under30", label: "Netherlands HSM — first application, under 30", amount: 4357, period: "month", source: NL_SOURCE },
   { id: "nl-30plus", label: "Netherlands HSM — first application, 30+", amount: 5942, period: "month", source: NL_SOURCE },
   { id: "nl-reduced", label: "Netherlands HSM — reduced (if independently qualified)", amount: 3122, period: "month", source: NL_SOURCE },
@@ -14,7 +16,7 @@ export const SALARY_RULES = [
   { id: "nl-blue-reduced", label: "Netherlands Blue Card — reduced (if independently qualified)", amount: 4754, period: "month", source: NL_SOURCE },
 ] as const;
 
-function dateValue(value: string): number | null {
+export function dateValue(value: string): number | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return null;
   const time = Date.parse(value + "T00:00:00Z");
   return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value ? time : null;

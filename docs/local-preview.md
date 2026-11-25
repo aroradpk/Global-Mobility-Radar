@@ -12,3 +12,5 @@ Optional open-data preview: see [phase3c.md](phase3c.md) for the explicit Swedis
 Canada PR calculator accessible from header without CV. Local self-reported scenarios; see [Canada rules](canada-rules.md). No official decision or live monitoring.
 
 Jobs, Canada and Australia sections now keep in-memory state while switching; confirmed Clear all local data resets all sections. Australia points screen is current-date self-reported only, see [Australia rules](australia-rules.md). Browser verification pending.
+
+Germany section: independent Opportunity Card, Blue Card and settlement screens. Shared assessment date refresh re-evaluates submitted country scenarios when the UTC day changes or browser resumes. See [Germany rules](germany-rules.md). Browser validation pending.

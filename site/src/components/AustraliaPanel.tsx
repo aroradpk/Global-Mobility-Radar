@@ -6,10 +6,11 @@ const ROUTES = [{id:"189",label:"189 · Skilled Independent",path:"skilled-indep
 const YES_NO = [["yes","Yes — confirmed"],["no","No"]] as const;
 const STATUS = {requirements_not_met:"Requirements not met / still outstanding",review_required:"Review required",potential_eoi_candidate:"Potential EOI candidate — not invited",meets_self_reported_screen:"Meets self-reported screen only"} as const;
 
-export default function AustraliaPanel(){
+export default function AustraliaPanel({today}:{today:string}){
   const [input,setInput]=useState<Record<string,string>>({});
-  const [result,setResult]=useState<ReturnType<typeof assessAustralia>|null>(null);
-  const update=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setResult(null);};
+  const [submitted,setSubmitted]=useState(false);
+  const result=submitted?assessAustralia(input,today):null;
+  const update=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
   const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select value={input[key]??""} onChange={e=>update(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
   const field=(key:string,label:string,type="number")=><label key={key}>{label}<input type={type} value={input[key]??""} onChange={e=>update(key,e.target.value)} min={type==="number"?0:undefined} step={type==="number"?1:undefined}/></label>;
   return <section className="card stack" aria-labelledby="australia-title">
@@ -51,8 +52,8 @@ export default function AustraliaPanel(){
         {input["invited"+route.id]==="yes"&&field("invitedPoints"+route.id,"Points stated in invitation")}
       </fieldset>)}
     </details>
-    <button type="button" className="btn primary" onClick={()=>setResult(assessAustralia(input,new Date().toISOString().slice(0,10)))}>Compare visa pathways</button>
-    <button type="button" className="btn ghost" onClick={()=>{setInput({});setResult(null);}}>Clear Australia inputs</button>
+    <button type="button" className="btn primary" onClick={()=>setSubmitted(true)}>Compare visa pathways</button>
+    <button type="button" className="btn ghost" onClick={()=>{setInput({});setSubmitted(false);}}>Clear Australia inputs</button>
     {result&&<div role="status" className="stack">
       <h3>Base points: {result.basePoints??"Unknown"}</h3>
       {Object.entries(result.factors).map(([k,v])=><p key={k}>{k.replace(/([A-Z])/g," $1")}: {v}</p>)}

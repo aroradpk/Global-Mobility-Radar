@@ -1,8 +1,8 @@
-import { SALARY_RULES } from "./jobScreening";
+import { SALARY_RULES, dateValue } from "./jobScreening";
 
 // Indicative comparison only. Do not infer contractual components or eligibility.
 export function advertisedSalary(country: string[], text: string, recent: boolean, today: string) {
-  if (!recent || !/^2026-\d{2}-\d{2}$/.test(today) || country.length !== 1 || !["DE", "NL"].includes(country[0])) return [];
+  if (!recent || dateValue(today) === null || !today.startsWith("2026-") || country.length !== 1 || !["DE", "NL"].includes(country[0])) return [];
   const number = "(\\d{1,9}(?:\\.\\d{1,2})?)";
   const pattern = new RegExp("^gross base (?:salary )?EUR " + number + "(?:\\s*[-–]\\s*" + number + ")? per (year|month)$", "i");
   const match = pattern.exec(text.trim());
