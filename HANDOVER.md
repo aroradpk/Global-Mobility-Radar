@@ -46,8 +46,13 @@ Active branch: development/roadmap-and-hardening
 - 8/8 new Python adapter tests and 6/6 advertised-salary TS cases passed locally in isolated reconstruction; strict TS compile passed. Exact expected blob hashes, commands and limitations in docs/phase3c.md. Live connector attempt failed DNS on robots request; no snapshot created. CI still zero runs; full previous pipeline integration and UI build/browser tests outstanding.
 - Indicative salary comparison now attached to imported job cards when strict format and fresh observation criteria hold, otherwise unknown. No ranking or eligibility claim. No live sponsor check, no deployment, no accepted module.
 
+## Phase 4A Canada screening (2026-11-25)
+- November 2026 official rules reviewed; implemented self-reported FSW 67-point screening and CRS including new LMI, 1270 maximum, spouse, language/ECA date checks, transferability and extras. Independent local panel available without CV. 25 synthetic cases passed in JavaScript runtime on exact serialised function; Vitest/browser and IRCC parity pending. See docs/canada-rules.md.
+- Safety-only CI bootstrap PR #2 created separately on maintenance/safe-ci-bootstrap (444a17d). Owner review/merge, then enable Actions and manually run Safe CI baseline on development branch. Main not modified. See docs/ci-unblock.md. No live or deployment permissions requested.
+- No module accepted; PNP/draw monitoring, evidence qualification, funds and NOC mapping outstanding. Phase 3 gates retained.
+
 ## Next goal
-Phase 4A: independently implement Canada's FSW/CRS rules from official current sources while Phase 3 live smoke tests, direct employer verification, broader salary extraction and sponsor adapters remain blocked/pending. Before any merge, resolve CI safely, execute full pipeline and UI checks and validate live source schema/permissions. No deferred gate removed.
+Phase 4B: Australia 189/190/491 points and mandatory screening; validate Canada against official calculator, complete outstanding Phase 3 and CI gates. No deferred gate removed.
 
 ## Blockers and owner actions
 Direct clone is unavailable in this execution environment (DNS resolution failure); GitHub Actions reported no runs; settings could not be read. Full dependency installation must be verified remotely. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.

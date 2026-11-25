@@ -8,3 +8,5 @@ Phase 3 exports now carry optional evidence metadata. The preview still treats i
 The manual vacancy screening panel works without a dataset: dated salary floor, Dutch sponsor identity comparison and recruitment warning patterns. See [job-screening.md](job-screening.md). Browser testing remains outstanding.
 
 Optional open-data preview: see [phase3c.md](phase3c.md) for the explicit Swedish JobSearch command. Live access unverified; use synthetic data until smoke tests pass. Advertised salary comparisons are indicative only.
+
+Canada PR calculator accessible from header without CV. Local self-reported scenarios; see [Canada rules](canada-rules.md). No official decision or live monitoring.
