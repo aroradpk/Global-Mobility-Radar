@@ -18,7 +18,7 @@ export default function GermanyPanel({today}:{today:string}){
   const [submitted,setSubmitted]=useState(false);
   const change=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
   const field=(key:string,label:string,decimal=false)=><label key={key}>{label}<input type="number" min={0} step={decimal?"0.01":"1"} value={input[key]??""} onChange={e=>change(key,e.target.value)}/></label>;
-  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select value={input[key]??""} onChange={e=>change(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([value,text])=><option value={value} key={value}>{text}</option>)}</select></label>;
+  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} value={input[key]??""} onChange={e=>change(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([value,text])=><option value={value} key={value}>{text}</option>)}</select></label>;
   const result=submitted?assessGermany(input,today).find(r=>r.id===active):undefined;
   const route=ROUTES.find(r=>r.id===active)!;
   return <section className="card stack" aria-labelledby="germany-title">

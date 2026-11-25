@@ -9,7 +9,7 @@ export default function CanadaPanel({today}:{today:string}){
   const result=submitted?assessCanada(input,today):null;
   const set=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
   const field=(key:string,label:string,placeholder="",type="text")=><label key={key}>{label}<input type={type} value={input[key]??""} placeholder={placeholder} maxLength={40} onChange={e=>set(key,e.target.value)}/></label>;
-  const select=(key:string,label:string,opts:readonly (readonly [string,string])[])=><label key={key}>{label}<select value={input[key]??""} onChange={e=>set(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
+  const select=(key:string,label:string,opts:readonly (readonly [string,string])[])=><label key={key}>{label}<select aria-label={label} value={input[key]??""} onChange={e=>set(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
   return <div className="card stack">
     <h2>Canada — FSW and CRS scenario</h2>
     <p>Official rules reviewed 25 November 2026. Enter confirmed facts; this is a self-reported scenario, not an official decision. No data leaves this browser. Change inputs to compare scenarios; unknown is not zero.</p>

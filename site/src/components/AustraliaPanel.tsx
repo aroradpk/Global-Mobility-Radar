@@ -11,7 +11,7 @@ export default function AustraliaPanel({today}:{today:string}){
   const [submitted,setSubmitted]=useState(false);
   const result=submitted?assessAustralia(input,today):null;
   const update=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
-  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select value={input[key]??""} onChange={e=>update(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
+  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} value={input[key]??""} onChange={e=>update(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
   const field=(key:string,label:string,type="number")=><label key={key}>{label}<input type={type} value={input[key]??""} onChange={e=>update(key,e.target.value)} min={type==="number"?0:undefined} step={type==="number"?1:undefined}/></label>;
   return <section className="card stack" aria-labelledby="australia-title">
     <h2 id="australia-title">Australia — skilled migration points</h2>
