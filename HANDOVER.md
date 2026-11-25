@@ -70,10 +70,10 @@ Active branch: development/roadmap-and-hardening
 - Next priority security remediation, then browser E2E/privacy/accessibility and bounded live-source smoke via CI, then Phase 4D country screens. No owner CI activation action remains. All 16 modules remain unaccepted pending their complete criteria. No paid hosting or live deployment.
 
 ## Next goal
-Priority: fix high/critical dependency audit findings and regenerate lockfile safely; rerun full CI, then browser/mobile/accessibility/privacy regression, official Canada/Australia/Germany parity and bounded government source smoke. Phase 4D: Ireland Critical Skills/general permits and Netherlands highly skilled migrant/Blue Card follows security remediation. Keep outstanding Phase 3 and policy monitoring gates. No deferred gate removed.
+Priority: verify standard CI on promoted dependency lock; then browser/mobile/accessibility/privacy regression, official Canada/Australia/Germany parity and bounded government source smoke. Phase 4D: Ireland Critical Skills/general permits and Netherlands highly skilled migrant/Blue Card follows security remediation. Keep outstanding Phase 3 and policy monitoring gates. No deferred gate removed.
 
 ## Blockers and owner actions
-Direct clone is unavailable in this execution environment (DNS resolution failure), but GitHub Actions is operational and full dependency installation/test/build succeeded. Dependency audit failed; see CI evidence above. Browser and live-source checks still pending. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.
+Direct clone is unavailable in this execution environment (DNS resolution failure), but GitHub Actions is operational and full dependency installation/test/build succeeded. Previous dependency audit failed; isolated upgrade candidate audit passed and lock promoted, standard CI confirmation pending. Browser and live-source checks still pending. Narrow tree check does not scan git history, binaries or all possible secret formats. If a service credential or deployment authorization is needed, stop at that boundary; do not use upstream credentials or publish applicant data.
 
 ## Continuation procedure
 Read AGENTS.md, roadmap and fork audit. Check latest branch/commit and CI. Implement the next dependency-ready gate; update status and evidence in this file and roadmap. Preserve all required modules until the acceptance score reaches 100, with final end-to-end release verification. Do not assume background execution or scheduled services exist.
@@ -81,3 +81,9 @@ Read AGENTS.md, roadmap and fork audit. Check latest branch/commit and CI. Imple
 - Additional Phase 3 changes: observation provenance also attached to snapshot health; freshness only counts successful matching source IDs and fingerprints. Export cutoff applied before deduplication. Optional evidence parsed and shown as unverified, with missing/stale warnings. Imported visa signals are excluded from active ranking boosts. No live jobs collected or sponsors approved.
 
 - Phase 4B follow-up: separate profile restart from global reset; selected/focus navigation styles, mobile touch targets and explicit hidden wrappers. Static integration review only; browser tests pending.
+
+
+## Dependency remediation candidate — 2026-11-26
+- Candidate run https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/45706920091, job dependency-upgrade-candidate at 2549029: npm 11.21.3 resolved fresh lock after two npm 10 resolver failures; npm audit reported zero vulnerabilities; npm ci, 136/136 Vitest cases and production build succeeded. Original audit job on temporary branch intentionally tests old lock and fails; judge the candidate job separately.
+- Promoted only reviewed package.json and package-lock.json: Vite 7.3.8, Vitest 4.1.12, React plugin 5.1.4; esbuild 0.28.2, mocker 4.1.12, tinypool absent. Exact original runtime direct dependencies and required runtime package versions unchanged; optional peer @opentelemetry/api 1.9.1 removed (all references optional, no required dependency). 100 added/changed locked entries, 12 removed; resolved registry/integrity present on all non-root entries. No peer bypass or audit relaxation. No candidate workflow promoted.
+- Full standard CI on the promoted commit is still required, including npm 10 lock consumption. No browser or live job source validation yet. No accepted modules.
