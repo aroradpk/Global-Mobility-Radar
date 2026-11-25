@@ -1,4 +1,8 @@
-# CI and live access unblock
+# CI activation resolved — 2026-11-26
+
+Safety-only PR #2 is merged and GitHub Actions is running. No further activation action is needed from the owner. Do not merge draft PR #1 yet. The full tests/build passed on 4377347; audit gate failed. See HANDOVER.md for details and current next goal.
+
+# Historical activation instructions (completed; retained for reference)
 1. Review safety-only PR https://github.com/aroradpk/Global-Mobility-Radar/pull/2. It removes deploy.yml and pages-moved.yml and adds read-only CI and guard/tests; no development app changes. Review diff and merge this PR only if satisfied (not draft PR #1).
 2. Confirm main .github/workflows has only ci.yml. Open repository Actions tab, enable workflows if GitHub prompts, and under Settings > Actions > General allow only necessary GitHub actions (checkout, setup-node, setup-python) with read-only token permissions. Do not add secrets.
 3. Select Safe CI baseline > Run workflow > branch development/roadmap-and-hardening > Run workflow. A manual workflow requires a workflow_dispatch definition on default branch. If no UI action available, inspect permissions and send a screenshot or run URL. No workflow dispatch/settings-write action is available in current connector; don't repeatedly attempt nonexistent runs.

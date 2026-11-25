@@ -68,3 +68,5 @@ Baseline: 0 accepted modules / 16; 0 / 100 weighted acceptance points. Earlier 8
 - Phase 4B follow-up static review: separated profile restart and global reset; improved navigation state/focus styles and mobile touch targets. No browser acceptance claim.
 
 - 2026-11-26 Phase 4C: Germany recognised/points Opportunity Card, initial Blue Card including IT experience and settlement screening. 34 new synthetic arithmetic cases passed; 54 prior Canada/Australia regression projections rerun from committed engines, all passed. Shared date refresh, salary constants and calendar-date guard; browser/CI/official parity outstanding. See docs/germany-rules.md and docs/quality-review.md. No module accepted; all 16 retained.
+
+- 2026-11-26 CI milestone: PR #2 merged; exact commit 4377347 push run 45706293808: 4 guard + 46 Python + 136 Vitest = 186 passing tests, tracked-tree guard and production build success. npm audit gate failed (2 moderate, 1 high, 2 critical). Prioritize targeted remediation and lockfile regeneration, no bypass. No browser/live or release acceptance. See HANDOVER.md and docs/quality-review.md.
