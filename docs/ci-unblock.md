@@ -1,0 +1,12 @@
+# CI activation resolved — 2026-11-26
+
+Safety-only PR #2 is merged and GitHub Actions is running. No further activation action is needed from the owner. Do not merge draft PR #1 yet. The full tests/build passed on 4377347; audit gate failed. See HANDOVER.md for details and current next goal.
+
+# Historical activation instructions (completed; retained for reference)
+1. Review safety-only PR https://github.com/aroradpk/Global-Mobility-Radar/pull/2. It removes deploy.yml and pages-moved.yml and adds read-only CI and guard/tests; no development app changes. Review diff and merge this PR only if satisfied (not draft PR #1).
+2. Confirm main .github/workflows has only ci.yml. Open repository Actions tab, enable workflows if GitHub prompts, and under Settings > Actions > General allow only necessary GitHub actions (checkout, setup-node, setup-python) with read-only token permissions. Do not add secrets.
+3. Select Safe CI baseline > Run workflow > branch development/roadmap-and-hardening > Run workflow. A manual workflow requires a workflow_dispatch definition on default branch. If no UI action available, inspect permissions and send a screenshot or run URL. No workflow dispatch/settings-write action is available in current connector; don't repeatedly attempt nonexistent runs.
+4. Report run URL. Agent can retrieve job failures and fix them. Do not merge PR #1 until checks and acceptance criteria pass.
+5. DNS/live testing: run on normal network in cloned repository or network-enabled Codex/Work environment. From pipeline: python -m unittest discover -s tests -v; python -m jobtracker.jobsearch_preview (dry run); python -m jobtracker.jobsearch_preview --live --query javascript (explicit approved public source, robots gate; no secrets). Import generated local snapshot. Do not upload actual CV or dataset to public repo. No blanket source approval. GitHub CI intentionally does not poll live sources; a separate bounded owner-invoked smoke test can be added only after baseline CI is working.
+6. Frontend: from site, npm ci --ignore-scripts, npm test, npm run build, npm run dev. Synthetic profile only until network/privacy and E2E tests are passed. Main app remains unaccepted; no deployment. 
+No paid services required for these steps. Existing CI runs zero; settings state unconfirmed.

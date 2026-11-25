@@ -1,10 +1,7 @@
-// Knowledge files are bundled; market and meta come from the API at runtime so
-// the daily workflow can refresh them without a rebuild. Postings stay on the
-// server (see api.ts).
+// Bundled reference knowledge only; no runtime API calls.
 import countriesJson from "../../knowledge/countries.json";
 import tracksJson from "../../knowledge/tracks.json";
 import skillsJson from "../../knowledge/skills.json";
-import { fetchMarket, fetchMeta } from "./api";
 import type { Country, Market, Meta, Skill, Track } from "./types";
 
 export const COUNTRIES = (countriesJson as { countries: Country[] }).countries;
@@ -24,7 +21,3 @@ export interface Dataset {
   meta: Meta;
 }
 
-export async function loadDataset(): Promise<Dataset> {
-  const [market, meta] = await Promise.all([fetchMarket(), fetchMeta()]);
-  return { market, meta };
-}

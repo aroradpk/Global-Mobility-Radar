@@ -1,3 +1,7 @@
+> **Global Mobility Radar development fork — not production-ready.** See [master roadmap](docs/master-product-roadmap.md) and [handover](HANDOVER.md). The inherited API, account, payment and deployment features are not approved for use. Do not upload a personal CV, configure upstream credentials, run live collectors or deploy this fork until the relevant gates are accepted. The inherited deployment and redirect workflows are removed on the development branch. The following upstream README is retained for attribution and reference only; its live app and instructions describe the upstream project, not our verified runtime.
+
+[Run the independent local preview with synthetic data](docs/local-preview.md). No account or private API is needed. Full build and browser checks remain pending.
+
 # Visa Job Atlas
 
 **Upload your CV, answer a few questions, and get the countries, open jobs and 12-month plan most likely to get you a visa-sponsored job.** 18 career fields across tech, engineering, business, health and creative work. English and Brazilian Portuguese.
