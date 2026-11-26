@@ -443,6 +443,31 @@ async function run(viewport) {
     await panel(page).getByLabel("Use saved first-language evidence").selectOption("");
     await inputValue(first,"8,8,8,8");
     pass(viewport.width+" Canada live language link, removal and manual restoration");
+    await openSection(page,"Profile");
+    await panel(page).getByLabel("Evidence category").selectOption("employment");
+    await panel(page).getByLabel("Employer",{exact:true}).fill("Example employer");
+    await panel(page).getByLabel("Role",{exact:true}).fill("Example developer");
+    await panel(page).getByLabel("Occupation code (self-reported)",{exact:true}).fill("21232");
+    await panel(page).getByLabel("Occupation classification / jurisdiction",{exact:true}).fill("NOC 2021");
+    await panel(page).getByLabel("I reviewed these facts; they are self-reported, not independently verified.").check();
+    await panel(page).getByRole("button",{name:"Save evidence record",exact:true}).click();
+    await openSection(page,"Canada PR");
+    const nocCode=panel(page).getByLabel("NOC 2021 code",{exact:true});
+    await nocCode.fill("14201");
+    await visible(panel(page).getByText(/Outside the FSW TEER 0–3 range/));
+    await panel(page).getByLabel("Use saved employment occupation").selectOption("4");
+    await inputValue(nocCode,"21232");
+    await visible(panel(page).getByText(/21232 — Software developers and programmers — TEER 1/));
+    await inputValue(panel(page).getByLabel(/At least one continuous year/),"");
+    await noOverflow(page,"Canada occupation reference");
+    await openSection(page,"Profile");
+    page.once("dialog",dialog=>dialog.accept());
+    await panel(page).getByRole("button",{name:"Remove record 4",exact:true}).click();
+    await openSection(page,"Canada PR");
+    await inputValue(nocCode,"");
+    await panel(page).getByLabel("Use saved employment occupation").selectOption("");
+    await inputValue(nocCode,"14201");
+    pass(viewport.width+" NOC reference link and removal without eligibility inference");
 
 
     page.once("dialog",dialog=>dialog.accept());
