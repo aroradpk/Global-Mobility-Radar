@@ -1,4 +1,5 @@
 import {useState} from "react";
+import ProfileEvidencePanel from "./ProfileEvidencePanel";
 import type {Profile,Answers} from "../types";
 import {skillLabel,TRACK} from "../data";
 import {confirmAge,currentAge,type ConfirmedAge} from "../engine/unifiedProfile";
@@ -9,7 +10,7 @@ export default function ProfilePanel({profile,answers,age,today,onAge,onCareer,o
  const active=currentAge(age,today);
  return <section className="card stack" aria-labelledby="profile-title">
   <h1 id="profile-title">Your shared profile</h1>
-  <p>Maintain your job-matching facts here and explicitly link confirmed facts into current-date country scenarios. No personal information leaves this tab. No immigration decision is inferred from a CV.</p>
+  <p>Maintain your job-matching facts here and explicitly link confirmed facts into current-date country scenarios. No personal information is transmitted; reviewed evidence can be explicitly exported to a local file. No immigration decision is inferred from a CV.</p>
   <div className="card stack">
     <h2>Current age for immigration assessments</h2>
     <label>Current age in completed years<input type="number" min={18} max={120} step={1} value={draft} onChange={e=>{setDraft(e.target.value);setError("");}}/></label>
@@ -30,5 +31,6 @@ export default function ProfilePanel({profile,answers,age,today,onAge,onCareer,o
    <button type="button" className="btn" disabled={!profile} onClick={onPreferences}>Edit relocation preferences</button>
    <p className="small muted">Preferences are not work authorisation, immigration chargeability, spouse eligibility or proof of funds. Those remain separate evidence.</p>
   </div>
+  <ProfileEvidencePanel today={today}/>
  </section>;
 }
