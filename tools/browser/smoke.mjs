@@ -148,6 +148,26 @@ async function run(viewport) {
     await panel(page).getByRole("button",{name:"Skilled Migrant — points",exact:true}).click();
     await inputValue(panel(page).getByLabel("Qualifying NZ skilled work months in applicable look-back window"),"18");
     pass(viewport.width+" NZ pathway input retention and missing evidence");
+    await openSection(page,"UK visas");
+    await visible(page.getByRole("heading",{name:"United Kingdom — employment and residence pathways"}));
+    await panel(page).getByRole("combobox",{name:"Applicable salary points option"}).selectOption("standard");
+    await panel(page).getByRole("combobox",{name:"Verified SOC 2020 code"}).selectOption("2134");
+    await panel(page).getByLabel("Contractual weekly hours, regular pattern (up to 48)").fill("37.5");
+    await panel(page).getByLabel("Qualifying annual salary in GBP after applicable deductions (not total compensation)").fill("54700");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByText("Required qualifying annual pay: GBP 54700.00",{exact:true}));
+    await visible(panel(page).getByRole("heading",{name:"Review required"}));
+    await noOverflow(page,"UK Skilled Worker");
+    await panel(page).getByRole("button",{name:"Global Talent — settlement",exact:true}).click();
+    await panel(page).getByRole("combobox",{name:"Original qualifying Global Talent grant"}).selectOption("talent");
+    await panel(page).getByLabel("Completed qualifying continuous residence months").fill("36");
+    await noOverflow(page,"UK Global Talent settlement");
+    await openSection(page,"Jobs");
+    await openSection(page,"UK visas");
+    await inputValue(panel(page).getByLabel("Completed qualifying continuous residence months"),"36");
+    await panel(page).getByRole("button",{name:"Skilled Worker",exact:true}).click();
+    await inputValue(panel(page).getByRole("combobox",{name:"Verified SOC 2020 code"}),"2134");
+    pass(viewport.width+" UK going-rate assessment and scenario retention");
     await openSection(page,"Canada PR");
     await inputValue(panel(page).getByLabel("Age in completed years",{exact:true}),"30");
     await openSection(page,"Australia skilled visas");
@@ -182,6 +202,9 @@ async function run(viewport) {
     await openSection(page,"New Zealand visas");
     await panel(page).getByRole("button",{name:"Skilled Migrant — points",exact:true}).click();
     await inputValue(panel(page).getByRole("combobox",{name:"Single skill category"}),"");
+    await openSection(page,"Jobs");
+    await openSection(page,"UK visas");
+    await inputValue(panel(page).getByRole("combobox",{name:"Verified SOC 2020 code"}),"");
     await openSection(page,"Jobs");
     // Delay only this synthetic file read, then release it after a confirmed reset.
     await page.evaluate(()=>{const original=File.prototype.text;File.prototype.text=function(){if(this.name!=="delayed-cv.txt")return original.call(this);return new Promise(resolve=>{globalThis.__releaseSyntheticCv=()=>{File.prototype.text=original;resolve("Synthetic applicant. Software engineer. JavaScript React Node.js. ".repeat(6));delete globalThis.__releaseSyntheticCv;};});};});

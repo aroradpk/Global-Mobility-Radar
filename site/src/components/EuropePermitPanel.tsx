@@ -12,7 +12,7 @@ export default function EuropePermitPanel({country,today}:{country:Country;today
   const input=scenarios[active]??{};
   const update=(key:string,value:string)=>{setScenarios(old=>({...old,[active]:{...old[active],[key]:value}}));setSubmitted(false);};
   const result=submitted?assessPermit(country,active,input,today):null;
-  const name={ireland:"Ireland",netherlands:"Netherlands",newzealand:"New Zealand"}[country];
+  const name={ireland:"Ireland",netherlands:"Netherlands",newzealand:"New Zealand",uk:"United Kingdom"}[country];
   return <section className="card stack" aria-labelledby={country+"-title"}>
     <h2 id={country+"-title"}>{name} — employment and residence pathways</h2>
     <p>Current-date self-reported screening for ordinary skilled workers. No profile is uploaded. Review date: {REVIEWED}; review again after {REVIEW_BY}. Unknown facts are not assumed true. This is not an official decision.</p>

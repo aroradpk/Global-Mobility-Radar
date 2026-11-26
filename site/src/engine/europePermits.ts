@@ -2,9 +2,10 @@ import { compareDutchSponsor, SALARY_RULES } from "./jobScreening";
 
 import { yes, choice, field, when, number, minimum, salary, recentYears, evaluatePermit, type Field, type Route, type Facts } from "./permitCore";
 import { nzRoutes } from "./nzPermits";
+import { ukRoutes } from "./ukPermits";
 export type { Facts } from "./permitCore";
 export { REVIEWED, REVIEW_BY } from "./permitCore";
-export type Country = "ireland" | "netherlands" | "newzealand";
+export type Country = "ireland" | "netherlands" | "newzealand" | "uk";
 const IE = "https://enterprise.gov.ie/en/what-we-do/workplace-and-skills/employment-permits/";
 const ISD = "https://www.irishimmigration.ie/";
 const IND = "https://ind.nl/en/";
@@ -134,5 +135,5 @@ const nlRoutes:Route[]=[
       yes("general","General conditions and truthful previous applications confirmed")],
     check:(i,_t,o)=>minimum(i,"months",60,"At least 60 consecutive qualifying months needed for standard route",o)},
 ];
-export const PERMIT_ROUTES:Record<Country,Route[]>={ireland:ieRoutes,netherlands:nlRoutes,newzealand:nzRoutes};
+export const PERMIT_ROUTES:Record<Country,Route[]>={ireland:ieRoutes,netherlands:nlRoutes,newzealand:nzRoutes,uk:ukRoutes};
 export function assessPermit(country:Country,id:string,input:Facts,today:string){return evaluatePermit(PERMIT_ROUTES[country]?.find(r=>r.id===id),input,today);}
