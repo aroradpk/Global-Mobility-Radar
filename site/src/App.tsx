@@ -29,10 +29,11 @@ export default function App() {
   const [age,setAge]=useState<ConfirmedAge|null>(null);
   const profileAge=currentAge(age,today);
   const [answers, setAnswers] = useState<Answers | null>(null);
+  const [savedAnswers,setSavedAnswers]=useState<Answers|null>(null);
   const effective = useMemo(() => profile ? answers ?? defaultAnswers(profile) : null, [profile, answers]);
   useEffect(() => { document.documentElement.lang = "en"; window.scrollTo({ top: 0 }); }, [step, view]);
-  const restartProfile = () => { setHasResults(false); setProfile(null); setCareerConfirmed(false); setManualReview(false); setAnswers(null); setStep("upload"); };
-  const startManual=()=>{setProfile(blankJobProfile());setCareerConfirmed(false);setManualReview(true);setAnswers(null);setStep("review");};
+  const restartProfile = () => { setHasResults(false); setProfile(null); setCareerConfirmed(false); setManualReview(false); setAnswers(null); setSavedAnswers(null); setStep("upload"); };
+  const startManual=()=>{setProfile(blankJobProfile());setCareerConfirmed(false);setManualReview(true);setAnswers(null);setSavedAnswers(null);setStep("review");};
   const editCareer=()=>{setView("jobs");if(profile){setStep("review");}else startManual();};
   const reset = () => { setView("jobs"); setResetKey(k=>k+1); setAge(null); restartProfile(); };
   return <LangContext.Provider value="en">
@@ -44,13 +45,13 @@ export default function App() {
     </div></header>
     <main className="wrap main">
       <div key={"jobs-"+resetKey} hidden={view!=="jobs"}>
-      {step === "upload" && <Upload onManual={startManual} onRead={(_text, p) => { setProfile(p); setCareerConfirmed(false);setManualReview(false);setAnswers(null); setStep("review"); }}/>}
+      {step === "upload" && <Upload onManual={startManual} onRead={(_text, p) => { setProfile(p); setCareerConfirmed(false);setManualReview(false);setAnswers(null);setSavedAnswers(null); setStep("review"); }}/>}
       {step === "review" && profile && <Review profile={profile} manual={manualReview} onBack={hasResults?()=>setStep("results"):restartProfile} onNext={p=>{setProfile(p);setCareerConfirmed(true);setManualReview(false);setStep("interview");}}/>}
-      {step === "interview" && profile && effective && <Interview profile={profile} answers={effective} onChange={setAnswers} onBack={() => setStep("review")} onNext={() => {setAnswers(effective); setHasResults(true); setStep("results");}}/>}
+      {step === "interview" && profile && effective && <Interview profile={profile} answers={effective} onChange={setAnswers} onBack={() => setStep("review")} onNext={() => {setAnswers(effective); setSavedAnswers(effective); setHasResults(true); setStep("results");}}/>}
       {/* Keep the imported snapshot, filters and screening work while editing preferences. */}
       {hasResults && profile && effective && <div hidden={step!=="results"}><LocalResults profile={profile} answers={effective} onBack={() => setStep("interview")} onEditProfile={()=>setStep("review")}/></div>}
       </div>
-      <div key={"profile-"+resetKey} hidden={view!=="profile"}><ProfilePanel profile={careerConfirmed?profile:null} answers={careerConfirmed?effective:null} age={age} today={today} onAge={setAge} onCareer={editCareer} onPreferences={()=>{setView("jobs");setStep("interview");}}/></div>
+      <div key={"profile-"+resetKey} hidden={view!=="profile"}><ProfilePanel profile={careerConfirmed?profile:null} answers={careerConfirmed?savedAnswers:null} age={age} today={today} onAge={setAge} onCareer={editCareer} onPreferences={()=>{setView("jobs");setStep("interview");}}/></div>
       <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today} profileAge={profileAge}/></div>
       <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today} profileAge={profileAge}/></div>
       <div key={"germany-"+resetKey} hidden={view!=="germany"}><GermanyPanel today={today} profileAge={profileAge}/></div>

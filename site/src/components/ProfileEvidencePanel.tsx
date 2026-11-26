@@ -1,7 +1,8 @@
 import {useState,useRef} from "react";
+import {serializeProfile,type ProfileExportContext} from "../engine/profileExport";
 import {evidenceFields,evidenceLabels,reviewEvidence,evidenceState,serializeEvidence,maxEvidenceRecords,type EvidenceKind,type EvidenceRecord} from "../engine/profileEvidence";
 
-export default function ProfileEvidencePanel({today}:{today:string}){
+export default function ProfileEvidencePanel({today,exportContext}:{today:string;exportContext:ProfileExportContext}){
  const [records,setRecords]=useState<EvidenceRecord[]>([]);
  const [kind,setKind]=useState<EvidenceKind>("employment");
  const [draft,setDraft]=useState<Record<string,string>>({});
@@ -22,12 +23,19 @@ export default function ProfileEvidencePanel({today}:{today:string}){
   else setRecords(prev=>prev.map(r=>r.id===editing?record:r));
   clearDraft();setStatus("Evidence record saved in this tab.");
  };
+ const downloadJson=(content:string,filename:string)=>{
+  const url=URL.createObjectURL(new Blob([content],{type:"application/json"}));
+  const link=document.createElement("a");link.href=url;link.download=filename;document.body.appendChild(link);
+  try{link.click();setStatus("Local export requested. Keep the downloaded file private.");}
+  finally{link.remove();window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
+ };
  const exportRecords=()=>{
   if(!window.confirm("Export reviewed evidence records to a private local JSON file? This file may contain sensitive information and will remain after you close this tab."))return;
-  const url=URL.createObjectURL(new Blob([serializeEvidence(records,today)],{type:"application/json"}));
-  const link=document.createElement("a");link.href=url;link.download="mobility-evidence.json";document.body.appendChild(link);
-  try{link.click();setStatus("Evidence export requested. Keep the downloaded file private.");}
-  finally{link.remove();window.setTimeout(()=>URL.revokeObjectURL(url),1000);}
+  downloadJson(serializeEvidence(records,today),"mobility-evidence.json");
+ };
+ const exportFullProfile=()=>{
+  if(!window.confirm("Export saved career facts, relocation preferences, confirmed age and evidence to a private local JSON file? Unsaved drafts and raw CV are excluded. This file persists after closing the tab."))return;
+  downloadJson(serializeProfile(exportContext,records,today),"mobility-profile.json");
  };
  return <div className="card stack">
   <h2>Immigration evidence records</h2>
@@ -50,6 +58,7 @@ export default function ProfileEvidencePanel({today}:{today:string}){
    <div className="row"><button type="button" className="btn" onClick={()=>{if(!mayDiscard())return;setKind(record.kind);setDraft({...record.values});setEditing(record.id);setConfirmed(false);setError("");setStatus("Editing record "+record.id+".");}}>Edit record {record.id}</button><button type="button" className="btn" onClick={()=>{if(!window.confirm("Remove this evidence record?"))return;setRecords(prev=>prev.filter(r=>r.id!==record.id));if(editing===record.id)clearDraft();setStatus("Evidence record removed.");}}>Remove record {record.id}</button></div>
   </div>)}
   <button type="button" className="btn" disabled={!records.length} onClick={exportRecords}>Export reviewed evidence (JSON)</button>
-  <p className="small muted">Export includes saved evidence records only, not your CV, career profile, preferences or immigration scenarios. Clear all local data or reload to clear this tab; downloaded files must be deleted separately.</p>
+  <button type="button" className="btn" disabled={!records.length&&!exportContext.profile&&!exportContext.preferences&&!exportContext.age} onClick={exportFullProfile}>Export complete saved profile (JSON)</button>
+  <p className="small muted">Evidence export includes saved records only. Complete profile export adds saved career facts, planning preferences and age confirmation, but excludes raw CV, unsaved edits, jobs and immigration scenarios. Clear all local data or reload to clear this tab; downloaded files must be deleted separately.</p>
  </div>;
 }

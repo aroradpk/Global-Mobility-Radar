@@ -388,6 +388,29 @@ async function run(viewport) {
     assert.equal(exported.records.length,1);
     assert.deepEqual(exported.records[0].values,{amount:"14000",currency:"CAD"});
     await download.delete();
+    // Draft changes must not leak into complete saved profile exports.
+    await panel(page).getByRole("button",{name:"Edit record 1",exact:true}).click();
+    await panel(page).getByLabel("Available amount",{exact:true}).fill("99999");
+    await panel(page).getByLabel("Current age in completed years",{exact:true}).fill("32");
+    await panel(page).getByRole("button",{name:"Confirm age for today",exact:true}).click();
+    await panel(page).getByRole("button",{name:"Edit relocation preferences",exact:true}).click();
+    await page.getByLabel("Where do you live now?").selectOption("IN");
+    await openSection(page,"Profile");
+    page.once("dialog",dialog=>dialog.dismiss());
+    await panel(page).getByRole("button",{name:"Export complete saved profile (JSON)",exact:true}).click();
+    page.once("dialog",dialog=>dialog.accept());
+    const [fullDownload]=await Promise.all([page.waitForEvent("download"),panel(page).getByRole("button",{name:"Export complete saved profile (JSON)",exact:true}).click()]);
+    assert.equal(fullDownload.suggestedFilename(),"mobility-profile.json");
+    const complete=JSON.parse(await readFile(await fullDownload.path(),"utf8"));
+    assert.equal(complete.kind,"mobility-profile");
+    assert.equal(complete.career.years,8);
+    assert.equal(complete.career.textLength,undefined);
+    assert.equal(complete.preferences.livesIn,null);
+    assert.equal(complete.age.currentValue,"32");
+    assert.equal(complete.evidence[0].values.amount,"14000");
+    await fullDownload.delete();
+    await panel(page).getByRole("button",{name:"Cancel evidence edit",exact:true}).click();
+    pass(viewport.width+" full saved profile export excludes pending evidence and preference drafts");
     page.once("dialog",dialog=>dialog.accept());
     await panel(page).getByRole("button",{name:"Remove record 1",exact:true}).click();
     await visible(panel(page).getByText("No evidence records saved.",{exact:true}));
@@ -403,6 +426,7 @@ async function run(viewport) {
     await visible(page.getByRole("heading",{name:/Where are you flying/}));
     await openSection(page,"Profile");
     await visible(panel(page).getByText("No evidence records saved.",{exact:true}));
+    assert.equal(await panel(page).getByRole("button",{name:"Export complete saved profile (JSON)",exact:true}).isDisabled(),true);
     await openSection(page,"Jobs");
     pass(viewport.width+" manual onboarding without CV and global reset");
     // Delay only this synthetic file read, then release it after a confirmed reset.
