@@ -50,3 +50,5 @@ Singapore shares local permit UI, no employer data fetched and PR always require
 - No new runtime dependencies. Exact age/sector salary tables and announced changes separated; employer-only COMPASS data confirmed manually, five-year tech age 37–44 threshold manual, PR preparation distinct from discretionary decision. No live employer verification, no immigration approval claim. Official parity, exceptional cases, PDF success path, broader accessibility, policy monitoring and unified profile outstanding. All 16 modules retained, formal acceptance 0/16. Next: UAE jobseeker, employment and renewable residence routes; then US. No deployment or owner intervention needed.
 
 UAE screens use local shared permit UI; see [UAE rules](uae-rules.md). Visit visa is not work permission and renewable residence is not permanent residence. Candidate verification pending.
+
+US screens share local permit UI; November 2026 bulletin snapshot expires at month end. See [US rules](us-rules.md). Candidate CI pending.

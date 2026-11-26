@@ -227,6 +227,28 @@ async function run(viewport) {
     await panel(page).getByRole("button",{name:"Jobseeker visit visa",exact:true}).click();
     await inputValue(panel(page).getByRole("combobox",{name:"Requested visit duration"}),"90");
     pass(viewport.width+" UAE visit/work distinction, salary and authority-specific evidence retention");
+    await openSection(page,"US visas");
+    await visible(page.getByRole("heading",{name:"United States — employment and residence pathways"}));
+    await panel(page).getByLabel("Continuous qualifying full-time employment months abroad within applicable preceding three years").fill("12");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByRole("heading",{name:"Review required"}));
+    await noOverflow(page,"US L1A");
+    await panel(page).getByRole("button",{name:"Green-card priority date",exact:true}).click();
+    await panel(page).getByRole("combobox",{name:"Employment preference category"}).selectOption("eb2");
+    await panel(page).getByRole("combobox",{name:"Verified chargeability area"}).selectOption("india");
+    await panel(page).getByLabel("Documented priority date").fill("2013-11-01");
+    await panel(page).getByRole("combobox",{name:"Actual chargeability including any exception independently verified"}).selectOption("yes");
+    await panel(page).getByRole("combobox",{name:"Actual priority date and retained-date eligibility verified"}).selectOption("yes");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByText("Final action date comparison: does not meet date test",{exact:true}));
+    await visible(panel(page).getByText("Filing chart comparison: meets date test",{exact:true}));
+    await noOverflow(page,"US bulletin");
+    await openSection(page,"Jobs");
+    await openSection(page,"US visas");
+    await inputValue(panel(page).getByLabel("Documented priority date"),"2013-11-01");
+    await panel(page).getByRole("button",{name:"L-1A — internal management transfer",exact:true}).click();
+    await inputValue(panel(page).getByLabel("Continuous qualifying full-time employment months abroad within applicable preceding three years"),"12");
+    pass(viewport.width+" US transfer and dated green-card chart separation and retention");
     await openSection(page,"Canada PR");
     await inputValue(panel(page).getByLabel("Age in completed years",{exact:true}),"30");
     await openSection(page,"Australia skilled visas");
@@ -273,6 +295,9 @@ async function run(viewport) {
     await openSection(page,"Jobs");
     await openSection(page,"UAE visas");
     await inputValue(panel(page).getByRole("combobox",{name:"Requested visit duration"}),"");
+    await openSection(page,"Jobs");
+    await openSection(page,"US visas");
+    await inputValue(panel(page).getByLabel("Continuous qualifying full-time employment months abroad within applicable preceding three years"),"");
     await openSection(page,"Jobs");
     // Delay only this synthetic file read, then release it after a confirmed reset.
     await page.evaluate(()=>{const original=File.prototype.text;File.prototype.text=function(){if(this.name!=="delayed-cv.txt")return original.call(this);return new Promise(resolve=>{globalThis.__releaseSyntheticCv=()=>{File.prototype.text=original;resolve("Synthetic applicant. Software engineer. JavaScript React Node.js. ".repeat(6));delete globalThis.__releaseSyntheticCv;};});};});

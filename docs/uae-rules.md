@@ -17,3 +17,6 @@ Green skilled employee: five-year renewable self-sponsored residence, valid UAE 
 53 synthetic unit cases, desktop/mobile scenario regression added; CI pending. No new dependencies.
 
 Phase 4I follow-up source and input review: official ICP 60-day single-entry service (https://icp.gov.ae/en/services-details/?serviceid=68e3509b5ae59b00117383ea) explicitly lists six-month passport validity and valid UAE health insurance. Added mandatory confirmations and four targeted regressions (57 UAE cases total). Federal either/or eligibility confirmed on UAE government and ICP service pages; Dubai service and Dubai official portal use different wording, so manual review remains. No automatic multi-entry or work permission claim. Final candidate CI required.
+
+
+Phase 4I verified: c1ca8f1 passed all five jobs at https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/45843023785 (507 frontend, 46 pipeline, 4 safety, 36 browser checkpoints, clean build/audits); promoted unchanged to development. Main untouched. Promoted CI pending.
