@@ -43,3 +43,8 @@ UK screens share the local permit UI; see [UK rules](uk-rules.md). No automatic 
 Hong Kong QMAS, TTPS, professional employment and ordinary right-of-abode screens share local permit UI. See [Hong Kong rules](hong-kong-rules.md). Candidate CI pending.
 
 Singapore shares local permit UI, no employer data fetched and PR always requires ICA review. See [Singapore rules](singapore-rules.md). Candidate CI pending.
+
+
+## Phase 4H verified evidence — 2026-11-26
+- Hong Kong promoted CI passed at d9dd1dd: https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/45833081816. Singapore final candidate 93291da passed all five jobs: https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/45833578934. 450/450 frontend (65 new Singapore cases), 46 pipeline and 4 safety tests (500 total); production build, audits, 33/33 grouped browser checkpoints at 1280/320/390 px including Singapore salary, PR checklist, retained state, reset and prior tested privacy paths. Candidate promoted unchanged to development; main unchanged; promoted CI pending verification.
+- No new runtime dependencies. Exact age/sector salary tables and announced changes separated; employer-only COMPASS data confirmed manually, five-year tech age 37–44 threshold manual, PR preparation distinct from discretionary decision. No live employer verification, no immigration approval claim. Official parity, exceptional cases, PDF success path, broader accessibility, policy monitoring and unified profile outstanding. All 16 modules retained, formal acceptance 0/16. Next: UAE jobseeker, employment and renewable residence routes; then US. No deployment or owner intervention needed.
