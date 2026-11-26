@@ -37,8 +37,8 @@ function checkSalary(i:Facts,o:Checks,threshold:number){
 function checkAge(i:Facts,o:Checks){const age=number(i.age);if(age!==null){if(age>120)o.missing.push("Enter a plausible age");else if(age<18)o.failed.push("Ordinary adult work-permit scope requires age 18 or older");}}
 export const uaeRoutes:Route[]=[
  {id:"jobseeker",title:"Jobseeker visit visa",kind:"Temporary visit · no permission to work",source:RES+"jobseeker-visit-visa",
- links:[["Dubai service requirements",GDRFA+"2a679791-408a-11ed-4fe5-0050569629e8"],["Work permit rules",WORK]],
- intro:"No initial host or sponsor required. Federal guidance permits either an eligible skilled occupation or a recent graduate of an approved top-500 university; both require a bachelor's degree or equivalent. Check issuing-authority interpretation before applying. Do not start work on a visit visa.",
+ links:[["Federal ICP 60-day service requirements","https://icp.gov.ae/en/services-details/?serviceid=68e3509b5ae59b00117383ea"],["Dubai service requirements",GDRFA+"2a679791-408a-11ed-4fe5-0050569629e8"],["Work permit rules",WORK]],
+ intro:"Federal single-entry visit; no initial host or sponsor required. Federal guidance permits either an eligible skilled occupation or a recent graduate of an approved top-500 university; both require a bachelor's degree or equivalent. Check issuing-authority interpretation before applying. Do not start work on a visit visa.",
  fields:[...common,
  choice("duration","Requested visit duration",[["60","60 days"],["90","90 days"],["120","120 days"]]),
  choice("basis","Eligibility basis",[["skilled","MoHRE professional level 1, 2 or 3"],["graduate","Recent graduate of approved top-500 university"],["neither","Neither"]]),
@@ -47,6 +47,8 @@ export const uaeRoutes:Route[]=[
  when(yes("university","University included in Ministry-approved top-500 classification"),i=>i.basis==="graduate"),
  when(field("graduation","Qualifying graduation date","date"),i=>i.basis==="graduate"),
  yes("degree","Recognised bachelor's degree or equivalent and required documents"),
+ yes("passportValidity","Passport has at least six months remaining at application"),
+ yes("visitInsurance","Valid health insurance in the UAE and applicable travel documents confirmed"),
  yes("guarantee","Prescribed financial guarantee and applicable visa fees verified and available"),
  yes("visitConditions","Understands no work without proper work permit and will leave or regularise status before expiry")],
  check:(i,t,o)=>{

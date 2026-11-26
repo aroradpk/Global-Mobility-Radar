@@ -3,7 +3,7 @@ import {assessPermit,type Facts} from "./europePermits";
 const day="2026-11-26";
 const common:Facts={scope:"yes",passport:"yes",authority:"icp",authorityProof:"yes"};
 const res:Facts={...common,medical:"yes",insurance:"yes",general:"yes"};
-const job:Facts={...common,duration:"90",basis:"skilled",level:"2",occupation:"yes",degree:"yes",guarantee:"yes",visitConditions:"yes"};
+const job:Facts={...common,duration:"90",basis:"skilled",level:"2",occupation:"yes",degree:"yes",passportValidity:"yes",visitInsurance:"yes",guarantee:"yes",visitConditions:"yes"};
 const employment:Facts={...res,age:"30",mainland:"yes",offer:"yes",employer:"yes",qualifications:"yes",permitProcess:"yes",fees:"yes"};
 const green:Facts={...res,contract:"yes",degree:"yes",salary:"15000",pay:"yes",permit:"yes",level:"3",classification:"yes"};
 const gold:Facts={...green,salary:"30000",level:"2",licence:"yes",continuing:"yes"};
@@ -19,6 +19,10 @@ const cases:Case[]=[
 ["job no basis","jobseeker",job,{basis:"neither"},no],
 ["job degree no","jobseeker",job,{degree:"no"},no],
 ["job guarantee missing","jobseeker",job,{guarantee:""},unknown],
+["job short passport validity","jobseeker",job,{passportValidity:"no"},no],
+["job passport validity unknown","jobseeker",job,{passportValidity:""},unknown],
+["job no UAE health insurance","jobseeker",job,{visitInsurance:"no"},no],
+["job insurance unknown","jobseeker",job,{visitInsurance:""},unknown],
 ["job no work condition","jobseeker",job,{visitConditions:"no"},no],
 ["job recent graduate","jobseeker",job,{basis:"graduate",university:"yes",graduation:"2025-01-01"},ok],
 ["job graduate exact anniversary","jobseeker",job,{basis:"graduate",university:"yes",graduation:"2024-11-26"},unknown],
