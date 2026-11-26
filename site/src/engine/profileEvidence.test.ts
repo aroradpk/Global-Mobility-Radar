@@ -1,0 +1,26 @@
+import {describe,it,expect} from "vitest";
+import {reviewEvidence,evidenceState,serializeEvidence,type EvidenceKind} from "./profileEvidence";
+const today="2026-11-26";
+const review=(kind:EvidenceKind,values:Record<string,string>)=>reviewEvidence(kind,values,today,1);
+describe("reviewed local immigration evidence",()=>{
+ it("keeps optional facts unknown and strips unrecognised keys",()=>{const r=review("employment",{employer:" Example ",role:"Engineer",occupation:"",unexpected:"ignored"});expect(r.record?.values).toEqual({employer:"Example",role:"Engineer"});});
+ it("requires reviewable identity",()=>expect(review("employment",{role:"Engineer"}).error).toBeTruthy());
+ it("rejects impossible dates",()=>expect(review("language",{test:"IELTS",taken:"2026-02-30"}).error).toBeTruthy());
+ it("rejects future test dates",()=>expect(review("language",{test:"IELTS",taken:"2026-11-27"}).error).toBeTruthy());
+ it("rejects reversed work dates",()=>expect(review("employment",{employer:"Example",role:"Engineer",start:"2025-01-01",end:"2024-01-01"}).error).toBeTruthy());
+ it("rejects future work dates",()=>expect(review("employment",{employer:"Example",role:"Engineer",start:"2027-01-01"}).error).toBeTruthy());
+ it("rejects impossible hours",()=>expect(review("employment",{employer:"Example",role:"Engineer",hours:"169"}).error).toBeTruthy());
+ it("requires occupation classification with code",()=>expect(review("employment",{employer:"Example",role:"Engineer",occupation:"21232"}).error).toBeTruthy());
+ it("keeps occupation evidence without inferring eligibility",()=>expect(review("employment",{employer:"Example",role:"Engineer",occupation:"21232",classification:"Canada NOC"}).record?.values.occupation).toBe("21232"));
+ for(const amount of ["-1","1e6","Infinity","NaN","1.001","1234567890123"])it("rejects invalid money "+amount,()=>expect(review("funds",{amount,currency:"CAD"}).error).toBeTruthy());
+ it("retains zero and normalizes currency syntax",()=>expect(review("funds",{amount:"0",currency:"cad"}).record?.values).toEqual({amount:"0",currency:"CAD"}));
+ it("rejects missing currency",()=>expect(review("salary",{amount:"1000",period:"monthly"}).error).toBeTruthy());
+ it("requires salary period",()=>expect(review("salary",{amount:"1000",currency:"CAD"}).error).toBeTruthy());
+ it("rejects fractional dependant count",()=>expect(review("family",{relationship:"child",count:"1.5"}).error).toBeTruthy());
+ it("bounds text",()=>expect(review("education",{qualification:"x".repeat(251)}).error).toBeTruthy());
+ it("rejects unknown category",()=>expect(review("__proto__" as EvidenceKind,{}).error).toBeTruthy());
+ it("rejects expiry before test date",()=>expect(review("language",{test:"IELTS",taken:"2025-01-01",expiry:"2024-01-01"}).error).toBeTruthy());
+ it("does not assume expiry",()=>{const r=review("language",{test:"IELTS"}).record!;expect(evidenceState(r,today)).toBe("expiry unknown");});
+ it("marks past expiry without guessing legal validity",()=>{const r=review("authorization",{country:"Example",status:"Permit",expiry:"2026-11-25"}).record!;expect(evidenceState(r,today)).toBe("expired");});
+ it("exports a versioned self-reported record only",()=>{const r=review("education",{qualification:"Example degree"}).record!;const parsed=JSON.parse(serializeEvidence([r],today));expect(parsed.schemaVersion).toBe(1);expect(parsed.records[0].values).toEqual({qualification:"Example degree"});expect(parsed.records[0].status).toBe("expiry unknown");});
+});
