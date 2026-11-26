@@ -3,7 +3,7 @@
 Updated: 2026-11-26
 Repository: aroradpk/Global-Mobility-Radar
 Review baseline: 7df403c5545c5704227ed75561f5ec4a08f5db9c
-Active branch: development/phase5b-evidence (candidate; do not merge into main)
+Active branch: development/phase5b-profile-export (candidate; do not merge into main)
 
 ## Current state
 - Fork access and initial static audit verified; upstream MIT licence read.
@@ -193,3 +193,8 @@ Phase 4I verified: c1ca8f1 passed all five jobs at https://github.com/aroradpk/G
 - M01 remains in progress: full profile export (career/preferences/age), official occupation and test mappings, linked facts beyond age, PDF success path, accessibility, independent evidence/official calculator parity remain pending. M09 comparison and all other outstanding gates retained; 0/16 accepted. Next: validate candidate CI, fix any regressions, then safe field mappings and complete export before route comparison. No deployment or owner action requested.
 
 - Phase 5B local verification: exact profileEvidence.ts Git blob SHA 6569ee99c7421baf03d2a7d5f9bfd3b435e712c9 reconstructed, strict tsc/noUnusedLocals/noUnusedParameters compile with unchanged dateValue function passed; Node 22 direct assertions corresponding to all 25 new Vitest cases passed. This is not a full Vitest/build/browser run. Direct git clone DNS failed; connector returned no statuses or PR-triggered workflow runs for candidate commit 7beb0b2; push CI result unverified. Added explicit draft-discard guard on category/record switch and browser regression at cf83583. No promotion or acceptance until full CI verified.
+
+
+## Phase 5B profile export candidate — 2026-11-27
+- Phase 5B evidence commit 300ec07 verified in push CI https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/45905997720: all five jobs passed; 632 frontend + 46 pipeline + 4 safety = 682 tests; 48 grouped browser checkpoints at 1280/320/390 px, build and both dependency audits clean (zero reported vulnerabilities). Phase 5A run 45850081454 also succeeded.
+- Profile export increment: explicit private versioned full saved-profile JSON, allowlisted career and planning fields, dated age with expired current value null, reviewed evidence with status. Separate last-saved preferences from live edit state; defaults only included as planning assumptions after opening dashboard, no raw CV/parser metadata or independent scenarios. Six new unit cases and browser tests for unsaved evidence/preferences, confirmation, download and global reset; full CI pending. No new dependencies or legal mapping changes. M01 remains in progress: official occupation/test mappings, linked facts beyond age, PDF success-path, independent evidence and accessibility remain open; all 16 gates retained, zero formal acceptance. Next verify this candidate and then implement a narrow official source-backed mapping.

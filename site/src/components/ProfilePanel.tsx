@@ -27,10 +27,10 @@ export default function ProfilePanel({profile,answers,age,today,onAge,onCareer,o
   </div>
   <div className="card stack">
    <h2>Relocation preferences</h2>
-   {answers?<dl><dt>Citizenship(s)</dt><dd>{answers.citizenships.join(", ")||"Unknown"}</dd><dt>Current residence</dt><dd>{answers.livesIn||"Unknown"}</dd><dt>Target destinations</dt><dd>{answers.targets.join(", ")||"No explicit selection"}</dd><dt>Target career</dt><dd>{TRACK.get(answers.family)?.name.en??answers.family}</dd><dt>Budget preference</dt><dd>{answers.budget}</dd><dt>Moving with family</dt><dd>{answers.withFamily?"Yes":"No (planning preference)"}</dd></dl>:<p>Complete the relocation preferences after reviewing your career profile.</p>}
+   {answers?<dl><dt>Citizenship(s)</dt><dd>{answers.citizenships.join(", ")||"Unknown"}</dd><dt>Current residence</dt><dd>{answers.livesIn||"Unknown"}</dd><dt>Target destinations</dt><dd>{answers.targets.join(", ")||"No explicit selection"}</dd><dt>Target career</dt><dd>{TRACK.get(answers.family)?.name.en??answers.family}</dd><dt>Budget preference</dt><dd>{answers.budget}</dd><dt>Moving with family</dt><dd>{answers.withFamily?"Yes":"No (planning preference)"}</dd></dl>:<p>No saved relocation preferences yet. Open the local dashboard to confirm your planning preferences after reviewing your career profile.</p>}
    <button type="button" className="btn" disabled={!profile} onClick={onPreferences}>Edit relocation preferences</button>
    <p className="small muted">Preferences are not work authorisation, immigration chargeability, spouse eligibility or proof of funds. Those remain separate evidence.</p>
   </div>
-  <ProfileEvidencePanel today={today}/>
+  <ProfileEvidencePanel today={today} exportContext={{profile,preferences:answers,age}}/>
  </section>;
 }
