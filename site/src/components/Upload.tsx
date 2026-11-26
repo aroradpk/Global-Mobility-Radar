@@ -5,7 +5,7 @@ import { SKILLS } from "../data";
 import type { Profile } from "../types";
 import { Barcode, FlightArc, Plane } from "./Icons";
 
-export default function Upload({ onRead }: { onRead: (text: string, profile: Profile) => void }) {
+export default function Upload({ onRead,onManual }: { onRead: (text: string, profile: Profile) => void; onManual:()=>void }) {
   const { t } = useT();
   const input = useRef<HTMLInputElement>(null);
   const mounted = useRef(true);
@@ -121,6 +121,7 @@ export default function Upload({ onRead }: { onRead: (text: string, profile: Pro
         />
       </div>
 
+      <button type="button" className="btn" disabled={busy} onClick={()=>{if(!reading.current)onManual();}}>Create profile without a CV</button>
       <p className="privacy">🔒 {t("privacy")}</p>
       <details className="paste">
         <summary>{t("orPaste")}</summary>

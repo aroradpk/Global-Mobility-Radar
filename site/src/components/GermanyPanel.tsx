@@ -1,4 +1,6 @@
 import { useState } from "react";
+import ProfileAgeControl from "./ProfileAgeControl";
+import {withProfileAge} from "../engine/unifiedProfile";
 import { assessGermany, DE_THRESHOLDS } from "../engine/germany.js";
 
 const BASE = "https://www.make-it-in-germany.com/en/";
@@ -12,12 +14,14 @@ const GERMAN = [["none","None / below A1"],["A1","A1"],["A2","A2"],["B1","B1"],[
 const STATUS = {review_required:"Review required",requirements_not_met:"Requirements not met / outstanding",meets_self_reported_screen:"Meets self-reported screen only"};
 const eur = (v:number) => v.toLocaleString("en-IE",{style:"currency",currency:"EUR"});
 
-export default function GermanyPanel({today}:{today:string}){
-  const [input,setInput]=useState<Record<string,string>>({});
+export default function GermanyPanel({today,profileAge}:{today:string;profileAge:string}){
+  const [manualInput,setInput]=useState<Record<string,string>>({});
+  const [linked,setLinked]=useState(false);
+  const input=withProfileAge(manualInput,"opAge",linked,profileAge);
   const [active,setActive]=useState<"opportunity"|"blue"|"settlement">("opportunity");
   const [submitted,setSubmitted]=useState(false);
   const change=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
-  const field=(key:string,label:string,decimal=false)=><label key={key}>{label}<input type="number" min={0} step={decimal?"0.01":"1"} value={input[key]??""} onChange={e=>change(key,e.target.value)}/></label>;
+  const field=(key:string,label:string,decimal=false)=><label key={key}>{label}<input type="number" min={0} step={decimal?"0.01":"1"} disabled={key==="opAge"&&linked} value={input[key]??""} onChange={e=>change(key,e.target.value)}/></label>;
   const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} value={input[key]??""} onChange={e=>change(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([value,text])=><option value={value} key={value}>{text}</option>)}</select></label>;
   const result=submitted?assessGermany(input,today).find(r=>r.id===active):undefined;
   const route=ROUTES.find(r=>r.id===active)!;
@@ -31,7 +35,8 @@ export default function GermanyPanel({today}:{today:string}){
       {select("opQualification","Qualification route",[["recognised","German or fully recognised qualification"],["partial","Official partial recognition / compensation notice"],["foreign","Foreign credential recognised in country of acquisition"],["none","No qualifying credential"]])}
       {input.opQualification==="foreign"&&select("opForeignProof","Official proof (Anabin/ZAB/DAB as applicable); vocational training at least two years")}
       {input.opQualification==="partial"||input.opQualification==="foreign"?<>
-        {field("opAge","Age in completed years at application")}
+        <ProfileAgeControl age={profileAge} linked={linked} onChange={v=>{setLinked(v);setSubmitted(false);}}/>
+      {field("opAge","Age in completed years at application")}
         <p>Age bands follow official operational guidance: under 35, then 35–39. Confirm precise birthday boundary with the authority.</p>
         {select("opGerman","Verified German level",GERMAN)}
         {select("opEnglish","Verified English level",[["belowB2","None / below B2"],["B2","B2"],["C1+","C1 or above / accepted native-speaker evidence"]])}

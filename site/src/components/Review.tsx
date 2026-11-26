@@ -2,23 +2,29 @@ import { useState } from "react";
 import { languageName, useT, type StringKey } from "../i18n";
 import { SKILLS, TRACK, skillLabel } from "../data";
 import type { Degree, Level, Profile } from "../types";
+import {validCareerYears} from "../engine/unifiedProfile";
 
 const LEVELS: Level[] = ["entry", "junior", "mid", "senior", "lead"];
 const DEGREES: Degree[] = ["none", "technical", "bachelor", "master", "phd"];
 const LANG_LEVELS = ["basic", "intermediate", "fluent", "native"] as const;
 const COMMON_LANGS = ["en", "pt", "es", "de", "fr", "it", "ja", "nl", "sv", "zh", "ko", "pl"];
 
-export default function Review(props: { profile: Profile; onChange: (p: Profile) => void; onBack: () => void; onNext: () => void }) {
+export default function Review(props: { profile: Profile; manual:boolean; onBack: () => void; onNext: (p:Profile) => void }) {
   const { t, tx, lang } = useT();
-  const p = props.profile;
-  const set = (patch: Partial<Profile>) => props.onChange({ ...p, ...patch });
+  const [p,setProfile]=useState(props.profile);
+  const [years,setYears]=useState(props.manual?"":String(p.years));
+  const [level,setLevel]=useState<Level|"">(props.manual?"":p.level);
+  const [degree,setDegree]=useState<Degree|"">(props.manual?"":p.degree);
+  const [confirmed,setConfirmed]=useState(false);
+  const set = (patch: Partial<Profile>) => {setProfile(old=>({...old,...patch}));setConfirmed(false);};
   const [newSkill, setNewSkill] = useState("");
   const [newLang, setNewLang] = useState("");
   const unknown = SKILLS.filter((s) => !p.skills.includes(s.id)).sort((a, b) => a.label.localeCompare(b.label));
 
   return (
     <section>
-      <h2>{t("reviewTitle")}</h2>
+      <h2>{props.manual?"Create your career profile":t("reviewTitle")}</h2>
+      <p>Review or enter job-matching facts. CV extraction may be wrong or incomplete; remove unsupported skills or languages and correct estimates. These are not immigration evidence.</p>
       <div className="grid2">
         <div className="card">
           <h3>{t("skills")}</h3>
@@ -43,17 +49,19 @@ export default function Review(props: { profile: Profile; onChange: (p: Profile)
         <div className="card stack">
           <label>
             {t("years")}
-            <input type="number" min={0} max={50} step={0.5} value={p.years} onChange={(e) => set({ years: Number(e.target.value) })} />
+            <input type="number" min={0} max={50} step={0.1} value={years} onChange={e=>{setYears(e.target.value);setConfirmed(false);}} />
           </label>
           <label>
             {t("level")}
-            <select value={p.level} onChange={(e) => set({ level: e.target.value as Level })}>
+            <select value={level} onChange={e=>{setLevel(e.target.value as Level|"");setConfirmed(false);}}>
+              <option value="">Select career level</option>
               {LEVELS.map((l) => <option key={l} value={l}>{t(("lvl_" + l) as StringKey)}</option>)}
             </select>
           </label>
           <label>
             {t("degree")}
-            <select value={p.degree} onChange={(e) => set({ degree: e.target.value as Degree })}>
+            <select value={degree} onChange={e=>{setDegree(e.target.value as Degree|"");setConfirmed(false);}}>
+              <option value="">Select education level</option>
               {DEGREES.map((d) => <option key={d} value={d}>{t(("deg_" + d) as StringKey)}</option>)}
             </select>
           </label>
@@ -81,6 +89,7 @@ export default function Review(props: { profile: Profile; onChange: (p: Profile)
             <div className="row" key={l.code}>
               <span className="grow">{languageName(l.code, lang)}</span>
               <select
+                aria-label={languageName(l.code,lang)+" proficiency"}
                 value={l.level}
                 onChange={(e) => {
                   const languages = [...p.languages];
@@ -104,9 +113,11 @@ export default function Review(props: { profile: Profile; onChange: (p: Profile)
           </div>
         </div>
       </div>
+      <label className="check"><input type="checkbox" checked={confirmed} onChange={e=>setConfirmed(e.target.checked)}/> I reviewed these career facts for job matching</label>
+      <p className="small muted">Enter experience (0–50 years), career level and education before continuing. No qualification can be explicitly selected. Skills and languages may remain empty when not recorded.</p>
       <div className="nav">
         <button className="btn ghost" onClick={props.onBack}>{t("back")}</button>
-        <button className="btn primary" onClick={props.onNext}>{t("next")}</button>
+        <button className="btn primary" disabled={!confirmed||!validCareerYears(years)||!level||!degree} onClick={()=>{if(confirmed&&validCareerYears(years)&&level&&degree)props.onNext({...p,years:Number(years),level,degree});}}>{t("next")}</button>
       </div>
     </section>
   );

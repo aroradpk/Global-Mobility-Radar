@@ -1,20 +1,25 @@
 import { useState } from "react";
+import ProfileAgeControl from "./ProfileAgeControl";
+import {withProfileAge} from "../engine/unifiedProfile";
 import { assessCanada } from "../engine/canada.js";
 const ROOT="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/";
 const education=["Less than secondary","Secondary","One-year postsecondary","Two-year postsecondary","Bachelor / 3+ year credential","Two or more, one 3+ years","Master / eligible professional degree","Doctorate"].map((l,i)=>[String(i),l] as const);
 const yn=[["yes","Yes — confirmed"],["no","No"]] as const;
-export default function CanadaPanel({today}:{today:string}){
-  const [input,setInput]=useState<Record<string,string>>({});
+export default function CanadaPanel({today,profileAge}:{today:string;profileAge:string}){
+  const [manualInput,setInput]=useState<Record<string,string>>({});
+  const [linked,setLinked]=useState(false);
+  const input=withProfileAge(manualInput,"age",linked,profileAge);
   const [submitted,setSubmitted]=useState(false);
   const result=submitted?assessCanada(input,today):null;
   const set=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
-  const field=(key:string,label:string,placeholder="",type="text")=><label key={key}>{label}<input type={type} value={input[key]??""} placeholder={placeholder} maxLength={40} onChange={e=>set(key,e.target.value)}/></label>;
+  const field=(key:string,label:string,placeholder="",type="text")=><label key={key}>{label}<input type={type} disabled={key==="age"&&linked} value={input[key]??""} placeholder={placeholder} maxLength={40} onChange={e=>set(key,e.target.value)}/></label>;
   const select=(key:string,label:string,opts:readonly (readonly [string,string])[])=><label key={key}>{label}<select aria-label={label} value={input[key]??""} onChange={e=>set(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
   return <div className="card stack">
     <h2>Canada — FSW and CRS scenario</h2>
     <p>Official rules reviewed 25 November 2026. Enter confirmed facts; this is a self-reported scenario, not an official decision. No data leaves this browser. Change inputs to compare scenarios; unknown is not zero.</p>
     <p><a href={ROOT+"who-can-apply/federal-skilled-workers.html"} target="_blank" rel="noopener noreferrer">FSW requirements</a> · <a href={ROOT+"check-score/crs-criteria.html"} target="_blank" rel="noopener noreferrer">CRS criteria</a> · <a href={ROOT+"check-score/high-wage.html"} target="_blank" rel="noopener noreferrer">High-wage NOC list</a></p>
     <details open><summary>Applicant and language</summary>
+      <ProfileAgeControl age={profileAge} linked={linked} onChange={v=>{setLinked(v);setSubmitted(false);}}/>
       {field("age","Age in completed years","","number")}
       {select("education","Highest confirmed Canadian-equivalent education",education)}
       {field("credential","Type canadian for Canadian credential; otherwise ECA report date","canadian or YYYY-MM-DD")}

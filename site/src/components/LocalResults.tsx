@@ -12,7 +12,7 @@ const SIGNAL: Record<string, string> = {
   relocation: "Relocation only", unknown: "Unknown", blocked: "Excluded", "employer-no": "Excluded",
 };
 
-export default function LocalResults({ profile, answers, onBack }: { profile: Profile; answers: Answers; onBack: () => void }) {
+export default function LocalResults({ profile, answers, onBack,onEditProfile }: { profile: Profile; answers: Answers; onBack: () => void; onEditProfile:()=>void }) {
   const [snapshot, setSnapshot] = useState<LocalJobs | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -36,7 +36,7 @@ export default function LocalResults({ profile, answers, onBack }: { profile: Pr
   }
   const stale = snapshot && Date.now() - Date.parse(snapshot.generatedAt) > 48 * 3600000;
   return <section>
-    <button className="btn ghost" onClick={onBack}>Edit preferences</button>
+    <div className="row"><button className="btn ghost" onClick={onBack}>Edit preferences</button><button className="btn ghost" onClick={onEditProfile}>Edit career profile</button></div>
     <h1>Global mobility dashboard</h1>
     <p className="muted">Local development preview. No account, external API, automatic polling or live verification.</p>
     <div className="card stack">
