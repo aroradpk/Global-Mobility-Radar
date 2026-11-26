@@ -2,6 +2,7 @@ import { useState } from "react";
 import ProfileAgeControl from "./ProfileAgeControl";
 import {withProfileAge} from "../engine/unifiedProfile";
 import {mapCanadaLanguage,withCanadaLanguage} from "../engine/canadaLanguage";
+import {mapCanadaEducation,withCanadaEducation,canadaEducationSource,canadaEducationReview} from "../engine/canadaEducation";
 import {lookupCanadaOccupation,lookupEmploymentOccupation,nocSource,nocDutiesSource,nocReview} from "../engine/canadaOccupation";
 import type {EvidenceRecord} from "../engine/profileEvidence";
 import { assessCanada } from "../engine/canada.js";
@@ -12,18 +13,27 @@ export default function CanadaPanel({today,profileAge,evidence}:{today:string;pr
   const [manualInput,setInput]=useState<Record<string,string>>({});
   const [linked,setLinked]=useState(false);
   const [languageId,setLanguageId]=useState("");
+  const [educationId,setEducationId]=useState("");
+  const [spouseEducationId,setSpouseEducationId]=useState("");
   const [occupationId,setOccupationId]=useState("");
   const [occupationCode,setOccupationCode]=useState("");
   const occupationRecord=evidence.find(r=>String(r.id)===occupationId&&r.kind==="employment");
   const occupation=occupationId?lookupEmploymentOccupation(occupationRecord,today):lookupCanadaOccupation("NOC 2021",occupationCode,today);
   const selected=evidence.find(r=>String(r.id)===languageId);
   const languageResult=mapCanadaLanguage(selected,today);
-  const input=withCanadaLanguage(withProfileAge(manualInput,"age",linked,profileAge),languageId,evidence,today);
+  const baseInput=withCanadaLanguage(withProfileAge(manualInput,"age",linked,profileAge),languageId,evidence,today);
+  const input=withCanadaEducation(withCanadaEducation(baseInput,educationId,evidence,today),spouseEducationId,evidence,today,"spouse");
   const [submitted,setSubmitted]=useState(false);
   const result=submitted?assessCanada(input,today):null;
   const set=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
-  const field=(key:string,label:string,placeholder="",type="text")=><label key={key}>{label}<input type={type} disabled={(key==="age"&&linked)||((key==="first"||key==="firstDate")&&!!languageId)} value={input[key]??""} placeholder={placeholder} maxLength={40} onChange={e=>set(key,e.target.value)}/></label>;
-  const select=(key:string,label:string,opts:readonly (readonly [string,string])[])=><label key={key}>{label}<select aria-label={label} value={input[key]??""} onChange={e=>set(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
+  const field=(key:string,label:string,placeholder="",type="text")=><label key={key}>{label}<input type={type} disabled={(key==="age"&&linked)||((key==="first"||key==="firstDate")&&!!languageId)||(key==="credential"&&!!educationId)||(key==="spouseCredential"&&!!spouseEducationId)} value={input[key]??""} placeholder={placeholder} maxLength={40} onChange={e=>set(key,e.target.value)}/></label>;
+  const select=(key:string,label:string,opts:readonly (readonly [string,string])[])=><label key={key}>{label}<select aria-label={label} disabled={(key==="education"&&!!educationId)||(key==="spouseEducation"&&!!spouseEducationId)} value={input[key]??""} onChange={e=>set(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
+  const credentialLink=(owner:"applicant"|"spouse",id:string,change:(v:string)=>void)=>{
+    const record=evidence.find(r=>String(r.id)===id&&r.kind==="education");
+    const mapped=mapCanadaEducation(record,today,owner);
+    return <><label>{owner==="applicant"?"Use saved applicant education":"Use saved spouse education"}<select value={id} onChange={e=>{change(e.target.value);setSubmitted(false);}}><option value="">Independent manual input</option>{id&&(!record||record.values.canadaEducationOwner!==owner)&&<option value={id}>Previously selected record unavailable</option>}{evidence.filter(r=>r.kind==="education"&&r.values.canadaEducationOwner===owner).map(r=><option key={r.id} value={String(r.id)}>{r.values.qualification} — record {r.id}</option>)}</select></label>
+    {id&&<p role="status">{mapped.ok?mapped.label+(mapped.validUntil?"; ECA last valid date "+mapped.validUntil:"; Canadian credential (no ECA required)")+". Self-reported evidence only.":mapped.reason} Unlink to restore your independent input.</p>}</>;
+  };
   return <div className="card stack">
     <h2>Canada — FSW and CRS scenario</h2>
     <p>Official rules reviewed 25 November 2026. Enter confirmed facts; this is a self-reported scenario, not an official decision. No data leaves this browser. Change inputs to compare scenarios; unknown is not zero.</p>
@@ -31,6 +41,8 @@ export default function CanadaPanel({today,profileAge,evidence}:{today:string;pr
     <details open><summary>Applicant and language</summary>
       <ProfileAgeControl age={profileAge} linked={linked} onChange={v=>{setLinked(v);setSubmitted(false);}}/>
       {field("age","Age in completed years","","number")}
+      {credentialLink("applicant",educationId,setEducationId)}
+      <p className="small muted">Single-credential mapping reviewed {canadaEducationReview.reviewedOn}. <a href={canadaEducationSource} target="_blank" rel="noopener noreferrer">Official ECA and equivalency guidance</a>. Multiple credentials and regulated professional equivalencies require manual review; this is not independent document verification.</p>
       {select("education","Highest confirmed Canadian-equivalent education",education)}
       {field("credential","Type canadian for Canadian credential; otherwise ECA report date","canadian or YYYY-MM-DD")}
       {select("firstKind","First official language",[["english","English"],["french","French"]])}
@@ -64,14 +76,14 @@ export default function CanadaPanel({today,profileAge,evidence}:{today:string;pr
       {select("highWageWork","Verified Canadian high-wage work points (at least 12 qualifying months; official NOC tier)",[["0","0 — none"],["20","20 — 1.3×"],["40","40 — 1.5×"],["70","70 — 2×"]])}
       {select("highWageOffer","Verified qualifying high-wage job offer NOC tier",[["0","0 — none"],["50","50 — 1.3×"],["70","70 — 1.5×"],["100","100 — 2×"]])}
       <p>Use official NOC median wage tiers, not advertised salary. Work and offer LMI points are alternatives, not additive.</p>
-      {input.spouse==="yes"&&<>{select("spouseEducation","Spouse confirmed education",education)}{field("spouseCredential","Spouse Canadian credential (canadian) or valid ECA date","canadian or YYYY-MM-DD")}{field("spouseLanguage","Spouse four approved language levels or none","none")}{field("spouseLanguageDate","Spouse test result date","","date")}{field("spouseYears","Spouse qualifying Canadian work years","","number")}</>}
+      {input.spouse==="yes"&&<>{credentialLink("spouse",spouseEducationId,setSpouseEducationId)}{select("spouseEducation","Spouse confirmed education",education)}{field("spouseCredential","Spouse Canadian credential (canadian) or valid ECA date","canadian or YYYY-MM-DD")}{field("spouseLanguage","Spouse four approved language levels or none","none")}{field("spouseLanguageDate","Spouse test result date","","date")}{field("spouseYears","Spouse qualifying Canadian work years","","number")}</>}
       {select("tradeCertificate","Valid qualifying Canadian trade certificate",yn)}
       {select("nomination","Accepted valid provincial nomination",yn)}
       {select("sibling","Eligible adult Canadian citizen/PR sibling living in Canada",yn)}
       {select("canadianStudy","Independently confirmed Canadian education bonus",[["0","0 — none"],["15","15 — eligible 1–2 year credential"],["30","30 — eligible 3+ year or graduate credential"]])}
     </details>
     <button className="btn primary" onClick={()=>setSubmitted(true)}>Calculate local scenario</button>
-    <button className="btn ghost" onClick={()=>{setInput({});setLanguageId("");setOccupationId("");setOccupationCode("");setSubmitted(false);}}>Clear Canada inputs</button>
+    <button className="btn ghost" onClick={()=>{setInput({});setLanguageId("");setEducationId("");setSpouseEducationId("");setOccupationId("");setOccupationCode("");setSubmitted(false);}}>Clear Canada inputs</button>
     {result&&<div role="status" className="stack"><h3>FSW selection: {result.fsw.score??"Unknown"} / 100 (67 threshold)</h3><p>{result.fsw.status==="meets_screen"?"Meets self-reported screening requirements only":result.fsw.status==="does_not_meet_screen"?"Does not meet one or more screening requirements":"Unknown — missing or expired evidence"}</p>{Object.entries(result.fsw.factors).map(([k,v])=><p key={k}>{k}: {v}</p>)}{result.fsw.failed.length>0&&<p>Failed: {result.fsw.failed.join("; ")}</p>}{result.fsw.missing.length>0&&<p>Review: {result.fsw.missing.join("; ")}</p>}
       <h3>CRS scenario: {result.crs.score??"Unknown"} / 1270</h3>{Object.entries(result.crs.factors).map(([k,v])=><p key={k}>{k}: {v}</p>)}{result.crs.missing.length>0&&<p>Review: {result.crs.missing.join("; ")}</p>}<p>CRS is not proof of pool eligibility or invitation. Compare with the <a href={ROOT+"check-score.html"} target="_blank" rel="noopener noreferrer">official calculator</a>. Draw tracking and PNP eligibility pending.</p></div>}
   </div>;
