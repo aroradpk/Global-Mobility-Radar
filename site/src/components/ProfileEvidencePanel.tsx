@@ -11,6 +11,7 @@ export default function ProfileEvidencePanel({today}:{today:string}){
  const [status,setStatus]=useState("");
  const nextId=useRef(1);
  const clearDraft=()=>{setDraft({});setEditing(null);setConfirmed(false);setError("");};
+ const mayDiscard=()=>!Object.values(draft).some(value=>value.trim()!=="")||window.confirm("Discard the unsaved evidence draft?");
  const save=()=>{
   if(!confirmed){setError("Confirm that you reviewed these self-reported facts.");return;}
   if(editing===null&&records.length>=maxEvidenceRecords){setError("Record limit reached. Remove an existing record first.");return;}
@@ -32,7 +33,7 @@ export default function ProfileEvidencePanel({today}:{today:string}){
   <h2>Immigration evidence records</h2>
   <p>Record optional details separately from job-matching facts. These are self-reported, not verified legal evidence. Blank optional fields remain unknown. No country calculator automatically uses these records yet.</p>
   <form className="stack" onSubmit={e=>{e.preventDefault();save();}}>
-   <label>Evidence category<select value={kind} disabled={editing!==null} onChange={e=>{setKind(e.target.value as EvidenceKind);clearDraft();setStatus("");}}>{(Object.keys(evidenceLabels) as EvidenceKind[]).map(k=><option key={k} value={k}>{evidenceLabels[k]}</option>)}</select></label>
+   <label>Evidence category<select value={kind} disabled={editing!==null} onChange={e=>{if(!mayDiscard())return;setKind(e.target.value as EvidenceKind);clearDraft();setStatus("");}}>{(Object.keys(evidenceLabels) as EvidenceKind[]).map(k=><option key={k} value={k}>{evidenceLabels[k]}</option>)}</select></label>
    <p className="small muted">{editing===null?"Add a record":"Editing a saved record"}. Do not include passport numbers, account numbers or document images.</p>
    {evidenceFields[kind].map(field=><label key={field.key}>{field.label}<input type={"format" in field&&field.format==="date"?"date":"text"} required={"required" in field&&field.required} maxLength={250} value={draft[field.key]??""} onChange={e=>{const value=e.target.value;setDraft(prev=>({...prev,[field.key]:value}));setConfirmed(false);setError("");}}/></label>)}
    <label><input type="checkbox" checked={confirmed} onChange={e=>{setConfirmed(e.target.checked);setError("");}}/> I reviewed these facts; they are self-reported, not independently verified.</label>
@@ -46,7 +47,7 @@ export default function ProfileEvidencePanel({today}:{today:string}){
    <strong>{evidenceLabels[record.kind]} — record {record.id}</strong>
    <p className="small muted">Reviewed {record.confirmedOn} · {evidenceState(record,today)}</p>
    <dl>{evidenceFields[record.kind].filter(f=>record.values[f.key]).map(f=><div key={f.key}><dt>{f.label}</dt><dd style={{overflowWrap:"anywhere"}}>{record.values[f.key]}</dd></div>)}</dl>
-   <div className="row"><button type="button" className="btn" onClick={()=>{setKind(record.kind);setDraft({...record.values});setEditing(record.id);setConfirmed(false);setError("");setStatus("Editing record "+record.id+".");}}>Edit record {record.id}</button><button type="button" className="btn" onClick={()=>{if(!window.confirm("Remove this evidence record?"))return;setRecords(prev=>prev.filter(r=>r.id!==record.id));if(editing===record.id)clearDraft();setStatus("Evidence record removed.");}}>Remove record {record.id}</button></div>
+   <div className="row"><button type="button" className="btn" onClick={()=>{if(!mayDiscard())return;setKind(record.kind);setDraft({...record.values});setEditing(record.id);setConfirmed(false);setError("");setStatus("Editing record "+record.id+".");}}>Edit record {record.id}</button><button type="button" className="btn" onClick={()=>{if(!window.confirm("Remove this evidence record?"))return;setRecords(prev=>prev.filter(r=>r.id!==record.id));if(editing===record.id)clearDraft();setStatus("Evidence record removed.");}}>Remove record {record.id}</button></div>
   </div>)}
   <button type="button" className="btn" disabled={!records.length} onClick={exportRecords}>Export reviewed evidence (JSON)</button>
   <p className="small muted">Export includes saved evidence records only, not your CV, career profile, preferences or immigration scenarios. Clear all local data or reload to clear this tab; downloaded files must be deleted separately.</p>
