@@ -71,7 +71,11 @@ const cases:Case[]=[
 ["GT no UK earnings","talentIlr",ti,{earnings:"no"},no],
 ["GT English unknown","talentIlr",ti,{english:""},unknown],
 ["GT current permission unknown","talentIlr",ti,{current:""},unknown],
-["missing inputs","skilled",{}, {},unknown]
+["missing inputs","skilled",{}, {},unknown],
+["IT code cannot claim ISL despite sufficient pay","skilled",sw,{option:"isl",isl:"yes"},no],
+["manual ISL code at full rate","skilled",sw,{option:"isl",isl:"yes",soc:"other",manualRate:"33400",manualRateConfirmed:"yes",salary:"33400"},ok],
+["manual rate below published column minimum","skilled",sw,{soc:"other",manualRate:"10000",manualRateConfirmed:"yes"},unknown],
+["entrant grant duration zero","skilled",sw,{option:"entrant",salary:"38300",entrant:"yes",entrantMonths:"0",entrantPeriod:"yes"},unknown]
 ];
 describe("UK ordinary routes",()=>{for(const [name,id,base,patch,expected,date] of cases)it(name,()=>expect(assessPermit("uk",id,{...base,...patch},date??day).status).toBe(expected));});
 it("uses full salary floor even when occupation going rate is lower",()=>{const x=assessPermit("uk","skilled",{...sw,soc:"2136",salary:"41700"},day);expect(x.details).toContain("Required qualifying annual pay: GBP 41700.00");});

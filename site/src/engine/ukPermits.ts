@@ -52,6 +52,8 @@ function ukSalary(i:Facts,o:Checks,settlement=false){
  const row=UK_IT_RATES.find(r=>r[0]===i.soc);
  const base=row?Number(row[column])*100:i.soc==="other"&&i.manualRateConfirmed==="yes"?cents(i.manualRate):null;
  const hours=cents(i.hours),pay=cents(i.salary);
+ if(!settlement&&option==="isl"&&row){o.failed.push("Selected IT occupation is not on the current Immigration Salary List");return;}
+ if(base!==null&&base<3340000){o.missing.push("Check the manually entered rate against the published Table 1/1a minimum column");return;}
  if(hours!==null&&hours>4800){o.missing.push("Over 48 hours or irregular hours require manual pay calculation");return;}
  if(base===null||hours===null||pay===null)return;
  // Exact integer arithmetic. Ceil fractional pennies, not approximate discount percentages.
@@ -93,10 +95,10 @@ const talentCriteria=[
 export const ukRoutes:Route[]=[
  {id:"skilled",title:"Skilled Worker",kind:"Sponsored work visa · not direct PR",source:SW,
  intro:"A valid sponsor and job-specific CoS are mandatory. Salary must meet both the applicable general floor and the published going-rate column, adjusted to regular hours.",
- links:[["Immigration Rules",RULES+"skilled-worker"],["Occupation rates",RULES+"skilled-occupations"],["Sponsor register",SPONSORS],["Salary discounts",SW+"/when-you-can-be-paid-less"]],
+ links:[["Immigration Rules",RULES+"skilled-worker"],["Occupation rates",RULES+"skilled-occupations"],["Sponsor register",SPONSORS],["Salary discounts",SW+"/when-you-can-be-paid-less"],["Immigration Salary List",RULES+"immigration-salary-list"]],
  fields:[...initial,...discountFields,...roles],
  check:(i,_t,o)=>{
-  if(i.option==="entrant"){const n=number(i.entrantMonths);if(n!==null&&n>48)o.failed.push("New entrant combined permission exceeds four years");}
+  if(i.option==="entrant"){const n=number(i.entrantMonths);if(n!==null&&n>48)o.failed.push("New entrant combined permission exceeds four years");else if(n===0)o.missing.push("Include the proposed grant in combined permission duration");}
   ukSalary(i,o);
  }},
  {id:"talentEvidence",title:"Global Talent — endorsement evidence",kind:"No job offer required · discretionary endorsement review",source:GT+"/eligibility",
