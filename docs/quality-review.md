@@ -131,3 +131,9 @@ Phase 4I verified: c1ca8f1 passed all five jobs at https://github.com/aroradpk/G
 ## Phase 5A unified profile candidate — 2026-11-26
 - Promoted US CI 45845323882 passed at 1d7c0ef. Added local profile section, manual career onboarding, explicit review confirmation, cancel-safe editing, canonical career/preference summary and opt-in live confirmed-age linking (eight age-bearing destination engines). No automatic legal evidence inference, no date of birth or persistence. Added unit cases and browser tests. See docs/unified-profile.md. Candidate CI pending.
 - Quality review: fixed loss of existing career/job data when editing profile by maintaining job results and committing Review draft only on Next; explicit manual profile required values avoid silently treating placeholders as facts. Linked age fails closed on date change/removal and preserves independent scenario on unlink. Remaining M01 fields, export, official mappings and country comparison, policy, tracker and monitoring outstanding. Formal acceptance 0/16; no deployment.
+
+
+## Phase 5B review — 2026-11-27
+- Medium / risk avoided: general career facts or occupation code alone do not establish legal qualifying experience; require code plus classification and keep new evidence separate from calculator inputs. Date reversal/future observation, text and numeric bounds, expiry-unknown and explicit confirmation regression fixtures added. No automated legal inference.
+- Medium / privacy: export only reviewed records after confirmation, with warning that file persists independently; exclude uncommitted draft/CV; use local Blob, revoke URL, no storage/network. Global reset remounts profile panel. Browser synthetic download/read/delete and state retention tests added; execution pending. Complete profile export and deeper accessibility review remain open.
+- Existing handover active branch was stale; corrected to Phase 5B candidate. No formal gate accepted. Full CI required before promotion.
