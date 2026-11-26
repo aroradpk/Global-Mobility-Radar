@@ -207,6 +207,26 @@ async function run(viewport) {
     await panel(page).getByRole("button",{name:"Employment Pass and COMPASS",exact:true}).click();
     await inputValue(panel(page).getByLabel("Qualifying fixed monthly salary in SGD"),"7982");
     pass(viewport.width+" Singapore salary, discretionary PR and scenario retention");
+    await openSection(page,"UAE visas");
+    await visible(page.getByRole("heading",{name:"United Arab Emirates — employment and residence pathways"}));
+    await panel(page).getByRole("combobox",{name:"Requested visit duration"}).selectOption("90");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByText("Requested visit duration: 90 days; not a work permit",{exact:true}));
+    await visible(panel(page).getByRole("heading",{name:"Review required"}));
+    await noOverflow(page,"UAE jobseeker");
+    await panel(page).getByRole("button",{name:"Golden Residence — skilled professional",exact:true}).click();
+    await panel(page).getByRole("combobox",{name:"Applicable issuing authority"}).selectOption("dubai");
+    await panel(page).getByLabel("Qualifying monthly salary in AED equivalent").fill("30000");
+    await panel(page).getByLabel("Months of documented salary bank transfers for Dubai").fill("6");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByText("Published monthly salary requirement: AED 30000",{exact:true}));
+    await noOverflow(page,"UAE golden residence");
+    await openSection(page,"Jobs");
+    await openSection(page,"UAE visas");
+    await inputValue(panel(page).getByLabel("Months of documented salary bank transfers for Dubai"),"6");
+    await panel(page).getByRole("button",{name:"Jobseeker visit visa",exact:true}).click();
+    await inputValue(panel(page).getByRole("combobox",{name:"Requested visit duration"}),"90");
+    pass(viewport.width+" UAE visit/work distinction, salary and authority-specific evidence retention");
     await openSection(page,"Canada PR");
     await inputValue(panel(page).getByLabel("Age in completed years",{exact:true}),"30");
     await openSection(page,"Australia skilled visas");
@@ -250,6 +270,9 @@ async function run(viewport) {
     await openSection(page,"Jobs");
     await openSection(page,"Singapore passes");
     await inputValue(panel(page).getByLabel("Age in completed years at application",{exact:true}),"");
+    await openSection(page,"Jobs");
+    await openSection(page,"UAE visas");
+    await inputValue(panel(page).getByRole("combobox",{name:"Requested visit duration"}),"");
     await openSection(page,"Jobs");
     // Delay only this synthetic file read, then release it after a confirmed reset.
     await page.evaluate(()=>{const original=File.prototype.text;File.prototype.text=function(){if(this.name!=="delayed-cv.txt")return original.call(this);return new Promise(resolve=>{globalThis.__releaseSyntheticCv=()=>{File.prototype.text=original;resolve("Synthetic applicant. Software engineer. JavaScript React Node.js. ".repeat(6));delete globalThis.__releaseSyntheticCv;};});};});

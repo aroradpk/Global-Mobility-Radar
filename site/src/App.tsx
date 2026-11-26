@@ -12,7 +12,7 @@ import EuropePermitPanel from "./components/EuropePermitPanel";
 import { useAssessmentDate } from "./useAssessmentDate";
 
 type Step = "upload" | "review" | "interview" | "results";
-const SECTIONS = {jobs:"Jobs",canada:"Canada PR",australia:"Australia skilled visas",germany:"Germany visas",ireland:"Ireland permits",netherlands:"Netherlands permits",newzealand:"New Zealand visas",uk:"UK visas",hongkong:"Hong Kong visas",singapore:"Singapore passes"} as const;
+const SECTIONS = {jobs:"Jobs",canada:"Canada PR",australia:"Australia skilled visas",germany:"Germany visas",ireland:"Ireland permits",netherlands:"Netherlands permits",newzealand:"New Zealand visas",uk:"UK visas",hongkong:"Hong Kong visas",singapore:"Singapore passes",uae:"UAE visas"} as const;
 type View = keyof typeof SECTIONS;
 
 export default function App() {
@@ -51,6 +51,7 @@ export default function App() {
       <div key={"uk-"+resetKey} hidden={view!=="uk"}><EuropePermitPanel country="uk" today={today}/></div>
       <div key={"hongkong-"+resetKey} hidden={view!=="hongkong"}><EuropePermitPanel country="hongkong" today={today}/></div>
       <div key={"singapore-"+resetKey} hidden={view!=="singapore"}><EuropePermitPanel country="singapore" today={today}/></div>
+      <div key={"uae-"+resetKey} hidden={view!=="uae"}><EuropePermitPanel country="uae" today={today}/></div>
     </main>
     <footer className="wrap foot">
       <p>Local preview: profile, imported job data and immigration scenarios are held in memory, cleared on reload or Clear all local data. No profile uploads, paid features or accounts. Opening a link visits an external site.</p>
