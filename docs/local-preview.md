@@ -41,3 +41,5 @@ UK screens share the local permit UI; see [UK rules](uk-rules.md). No automatic 
 - UK sources and scope in docs/uk-rules.md. Official nine IT salary rows, regular-hours calculation and discount safeguards, endorsement evidence readiness (not decision), visa and current ILR screens. Announced Earned Settlement and future B2 settlement requirements are not applied as current rules; re-review before expiry. No additional runtime dependency. Actual sponsor/occupation evidence, exceptional or historical salary/residence cases, official parity, PDF success path and full accessibility/cross-browser remain outstanding. Formal acceptance remains 0/16. Next: Phase 4G Hong Kong QMAS and Top Talent Pass, then Singapore/UAE/US. No deployment or owner intervention.
 
 Hong Kong QMAS, TTPS, professional employment and ordinary right-of-abode screens share local permit UI. See [Hong Kong rules](hong-kong-rules.md). Candidate CI pending.
+
+Singapore shares local permit UI, no employer data fetched and PR always requires ICA review. See [Singapore rules](singapore-rules.md). Candidate CI pending.

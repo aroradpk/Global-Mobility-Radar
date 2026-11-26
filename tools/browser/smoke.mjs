@@ -187,6 +187,26 @@ async function run(viewport) {
     await panel(page).getByRole("button",{name:"QMAS — general criteria",exact:true}).click();
     await inputValue(panel(page).getByLabel("Age in completed years at application",{exact:true}),"30");
     pass(viewport.width+" Hong Kong criteria count, income and scenario retention");
+    await openSection(page,"Singapore passes");
+    await visible(page.getByRole("heading",{name:"Singapore — employment and residence pathways"}));
+    await panel(page).getByLabel("Age in completed years at application",{exact:true}).fill("30");
+    await panel(page).getByRole("combobox",{name:"Employer's official MOM sector"}).selectOption("finance");
+    await panel(page).getByLabel("Qualifying fixed monthly salary in SGD").fill("7982");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByText("Current EP monthly salary floor: SGD 7982",{exact:true}));
+    await visible(panel(page).getByRole("heading",{name:"Review required"}));
+    await noOverflow(page,"Singapore EP");
+    await panel(page).getByRole("button",{name:"Permanent residence — readiness",exact:true}).click();
+    await panel(page).getByRole("combobox",{name:"Current valid immigration/work status"}).selectOption("ep");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByRole("heading",{name:"Review required"}));
+    await noOverflow(page,"Singapore PR");
+    await openSection(page,"Jobs");
+    await openSection(page,"Singapore passes");
+    await inputValue(panel(page).getByRole("combobox",{name:"Current valid immigration/work status"}),"ep");
+    await panel(page).getByRole("button",{name:"Employment Pass and COMPASS",exact:true}).click();
+    await inputValue(panel(page).getByLabel("Qualifying fixed monthly salary in SGD"),"7982");
+    pass(viewport.width+" Singapore salary, discretionary PR and scenario retention");
     await openSection(page,"Canada PR");
     await inputValue(panel(page).getByLabel("Age in completed years",{exact:true}),"30");
     await openSection(page,"Australia skilled visas");
@@ -226,6 +246,9 @@ async function run(viewport) {
     await inputValue(panel(page).getByRole("combobox",{name:"Verified SOC 2020 code"}),"");
     await openSection(page,"Jobs");
     await openSection(page,"Hong Kong visas");
+    await inputValue(panel(page).getByLabel("Age in completed years at application",{exact:true}),"");
+    await openSection(page,"Jobs");
+    await openSection(page,"Singapore passes");
     await inputValue(panel(page).getByLabel("Age in completed years at application",{exact:true}),"");
     await openSection(page,"Jobs");
     // Delay only this synthetic file read, then release it after a confirmed reset.
