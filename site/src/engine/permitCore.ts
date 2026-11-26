@@ -50,7 +50,7 @@ export function evaluatePermit(route:Route|undefined,input:Facts,today:string) {
         else if(v!=="yes")out.missing.push(f.label);
       }else if(f.kind==="choice"){
         if(!f.options?.some(([k])=>k===v))out.missing.push(f.label);
-      }else if(f.kind==="number"?number(v)===null:f.kind==="money"?cents(v)===null:f.kind==="date"?(!v||dateValue(v)===null||v>today):(!v?.trim()||v.length>200))out.missing.push(f.label);
+      }else if(f.kind==="number"?number(v)===null:f.kind==="money"?cents(v)===null:f.kind==="date"?(!v||dateValue(v)===null||v>today):(typeof v!=="string"||!v.trim()||v.length>200))out.missing.push(f.label);
     }
     route.check(input,today,out);
   }

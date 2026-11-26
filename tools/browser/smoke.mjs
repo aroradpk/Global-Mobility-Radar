@@ -168,6 +168,25 @@ async function run(viewport) {
     await panel(page).getByRole("button",{name:"Skilled Worker",exact:true}).click();
     await inputValue(panel(page).getByRole("combobox",{name:"Verified SOC 2020 code"}),"2134");
     pass(viewport.width+" UK going-rate assessment and scenario retention");
+    await openSection(page,"Hong Kong visas");
+    await visible(page.getByRole("heading",{name:"Hong Kong — employment and residence pathways"}));
+    await panel(page).getByLabel("Age in completed years at application",{exact:true}).fill("30");
+    await panel(page).getByRole("combobox",{name:"Proficient in written and spoken English",exact:true}).selectOption("yes");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByRole("heading",{name:"Review required"}));
+    await visible(panel(page).getByText(/Confirmed criteria: 2 \/ 12/));
+    await noOverflow(page,"HK QMAS");
+    await panel(page).getByRole("button",{name:"Top Talent — Category A",exact:true}).click();
+    await panel(page).getByLabel("Qualifying previous-year individual income in HKD equivalent").fill("2500000");
+    await panel(page).getByRole("button",{name:"Assess selected pathway"}).click();
+    await visible(panel(page).getByText("Category A minimum: HKD 2,500,000 in the preceding year",{exact:true}));
+    await noOverflow(page,"HK Top Talent");
+    await openSection(page,"Jobs");
+    await openSection(page,"Hong Kong visas");
+    await inputValue(panel(page).getByLabel("Qualifying previous-year individual income in HKD equivalent"),"2500000");
+    await panel(page).getByRole("button",{name:"QMAS — general criteria",exact:true}).click();
+    await inputValue(panel(page).getByLabel("Age in completed years at application",{exact:true}),"30");
+    pass(viewport.width+" Hong Kong criteria count, income and scenario retention");
     await openSection(page,"Canada PR");
     await inputValue(panel(page).getByLabel("Age in completed years",{exact:true}),"30");
     await openSection(page,"Australia skilled visas");
@@ -205,6 +224,9 @@ async function run(viewport) {
     await openSection(page,"Jobs");
     await openSection(page,"UK visas");
     await inputValue(panel(page).getByRole("combobox",{name:"Verified SOC 2020 code"}),"");
+    await openSection(page,"Jobs");
+    await openSection(page,"Hong Kong visas");
+    await inputValue(panel(page).getByLabel("Age in completed years at application",{exact:true}),"");
     await openSection(page,"Jobs");
     // Delay only this synthetic file read, then release it after a confirmed reset.
     await page.evaluate(()=>{const original=File.prototype.text;File.prototype.text=function(){if(this.name!=="delayed-cv.txt")return original.call(this);return new Promise(resolve=>{globalThis.__releaseSyntheticCv=()=>{File.prototype.text=original;resolve("Synthetic applicant. Software engineer. JavaScript React Node.js. ".repeat(6));delete globalThis.__releaseSyntheticCv;};});};});
