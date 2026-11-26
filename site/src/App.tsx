@@ -11,6 +11,7 @@ import GermanyPanel from "./components/GermanyPanel";
 import EuropePermitPanel from "./components/EuropePermitPanel";
 import { useAssessmentDate } from "./useAssessmentDate";
 import ProfilePanel from "./components/ProfilePanel";
+import type {EvidenceRecord} from "./engine/profileEvidence";
 import {blankJobProfile,currentAge,type ConfirmedAge} from "./engine/unifiedProfile";
 
 type Step = "upload" | "review" | "interview" | "results";
@@ -26,6 +27,7 @@ export default function App() {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [careerConfirmed,setCareerConfirmed]=useState(false);
   const [manualReview,setManualReview]=useState(false);
+  const [evidence,setEvidence]=useState<EvidenceRecord[]>([]);
   const [age,setAge]=useState<ConfirmedAge|null>(null);
   const profileAge=currentAge(age,today);
   const [answers, setAnswers] = useState<Answers | null>(null);
@@ -35,7 +37,7 @@ export default function App() {
   const restartProfile = () => { setHasResults(false); setProfile(null); setCareerConfirmed(false); setManualReview(false); setAnswers(null); setSavedAnswers(null); setStep("upload"); };
   const startManual=()=>{setProfile(blankJobProfile());setCareerConfirmed(false);setManualReview(true);setAnswers(null);setSavedAnswers(null);setStep("review");};
   const editCareer=()=>{setView("jobs");if(profile){setStep("review");}else startManual();};
-  const reset = () => { setView("jobs"); setResetKey(k=>k+1); setAge(null); restartProfile(); };
+  const reset = () => { setView("jobs"); setResetKey(k=>k+1); setAge(null); setEvidence([]); restartProfile(); };
   return <LangContext.Provider value="en">
     <header className="top"><div className="wrap top-in">
       <strong>Global Mobility Radar</strong>
@@ -51,8 +53,8 @@ export default function App() {
       {/* Keep the imported snapshot, filters and screening work while editing preferences. */}
       {hasResults && profile && effective && <div hidden={step!=="results"}><LocalResults profile={profile} answers={effective} onBack={() => setStep("interview")} onEditProfile={()=>setStep("review")}/></div>}
       </div>
-      <div key={"profile-"+resetKey} hidden={view!=="profile"}><ProfilePanel profile={careerConfirmed?profile:null} answers={careerConfirmed?savedAnswers:null} age={age} today={today} onAge={setAge} onCareer={editCareer} onPreferences={()=>{setView("jobs");setStep("interview");}}/></div>
-      <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today} profileAge={profileAge}/></div>
+      <div key={"profile-"+resetKey} hidden={view!=="profile"}><ProfilePanel evidence={evidence} onEvidence={setEvidence} profile={careerConfirmed?profile:null} answers={careerConfirmed?savedAnswers:null} age={age} today={today} onAge={setAge} onCareer={editCareer} onPreferences={()=>{setView("jobs");setStep("interview");}}/></div>
+      <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
       <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today} profileAge={profileAge}/></div>
       <div key={"germany-"+resetKey} hidden={view!=="germany"}><GermanyPanel today={today} profileAge={profileAge}/></div>
       <div key={"ireland-"+resetKey} hidden={view!=="ireland"}><EuropePermitPanel country="ireland" today={today} profileAge={profileAge}/></div>

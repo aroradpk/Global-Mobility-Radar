@@ -1,10 +1,11 @@
 import {useState} from "react";
 import ProfileEvidencePanel from "./ProfileEvidencePanel";
+import type {EvidenceRecord} from "../engine/profileEvidence";
 import type {Profile,Answers} from "../types";
 import {skillLabel,TRACK} from "../data";
 import {confirmAge,currentAge,type ConfirmedAge} from "../engine/unifiedProfile";
 
-export default function ProfilePanel({profile,answers,age,today,onAge,onCareer,onPreferences}:{profile:Profile|null;answers:Answers|null;age:ConfirmedAge|null;today:string;onAge:(age:ConfirmedAge|null)=>void;onCareer:()=>void;onPreferences:()=>void}){
+export default function ProfilePanel({profile,answers,age,today,onAge,onCareer,onPreferences,evidence,onEvidence}:{evidence:EvidenceRecord[];onEvidence:React.Dispatch<React.SetStateAction<EvidenceRecord[]>>;profile:Profile|null;answers:Answers|null;age:ConfirmedAge|null;today:string;onAge:(age:ConfirmedAge|null)=>void;onCareer:()=>void;onPreferences:()=>void}){
  const [draft,setDraft]=useState(age?.value??"");
  const [error,setError]=useState("");
  const active=currentAge(age,today);
@@ -31,6 +32,6 @@ export default function ProfilePanel({profile,answers,age,today,onAge,onCareer,o
    <button type="button" className="btn" disabled={!profile} onClick={onPreferences}>Edit relocation preferences</button>
    <p className="small muted">Preferences are not work authorisation, immigration chargeability, spouse eligibility or proof of funds. Those remain separate evidence.</p>
   </div>
-  <ProfileEvidencePanel today={today} exportContext={{profile,preferences:answers,age}}/>
+  <ProfileEvidencePanel records={evidence} setRecords={onEvidence} today={today} exportContext={{profile,preferences:answers,age}}/>
  </section>;
 }

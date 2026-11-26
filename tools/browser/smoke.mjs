@@ -420,6 +420,30 @@ async function run(viewport) {
     await panel(page).getByRole("button",{name:"Save evidence record",exact:true}).click();
     await visible(panel(page).getByText("Available funds — record 2",{exact:true}));
     pass(viewport.width+" reviewed evidence save/edit/cancel/export/delete and navigation");
+    await panel(page).getByLabel("Evidence category").selectOption("language");
+    await panel(page).getByLabel("Language test name",{exact:true}).fill("IELTS General Training");
+    await panel(page).getByLabel("Test date",{exact:true}).fill("2026-01-01");
+    for(const [label,score] of [["Speaking score / grade","7"],["Listening score / grade","8"],["Reading score / grade","7"],["Writing score / grade","7"]])await panel(page).getByLabel(label,{exact:true}).fill(score);
+    await panel(page).getByLabel("Canadian approved test format checked (optional: confirmed)",{exact:true}).fill("confirmed");
+    await panel(page).getByLabel("I reviewed these facts; they are self-reported, not independently verified.").check();
+    await panel(page).getByRole("button",{name:"Save evidence record",exact:true}).click();
+    await openSection(page,"Canada PR");
+    await panel(page).getByLabel("First official language",{exact:true}).selectOption("english");
+    const first=panel(page).getByLabel("Four first-language approved CLB/NCLC levels, comma-separated, or none",{exact:true});
+    await first.fill("8,8,8,8");
+    await panel(page).getByLabel("Use saved first-language evidence").selectOption("3");
+    await inputValue(first,"9,9,9,9");
+    assert.equal(await first.isDisabled(),true);
+    await noOverflow(page,"Canada linked language");
+    await openSection(page,"Profile");
+    page.once("dialog",dialog=>dialog.accept());
+    await panel(page).getByRole("button",{name:"Remove record 3",exact:true}).click();
+    await openSection(page,"Canada PR");
+    await inputValue(first,"");
+    await panel(page).getByLabel("Use saved first-language evidence").selectOption("");
+    await inputValue(first,"8,8,8,8");
+    pass(viewport.width+" Canada live language link, removal and manual restoration");
+
 
     page.once("dialog",dialog=>dialog.accept());
     await page.getByRole("button",{name:"Clear all local data",exact:true}).click();

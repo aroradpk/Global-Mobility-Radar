@@ -2,8 +2,7 @@ import {useState,useRef} from "react";
 import {serializeProfile,type ProfileExportContext} from "../engine/profileExport";
 import {evidenceFields,evidenceLabels,reviewEvidence,evidenceState,serializeEvidence,maxEvidenceRecords,type EvidenceKind,type EvidenceRecord} from "../engine/profileEvidence";
 
-export default function ProfileEvidencePanel({today,exportContext}:{today:string;exportContext:ProfileExportContext}){
- const [records,setRecords]=useState<EvidenceRecord[]>([]);
+export default function ProfileEvidencePanel({today,exportContext,records,setRecords}:{today:string;exportContext:ProfileExportContext;records:EvidenceRecord[];setRecords:React.Dispatch<React.SetStateAction<EvidenceRecord[]>>}){
  const [kind,setKind]=useState<EvidenceKind>("employment");
  const [draft,setDraft]=useState<Record<string,string>>({});
  const [editing,setEditing]=useState<number|null>(null);
@@ -39,10 +38,11 @@ export default function ProfileEvidencePanel({today,exportContext}:{today:string
  };
  return <div className="card stack">
   <h2>Immigration evidence records</h2>
-  <p>Record optional details separately from job-matching facts. These are self-reported, not verified legal evidence. Blank optional fields remain unknown. No country calculator automatically uses these records yet.</p>
+  <p>Record optional details separately from job-matching facts. These are self-reported, not verified legal evidence. Blank optional fields remain unknown. Canada can explicitly link a reviewed language record; other fields remain independent.</p>
   <form className="stack" onSubmit={e=>{e.preventDefault();save();}}>
    <label>Evidence category<select value={kind} disabled={editing!==null} onChange={e=>{if(!mayDiscard())return;setKind(e.target.value as EvidenceKind);clearDraft();setStatus("");}}>{(Object.keys(evidenceLabels) as EvidenceKind[]).map(k=><option key={k} value={k}>{evidenceLabels[k]}</option>)}</select></label>
    <p className="small muted">{editing===null?"Add a record":"Editing a saved record"}. Do not include passport numbers, account numbers or document images.</p>
+   {kind==="language"&&<p className="small muted">For Canada, use IELTS General Training, CELPIP-General, PTE Core, TCF Canada, or TEF Canada (previous score equivalency). Enter component scores from one approved result, not overall scores or IELTS One Skill Retake. Type confirmed in the Canadian format field only after checking the original report.</p>}
    {evidenceFields[kind].map(field=><label key={field.key}>{field.label}<input type={"format" in field&&field.format==="date"?"date":"text"} required={"required" in field&&field.required} maxLength={250} value={draft[field.key]??""} onChange={e=>{const value=e.target.value;setDraft(prev=>({...prev,[field.key]:value}));setConfirmed(false);setError("");}}/></label>)}
    <label><input type="checkbox" checked={confirmed} onChange={e=>{setConfirmed(e.target.checked);setError("");}}/> I reviewed these facts; they are self-reported, not independently verified.</label>
    <div className="row"><button className="btn primary" type="submit">Save evidence record</button><button className="btn" type="button" onClick={()=>{clearDraft();setStatus("Draft discarded.");}}>Cancel evidence edit</button></div>
