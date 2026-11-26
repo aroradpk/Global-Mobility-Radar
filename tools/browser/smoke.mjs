@@ -358,6 +358,10 @@ async function run(viewport) {
     await panel(page).getByLabel("Evidence category").selectOption("funds");
     await panel(page).getByLabel("Available amount",{exact:true}).fill("12000");
     await panel(page).getByLabel("Currency (3-letter code)",{exact:true}).fill("cad");
+    page.once("dialog",dialog=>dialog.dismiss());
+    await panel(page).getByLabel("Evidence category").selectOption("salary");
+    await inputValue(panel(page).getByLabel("Evidence category"),"funds");
+    await inputValue(panel(page).getByLabel("Available amount",{exact:true}),"12000");
     await panel(page).getByRole("button",{name:"Save evidence record",exact:true}).click();
     await visible(panel(page).getByText("Confirm that you reviewed these self-reported facts.",{exact:true}));
     await panel(page).getByLabel("I reviewed these facts; they are self-reported, not independently verified.").check();
