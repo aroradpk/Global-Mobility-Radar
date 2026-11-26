@@ -84,7 +84,7 @@ function assessEp(i:Facts,o:Checks){
  o.details.push(scores.map((v,j)=>"C"+(j+1)+": "+(v??"unknown")).join(" · "));
  if(scores.every(v=>v!==null)){
   const total=scores.reduce<number>((a,v)=>a+(v??0),0);
-  o.details.push("COMPASS total: "+total+" / 90; pass threshold 40");
+  o.details.push("COMPASS total: "+total+" points; pass threshold 40");
   if(total<40)o.failed.push("Stage 2 COMPASS score below 40");
  }else{
   const confirmed=scores.reduce<number>((a,v)=>a+(v??0),0);
@@ -147,6 +147,7 @@ export const sgRoutes:Route[]=[
   if(i.pass==="other")o.missing.push("Other PR categories require official individual review; this screen is for current EP/S Pass holders");
   else if(i.pass==="ep"||i.pass==="sp")o.details.push("Current EP/S Pass category permits application without a local sponsor, subject to ICA verification.");
   o.details.push("ICA weighs family ties, economic contributions, qualifications, age, family profile and residence history. No approval probability calculated.");
+  if(i.scope==="yes"&&(i.pass==="ep"||i.pass==="sp")&&i.documents==="yes"&&i.ns==="yes"&&i.general==="yes")o.details.push("Self-reported preparation checklist complete. This is not a PR eligibility or approval decision.");
   o.missing.push("Final eligibility and discretionary decision require ICA assessment");
  }},
 ];

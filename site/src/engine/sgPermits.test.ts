@@ -74,6 +74,9 @@ describe("Singapore route screens",()=>{for(const [name,id,base,patch,expected,d
 describe("official EP salary schedule",()=>{
  it("keeps announced 2027 rates separate",()=>{expect(epFloor(30,"other")).toBe(7223);expect(epFloor(30,"other",true)).toBe(7750);expect(epFloor(30,"finance")).toBe(7982);expect(epFloor(30,"finance",true)).toBe(8541);});
  it("all 23 published bands increase monotonically",()=>{for(const sector of ["finance","other"]){for(let age=24;age<=45;age++){expect(epFloor(age,sector)!).toBeGreaterThan(epFloor(age-1,sector)!);expect(epFloor(age,sector,true)!).toBeGreaterThan(epFloor(age,sector)!);}}});
- it("small firm default points reflected in total",()=>expect(assessPermit("singapore","ep",ep,day).details).toContain("COMPASS total: 40 / 90; pass threshold 40"));
+ it("small firm default points reflected in total",()=>expect(assessPermit("singapore","ep",ep,day).details).toContain("COMPASS total: 40 points; pass threshold 40"));
  it("no PR probability or automatic pass",()=>{const r=assessPermit("singapore","pr",pr,day);expect(r.status).toBe(unknown);expect(r.details.join(" ")).toContain("No approval probability calculated");});
 });
+
+it("supports all six maximum component scores without a misleading denominator",()=>{const r=assessPermit("singapore","ep",{...large,c1:"20",c2:"20",share:"lt5",c4Band:"high",sol:"yes",solProof:"yes",sep:"yes",sepProof:"yes"},day);expect(r.status).toBe(ok);expect(r.details).toContain("COMPASS total: 110 points; pass threshold 40");});
+it("PR readiness is distinct from final eligibility",()=>{const ready=assessPermit("singapore","pr",pr,day);const incomplete=assessPermit("singapore","pr",{...pr,documents:""},day);expect(ready.status).toBe(unknown);expect(ready.details.join(" ")).toContain("preparation checklist complete");expect(incomplete.details.join(" ")).not.toContain("preparation checklist complete");});
