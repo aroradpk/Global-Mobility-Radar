@@ -3,7 +3,7 @@
 Updated: 2026-11-26
 Repository: aroradpk/Global-Mobility-Radar
 Review baseline: 7df403c5545c5704227ed75561f5ec4a08f5db9c
-Active branch: development/roadmap-and-hardening
+Active branch: development/phase5b-evidence (candidate; do not merge into main)
 
 ## Current state
 - Fork access and initial static audit verified; upstream MIT licence read.
@@ -186,3 +186,8 @@ Phase 4I verified: c1ca8f1 passed all five jobs at https://github.com/aroradpk/G
 ## Phase 5A unified profile candidate — 2026-11-26
 - Promoted US CI 45845323882 passed at 1d7c0ef. Added local profile section, manual career onboarding, explicit review confirmation, cancel-safe editing, canonical career/preference summary and opt-in live confirmed-age linking (eight age-bearing destination engines). No automatic legal evidence inference, no date of birth or persistence. Added unit cases and browser tests. See docs/unified-profile.md. Candidate CI pending.
 - Quality review: fixed loss of existing career/job data when editing profile by maintaining job results and committing Review draft only on Next; explicit manual profile required values avoid silently treating placeholders as facts. Linked age fails closed on date change/removal and preserves independent scenario on unlink. Remaining M01 fields, export, official mappings and country comparison, policy, tracker and monitoring outstanding. Formal acceptance 0/16; no deployment.
+
+
+## Phase 5B structured evidence candidate — 2026-11-27
+- Base d33c7d6; main e148ae0 remains untouched. Seven local evidence categories with bounded records, explicit review, optional unknown fields, dates and amount validation, occupation code/classification pair, edit/cancel/delete and confirmed JSON export. No automatic legal mapping, persistence, new dependencies, or remote traffic. Browser regressions cover save, edit, cancel, navigation, download, delete and reset across three widths. 25 new unit tests written; CI not yet verified.
+- M01 remains in progress: full profile export (career/preferences/age), official occupation and test mappings, linked facts beyond age, PDF success path, accessibility, independent evidence/official calculator parity remain pending. M09 comparison and all other outstanding gates retained; 0/16 accepted. Next: validate candidate CI, fix any regressions, then safe field mappings and complete export before route comparison. No deployment or owner action requested.
