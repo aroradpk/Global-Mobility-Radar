@@ -1,0 +1,12 @@
+# Australia 189/190/491 — Phase 4B
+Official sources reviewed 2026-11-26:
+- https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/skilled-independent-189/points-table
+- https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/skilled-nominated-190/points-table
+- https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/skilled-work-regional-provisional-491/points-table
+- https://immi.homeaffairs.gov.au/visas/working-in-australia/skillselect/expression-of-interest
+- https://immi.homeaffairs.gov.au/visas/working-in-australia/skills-assessment
+- https://immi.homeaffairs.gov.au/help-support/meeting-our-requirements/english-language
+- https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/skilled-work-regional-provisional-491/application
+
+Version review window 2026-11-26 through 2026-12-26, a product freshness guard not a legal expiry. Points: age, English, recognised qualification, employment (combined cap 20), partner, study, specialist research, regional study, NAATI, Professional Year. Exact completed months entered for qualifying work in past ten years, no raw CV inference; overlap checked by total duration only, not exact dates. State nomination 190 +5 and 491 state/eligible family support +15 separately; potential points are explicitly conditional. 189/190 permanent; 491 provisional, 191 separate conditions. Current self-reported evidence only, no invitation or grant prediction. Minimum 65, actual invitation may require higher. Missing data and stale rules never silently pass; explicit status separates EOI candidate, outstanding requirements, review and self-reported invitation screen. No automatic assessment of state nomination availability, occupation lists, ACS deducted years, test score conversion, passport verification, health/character or 191; manual confirmation required. English and skills date checks use conservative three-year boundary (shorter validity checked manually, exceptional 60-day skills assessment period requires manual review). Professional Year four-year boundary conservative. Partner skilled/English category must be manually verified. For actual invitation-date assessment, use official calculator/authority; current-date screen cannot determine historical points. No personal data submitted or saved.
+28 synthetic JS cases executed against same function serialised to australia.js before commit; Vitest/browser/official parity pending. See docs/quality-review.md.

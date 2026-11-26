@@ -74,3 +74,31 @@ jobs:
           node-version: "22"
       - name: Audit locked dependencies (high/critical gate)
         run: npm audit --package-lock-only --audit-level=high
+
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      - name: Build production preview
+        working-directory: site
+        run: |
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build
+      - name: Audit browser test tooling
+        working-directory: tools/browser
+        run: npm audit --package-lock-only --audit-level=high
+      - name: Install audited browser tooling
+        working-directory: tools/browser
+        run: npm ci --ignore-scripts --no-audit --no-fund
+      - name: Install pinned Chromium
+        working-directory: tools/browser
+        run: ./node_modules/.bin/playwright install --with-deps chromium
+      - name: Desktop and mobile browser regression
+        working-directory: tools/browser
+        run: npm test

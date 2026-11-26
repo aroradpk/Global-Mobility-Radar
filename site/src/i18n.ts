@@ -2,16 +2,16 @@ import { createContext, useContext } from "react";
 import type { L10n, Lang } from "./types";
 
 const STRINGS = {
-  appName: { en: "Visa Job Atlas", pt: "Visa Job Atlas" },
+  appName: { en: "Global Mobility Radar", pt: "Global Mobility Radar" },
   tagline: {
-    en: "Upload your CV, answer a few questions, and get the countries, open jobs and 12-month plan most likely to get you a visa-sponsored job: tech, engineering, business, health or creative.",
-    pt: "Envie seu CV, responda algumas perguntas e receba os países, as vagas abertas e um plano de 12 meses com mais chance de te levar a um emprego com visto patrocinado: tecnologia, engenharia, negócios, saúde ou criação.",
+    en: "Review your profile and explore imported job leads and dated immigration references.",
+    pt: "Revise seu perfil e explore vagas importadas e referências de imigração.",
   },
   privacy: {
-    en: "Your CV is read inside your browser and never uploaded. Only the skills, level and answers we extract are sent to match you with jobs.",
-    pt: "Seu CV é lido dentro do seu navegador e nunca é enviado. Só as habilidades, o nível e as respostas que extraímos são enviados para cruzar com as vagas.",
+    en: "Your CV is processed locally. This preview retains the reviewed profile in memory only.",
+    pt: "Seu CV é processado localmente. O perfil fica apenas na memória desta página.",
   },
-  heroEyebrow: { en: "Jobs abroad · visa sponsorship · 18 career fields", pt: "Vagas no exterior · visto patrocinado · 18 áreas" },
+  heroEyebrow: { en: "Local preview · imported job leads · 18 career fields", pt: "Vagas no exterior · visto patrocinado · 18 áreas" },
   heroTitle: { en: "Where are you flying", pt: "Para onde você" },
   heroTitleGrad: { en: "next?", pt: "vai voar?" },
   choosePdf: { en: "Choose your CV", pt: "Escolher seu CV" },
@@ -96,7 +96,7 @@ const STRINGS = {
   h12: { en: "Within a year", pt: "Em até 1 ano" },
   h24: { en: "In 1-2 years", pt: "Em 1-2 anos" },
   qWithFamily: { en: "Moving with a partner or children", pt: "Vou me mudar com parceiro(a) ou filhos" },
-  buildPlan: { en: "Build my plan", pt: "Montar meu plano" },
+  buildPlan: { en: "Open local dashboard", pt: "Montar meu plano" },
   loadingData: { en: "Loading today's job data…", pt: "Carregando os dados de vagas de hoje…" },
   dataError: { en: "Couldn't load the job data. Countries and the plan still work; job matches won't.", pt: "Não foi possível carregar os dados de vagas. Países e plano funcionam; as vagas não." },
   tabOverview: { en: "Overview", pt: "Resumo" },

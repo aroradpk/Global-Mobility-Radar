@@ -1,0 +1,20 @@
+import {describe,it,expect} from "vitest";
+import {blankJobProfile,validCareerYears,confirmAge,currentAge,withProfileAge} from "./unifiedProfile";
+const today="2026-11-26";
+describe("private shared profile",()=>{
+ it("manual placeholder starts with no claimed skills, languages or family",()=>{const p=blankJobProfile();expect(p.skills).toEqual([]);expect(p.languages).toEqual([]);expect(p.families).toEqual([]);expect(p.textLength).toBe(0);});
+ it("fresh blank profile arrays are independent",()=>{const a=blankJobProfile();a.skills.push("js");expect(blankJobProfile().skills).toEqual([]);});
+ for(const v of ["0","0.5","8","8.3","49.9","50"])it("valid experience "+v,()=>expect(validCareerYears(v)).toBe(true));
+ for(const v of [""," ","-1","51","50.1","1e2","NaN","8.33"])it("invalid experience "+JSON.stringify(v),()=>expect(validCareerYears(v)).toBe(false));
+ for(const v of ["18","30","120","030"])it("valid age "+v,()=>expect(confirmAge(v,today)).toEqual({value:String(Number(v)),confirmedOn:today}));
+ for(const v of ["","17","121","30.5","1e2","NaN","-1"," 30"])it("invalid age "+JSON.stringify(v),()=>expect(confirmAge(v,today)).toBeNull());
+ it("invalid confirmation date",()=>expect(confirmAge("30","2026-11-31")).toBeNull());
+ it("same day only",()=>{const a=confirmAge("30",today);expect(currentAge(a,today)).toBe("30");expect(currentAge(a,"2026-11-27")).toBe("");expect(currentAge(a,"2026-11-25")).toBe("");});
+ it("removed age is unknown",()=>expect(currentAge(null,today)).toBe(""));
+ it("invalid stored age stays unknown",()=>expect(currentAge({value:"999",confirmedOn:today},today)).toBe(""));
+ it("link uses confirmed age without touching draft",()=>{const a={age:"31",offer:"yes",education:""};expect(withProfileAge(a,"age",true,"30")).toEqual({age:"30",offer:"yes",education:""});expect(a.age).toBe("31");});
+ it("unlink restores independent draft",()=>expect(withProfileAge({age:"31"},"age",false,"30").age).toBe("31"));
+ it("missing linked age does not fall back to old scenario age",()=>expect(withProfileAge({age:"31"},"age",true,"").age).toBe(""));
+ it("German opportunity-card key only",()=>expect(withProfileAge({opAge:"31",age:"22",opEnglish:""},"opAge",true,"30")).toEqual({opAge:"30",age:"22",opEnglish:""}));
+ it("no legal evidence inferred by profile link",()=>expect(withProfileAge({},"age",true,"30")).toEqual({age:"30"}));
+});

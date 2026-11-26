@@ -14,3 +14,16 @@ Thumbs.db
 
 # Local env files (Vite)
 *.local
+
+# Local secrets and credentials (only synthetic templates may be committed)
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.pem
+*.key
+*.p12
+*.pfx
+
+# Isolated browser test dependencies
+/tools/browser/node_modules/
