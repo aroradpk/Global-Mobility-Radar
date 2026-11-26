@@ -28,6 +28,7 @@ function residence(i:Facts,o:Checks){
   const age=number(i.age);
   if(age!==null){if(age<18||age>120)o.missing.push("Confirm adult age in supported scope");else if(age>55)o.failed.push("Age exceeds 55 at residence application");}
   minimum(i,"hours",30,"At least 30 guaranteed hours per week required",o);
+  bound(i,o,"hours",168,"Weekly hours cannot exceed 168");
   if(i.contract==="fixed")minimum(i,"contractMonths",12,"Fixed-term employment must have at least 12 months remaining",o);
   if(i.contract==="other"){o.missing.push("Contract for services / special arrangement requires manual review");}
 }
@@ -37,6 +38,7 @@ function checkPay(i:Facts,o:Checks,amount:number,label:string){
   if(pay!==null&&pay<amount)o.failed.push("Confirmed hourly pay below selected criterion");
 }
 function bound(i:Facts,o:Checks,key:string,max:number,label:string){const n=number(i[key]);if(n!==null&&n>max)o.missing.push(label);}
+function checkSeparateMonths(i:Facts,o:Checks){const a=number(i.relevantMonths),b=number(i.nzMonths);if(a!==null&&b!==null&&a+b>120)o.missing.push("Separate work periods cannot exceed 120 months within the ten-year window");}
 const greenPay:Field[]=[
   choice("wageKind","Official occupation-specific wage criterion",[["median","No specified Green List rate; median applies"],["specified","Specific Green List wage rate"],["exception","Special salary/contract or transitional case"]]),
   when(field("requiredPay","Verified official occupation-specific hourly NZD threshold","money"),i=>i.wageKind==="specified"),
@@ -62,7 +64,7 @@ const pointsOptions=[
 ] as const;
 const qualificationPoints:Record<string,number>={nzPhd:6,nzMasters6:6,nzMasters5:5,nzLevel8:5,nzBachelor:5,foreignPhd:6,foreignMasters:5,foreignLevel8:4,foreignBachelor:4};
 function skillPoints(i:Facts):number|null{
-  if(i.skillCategory==="qualification")return qualificationPoints[i.qualification]??null;
+  if(i.skillCategory==="qualification")return Object.prototype.hasOwnProperty.call(qualificationPoints,i.qualification)?qualificationPoints[i.qualification]:null;
   if(i.skillCategory==="registration")return ["3","4","5","6"].includes(i.registrationPoints)?Number(i.registrationPoints):null;
   if(i.skillCategory==="income"&&i.wageBasis==="current"){
     const pay=cents(i.payRate);
@@ -104,9 +106,9 @@ export const nzRoutes:Route[]=[
     when(yes("english","Applicable AEWV English evidence verified"),i=>["3","4","5"].includes(i.level)),
     yes("noPayment","No money offered or promised in exchange for a job offer"),
     yes("health","Applicable health requirements met"),yes("character","Applicable character requirements met"),yes("general","Genuine purpose, identity and remaining visa conditions reviewed")],
-  check:(i,_t,o)=>{minimum(i,"hours",30,"At least 30 guaranteed hours per week required",o);if(i.skill==="experience")minimum(i,"experience",24,"At least 24 full-time-equivalent relevant months required",o);if(i.skill==="exception")o.missing.push("Special skills exemption requires manual review");}},
+  check:(i,_t,o)=>{minimum(i,"hours",30,"At least 30 guaranteed hours per week required",o);bound(i,o,"hours",168,"Weekly hours cannot exceed 168");if(i.skill==="experience")minimum(i,"experience",24,"At least 24 full-time-equivalent relevant months required",o);if(i.skill==="exception")o.missing.push("Special skills exemption requires manual review");}},
  {id:"smcPoints",title:"Skilled Migrant — points",kind:"Resident visa · six points and job offer",source:SMC,
-  intro:"Rules effective 24 August 2026. One skill category only, plus qualifying New Zealand work points. No invitation guarantee.",
+  intro:"Rules effective 24 August 2026. One skill category only. If you have 5, 4 or 3 skill points, count qualifying NZ work within the last 24, 36 or 48 months respectively (12, 18 or 24 months needed). No invitation guarantee.",
   links:[["SMC wage threshold",WAGE],["August 2026 changes",CHANGE]],
   fields:[...smcCommon,
     choice("skillCategory","Single skill category",[["qualification","Qualification"],["registration","NZ occupational registration"],["income","Income"]]),
@@ -131,8 +133,13 @@ export const nzRoutes:Route[]=[
     if(points===6){o.details.push("Skill category points: 6; NZ work points not needed");return;}
     const months=number(i.nzMonths);
     if(months===null)return;
-    const extra=months>=24?3:months>=18?2:months>=12?1:0;
-    o.details.push("Skill points: "+points+"; eligible NZ work points: "+extra+"; combined: "+Math.min(6,points+extra)+" / 6");
+    // INZ EOI uses the window specific to the points still needed: 12/24, 18/36 or 24/48 months.
+    const required=6-points, minimumMonths=required===3?24:required===2?18:12;
+    const lookback=minimumMonths*2;
+    o.details.push("For "+required+" additional points: "+minimumMonths+" qualifying NZ months within the last "+lookback+" months.");
+    if(months>lookback){o.missing.push("Entered NZ months exceed the applicable "+lookback+"-month window; count only qualifying months inside it");return;}
+    const extra=Math.min(required,months>=24?3:months>=18?2:months>=12?1:0);
+    o.details.push("Skill points: "+points+"; eligible NZ work points: "+extra+"; combined: "+(points+extra)+" / 6");
     if(points+extra<6)o.failed.push("Fewer than six skilled residence points");
   }},
  {id:"smcExperience",title:"Skilled Migrant — work experience",kind:"Resident visa · experience pathway",source:SMC,
@@ -142,7 +149,7 @@ export const nzRoutes:Route[]=[
     field("relevantMonths","Relevant qualifying experience months (last 10 years, excluding self-employment)"),
     field("nzMonths","Additional qualifying NZ skilled work months (last 4 years)"),experienceEvidence,
     yes("nonOverlap","Separate qualifying periods, no double counting across the two requirements")],
-  check:(i,_t,o)=>{smc(i,o);if(i.occupation==="red")o.failed.push("Occupation excluded from this experience pathway");if(i.occupation==="amber")o.missing.push("Amber List extra requirements require manual review");minimum(i,"relevantMonths",36,"At least 36 relevant months required",o);minimum(i,"nzMonths",24,"At least 24 additional NZ skilled months required",o);bound(i,o,"relevantMonths",120,"Relevant months exceed ten-year window");bound(i,o,"nzMonths",48,"NZ months exceed four-year window");if(i.wageBasis==="current"&&i.occupation==="ordinary")checkPay(i,o,3850,"Current ordinary experience pathway floor");}},
+  check:(i,_t,o)=>{smc(i,o);if(i.occupation==="red")o.failed.push("Occupation excluded from this experience pathway");if(i.occupation==="amber")o.missing.push("Amber List extra requirements require manual review");minimum(i,"relevantMonths",36,"At least 36 relevant months required",o);minimum(i,"nzMonths",24,"At least 24 additional NZ skilled months required",o);bound(i,o,"relevantMonths",120,"Relevant months exceed ten-year window");bound(i,o,"nzMonths",48,"NZ months exceed four-year window");checkSeparateMonths(i,o);if(i.wageBasis==="current"&&i.occupation==="ordinary")checkPay(i,o,3850,"Current ordinary experience pathway floor");}},
  {id:"smcTrades",title:"Skilled Migrant — trades and technicians",kind:"Resident visa · trade qualification and experience",source:SMC,
   intro:"New August 2026 pathway for eligible trades and technician occupations with recognised qualifications and post-qualification experience.",
   links:[["SMC wage threshold",WAGE],["August 2026 changes",CHANGE]],
@@ -151,7 +158,7 @@ export const nzRoutes:Route[]=[
     field("relevantMonths","Relevant post-qualification experience months (last 10 years)"),
     field("nzMonths","Additional qualifying NZ post-qualification skilled months (last 3 years)"),experienceEvidence,
     yes("nonOverlap","Separate relevant and NZ qualifying periods; no self-employment or double counting")],
-  check:(i,_t,o)=>{smc(i,o);minimum(i,"relevantMonths",30,"At least 30 relevant post-qualification months required",o);minimum(i,"nzMonths",18,"At least 18 additional NZ skilled months required",o);bound(i,o,"relevantMonths",120,"Relevant months exceed ten-year window");bound(i,o,"nzMonths",36,"NZ months exceed three-year window");if(i.wageBasis==="current")checkPay(i,o,MEDIAN_CENTS,"Current trades pathway floor");}},
+  check:(i,_t,o)=>{smc(i,o);minimum(i,"relevantMonths",30,"At least 30 relevant post-qualification months required",o);minimum(i,"nzMonths",18,"At least 18 additional NZ skilled months required",o);bound(i,o,"relevantMonths",120,"Relevant months exceed ten-year window");bound(i,o,"nzMonths",36,"NZ months exceed three-year window");checkSeparateMonths(i,o);if(i.wageBasis==="current")checkPay(i,o,MEDIAN_CENTS,"Current trades pathway floor");}},
  {id:"permanent",title:"Permanent Resident Visa",kind:"Permanent residence · unlimited travel conditions",source:VISAS+"permanent-resident-visa/",
   intro:"Separate stage after a resident visa. This screen uses the ordinary physical-presence commitment route; other ways to show commitment need manual review.",
   links:[["Commitment requirements",COMMIT]],

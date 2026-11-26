@@ -69,7 +69,15 @@ const cases:Case[]=[
 ["PR other commitment manual","permanent",pr,{scope:"no",daysFirst:"1"},unknown],
 ["invalid date","straight",straight,{},unknown,"2026-11-31"],
 ["stale rule pack","straight",straight,{},unknown,"2026-12-27"],
-["no inputs","smcPoints",{}, {},unknown]
+["no inputs","smcPoints",{}, {},unknown],
+["SMC five points exceeds two-year lookback","smcPoints",smc,{qualification:"nzBachelor",nzMonths:"25"},unknown],
+["SMC four points exceeds three-year lookback","smcPoints",smc,{nzMonths:"37"},unknown],
+["SMC three points exceeds four-year lookback","smcPoints",smc,{skillCategory:"income",payRate:"52.50",nzMonths:"49"},unknown],
+["SMC invalid prototype qualification","smcPoints",smc,{qualification:"constructor"},unknown],
+["Straight impossible hours","straight",straight,{hours:"169"},unknown],
+["AEWV impossible hours","aewv",ae,{hours:"169"},unknown],
+["SMC combined experience exceeds window","smcExperience",exp,{relevantMonths:"100",nzMonths:"24"},unknown],
+["Trades combined experience exceeds window","smcTrades",trades,{relevantMonths:"110",nzMonths:"18"},unknown]
 ];
 describe("NZ current ordinary route screens",()=>{for(const [name,id,base,patch,expected,date] of cases)it(name,()=>expect(assessPermit("newzealand",id,{...base,...patch},date??day).status).toBe(expected));});
 it("does not add qualification and income skill points",()=>{const result=assessPermit("newzealand","smcPoints",{...smc,payRate:"105",nzMonths:"0"},day);expect(result.status).toBe(no);expect(result.details.join(" ")).toContain("Skill points: 4");});
