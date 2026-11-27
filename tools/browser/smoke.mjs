@@ -425,6 +425,7 @@ async function run(viewport) {
     await panel(page).getByLabel("Test date",{exact:true}).fill("2026-01-01");
     for(const [label,score] of [["Speaking score / grade","7"],["Listening score / grade","8"],["Reading score / grade","7"],["Writing score / grade","7"]])await panel(page).getByLabel(label,{exact:true}).fill(score);
     await panel(page).getByLabel("Canadian approved test format checked (optional: confirmed)",{exact:true}).fill("confirmed");
+    await panel(page).getByLabel("Canadian language test owner",{exact:true}).selectOption("applicant");
     await panel(page).getByLabel("I reviewed these facts; they are self-reported, not independently verified.").check();
     await panel(page).getByRole("button",{name:"Save evidence record",exact:true}).click();
     await openSection(page,"Canada PR");
@@ -502,6 +503,49 @@ async function run(viewport) {
     await inputValue(edu,"7");
     await inputValue(credential,"canadian");
     pass(viewport.width+" Canadian credential mapping, removal and manual restoration");
+    await openSection(page,"Profile");
+    await panel(page).getByLabel("Evidence category").selectOption("language");
+    async function saveLanguage(test,scores,owner){
+      await panel(page).getByLabel("Language test name",{exact:true}).fill(test);
+      await panel(page).getByLabel("Test date",{exact:true}).fill("2026-01-01");
+      for(const [i,label] of ["Speaking score / grade","Listening score / grade","Reading score / grade","Writing score / grade"].entries())await panel(page).getByLabel(label,{exact:true}).fill(scores[i]);
+      await panel(page).getByLabel("Canadian approved test format checked (optional: confirmed)",{exact:true}).fill("confirmed");
+      await panel(page).getByLabel("Canadian language test owner",{exact:true}).selectOption(owner);
+      await panel(page).getByLabel("I reviewed these facts; they are self-reported, not independently verified.").check();
+      await panel(page).getByRole("button",{name:"Save evidence record",exact:true}).click();
+    }
+    await saveLanguage("TCF Canada",["10","458","453","10"],"applicant");
+    await saveLanguage("CELPIP-General",["8","8","8","8"],"spouse");
+    await openSection(page,"Canada PR");
+    const second=panel(page).getByLabel("Four second-language approved benchmarks or none",{exact:true});
+    await second.fill("none");
+    await panel(page).getByLabel("Use saved second-language evidence",{exact:true}).selectOption("6");
+    await inputValue(second,"7,7,7,7");
+    assert.equal(await second.isDisabled(),true);
+    await panel(page).getByLabel("First official language",{exact:true}).selectOption("french");
+    await inputValue(second,"");
+    await panel(page).getByLabel("First official language",{exact:true}).selectOption("english");
+    await inputValue(second,"7,7,7,7");
+    const extra=panel(page).locator("details").filter({has:page.getByText("CRS — work and extra points",{exact:true})});
+    if(!await extra.evaluate(el=>el.open))await extra.locator("summary").click();
+    await panel(page).getByLabel("Accompanying spouse/partner who is not Canadian citizen or PR",{exact:true}).selectOption("yes");
+    const spouseLang=panel(page).getByLabel("Spouse four approved language levels or none",{exact:true});
+    await spouseLang.fill("none");
+    const spouseLink=panel(page).getByLabel("Use saved spouse-language evidence",{exact:true});
+    assert.equal(await spouseLink.locator('option[value="6"]').count(),0);
+    await spouseLink.selectOption("7");
+    await inputValue(spouseLang,"8,8,8,8");
+    await noOverflow(page,"Canadian second and spouse language links");
+    await openSection(page,"Profile");
+    page.once("dialog",dialog=>dialog.accept());
+    await panel(page).getByRole("button",{name:"Remove record 7",exact:true}).click();
+    await openSection(page,"Canada PR");
+    await inputValue(spouseLang,"");
+    await spouseLink.selectOption("");
+    await inputValue(spouseLang,"none");
+    await panel(page).getByLabel("Use saved second-language evidence",{exact:true}).selectOption("");
+    await inputValue(second,"none");
+    pass(viewport.width+" owner-aware second and spouse language evidence links");
 
 
     page.once("dialog",dialog=>dialog.accept());

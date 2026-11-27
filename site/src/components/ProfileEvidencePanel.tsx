@@ -1,6 +1,7 @@
 import {useState,useRef} from "react";
 import {serializeProfile,type ProfileExportContext} from "../engine/profileExport";
 import {canadaEducationFields,canadaEducationSource} from "../engine/canadaEducation";
+import {canadaLanguageOwners} from "../engine/canadaLanguage";
 import {evidenceFields,evidenceLabels,reviewEvidence,evidenceState,serializeEvidence,maxEvidenceRecords,type EvidenceKind,type EvidenceRecord} from "../engine/profileEvidence";
 
 export default function ProfileEvidencePanel({today,exportContext,records,setRecords}:{today:string;exportContext:ProfileExportContext;records:EvidenceRecord[];setRecords:React.Dispatch<React.SetStateAction<EvidenceRecord[]>>}){
@@ -43,10 +44,10 @@ export default function ProfileEvidencePanel({today,exportContext,records,setRec
   <form className="stack" onSubmit={e=>{e.preventDefault();save();}}>
    <label>Evidence category<select value={kind} disabled={editing!==null} onChange={e=>{if(!mayDiscard())return;setKind(e.target.value as EvidenceKind);clearDraft();setStatus("");}}>{(Object.keys(evidenceLabels) as EvidenceKind[]).map(k=><option key={k} value={k}>{evidenceLabels[k]}</option>)}</select></label>
    <p className="small muted">{editing===null?"Add a record":"Editing a saved record"}. Do not include passport numbers, account numbers or document images.</p>
-   {kind==="language"&&<p className="small muted">For Canada, use IELTS General Training, CELPIP-General, PTE Core, TCF Canada, or TEF Canada (previous score equivalency). Enter component scores from one approved result, not overall scores or IELTS One Skill Retake. Type confirmed in the Canadian format field only after checking the original report.</p>}
+   {kind==="language"&&<p className="small muted">For Canada, use IELTS General Training, CELPIP-General, PTE Core, TCF Canada, or TEF Canada (previous score equivalency). Enter component scores from one approved result, not overall scores or IELTS One Skill Retake. Select the actual test owner. For Canadian linking, use the result date in the test date field and type confirmed only after checking the original approved report.</p>}
    {kind==="education"&&<p className="small muted">For Canada, select the exact level from your completed Canadian credential or immigration-purpose ECA using the <a href={canadaEducationSource} target="_blank" rel="noopener noreferrer">IRCC equivalency table</a>. For foreign credentials, enter the ECA issue date as the assessment date and check the designated provider is appropriate for your occupation. Multiple-credential and professional-body cases remain manual. Do not enter report numbers.</p>}
    {evidenceFields[kind].map(field=>{
-    const choices=Object.prototype.hasOwnProperty.call(canadaEducationFields,field.key)?canadaEducationFields[field.key]:undefined;
+    const choices=field.key==="canadaLanguageOwner"?canadaLanguageOwners:Object.prototype.hasOwnProperty.call(canadaEducationFields,field.key)?canadaEducationFields[field.key]:undefined;
     const update=(value:string)=>{setDraft(prev=>({...prev,[field.key]:value}));setConfirmed(false);setError("");};
     return <label key={field.key}>{field.label}{choices?<select aria-label={field.label} value={draft[field.key]??""} onChange={e=>update(e.target.value)}><option value="">Unknown / not applicable</option>{choices.map(([value,label])=><option key={value} value={value}>{label}</option>)}</select>:<input type={"format" in field&&field.format==="date"?"date":"text"} required={"required" in field&&field.required} maxLength={250} value={draft[field.key]??""} onChange={e=>update(e.target.value)}/>}</label>;
    })}

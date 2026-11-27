@@ -41,10 +41,22 @@ export function mapCanadaLanguage(record:EvidenceRecord|undefined,today:string):
  }
  return {ok:true,kind:rule.kind,levels,taken:v.taken};
 }
-// Selected evidence stays live. Missing/deleted/expired/contradictory records
-// never fall back to the independent manual draft while linked.
-export function withCanadaLanguage(input:Record<string,string>,selected:string,records:readonly EvidenceRecord[],today:string):Record<string,string>{
+export type LanguageSlot="first"|"second"|"spouseLanguage";
+export const canadaLanguageOwners=[["applicant","Principal applicant"],["spouse","Spouse / partner"]] as const;
+export function resolveCanadaLanguage(record:EvidenceRecord|undefined,today:string,slot:LanguageSlot,firstKind:string):Result{
+ const mapped=mapCanadaLanguage(record,today);
+ if(!mapped.ok)return mapped;
+ const owner=slot==="spouseLanguage"?"spouse":"applicant";
+ if(record?.values.canadaLanguageOwner!==owner)return {ok:false,reason:"Confirm the correct language test owner in the profile."};
+ if(slot==="spouseLanguage")return mapped;
+ if(firstKind!=="english"&&firstKind!=="french")return {ok:false,reason:"Select the applicant's first official language."};
+ const expected=slot==="first"?firstKind:firstKind==="english"?"french":"english";
+ if(mapped.kind!==expected)return {ok:false,reason:slot==="first"?"Test must match the first official language.":"Second official language must be different from the first."};
+ return mapped;
+}
+// Selected evidence stays live; no fallback to independent drafts until unlink.
+export function withCanadaLanguage(input:Record<string,string>,selected:string,records:readonly EvidenceRecord[],today:string,slot:LanguageSlot="first"):Record<string,string>{
  if(!selected)return input;
- const mapped=mapCanadaLanguage(records.find(r=>String(r.id)===selected),today);
- return mapped.ok&&mapped.kind===input.firstKind?{...input,first:mapped.levels.join(","),firstDate:mapped.taken}:{...input,first:"",firstDate:""};
+ const mapped=resolveCanadaLanguage(records.find(r=>String(r.id)===selected),today,slot,input.firstKind??"");
+ return {...input,[slot]:mapped.ok?mapped.levels.join(","):"",[slot+"Date"]:mapped.ok?mapped.taken:""};
 }

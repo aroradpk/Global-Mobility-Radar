@@ -3,7 +3,7 @@
 Updated: 2026-11-26
 Repository: aroradpk/Global-Mobility-Radar
 Review baseline: 7df403c5545c5704227ed75561f5ec4a08f5db9c
-Active branch: development/phase5b-canada-education (candidate from verified main)
+Active branch: development/phase5b-canada-language-links (candidate from qualification accessibility fix)
 
 ## Current state
 - Fork access and initial static audit verified; upstream MIT licence read.
@@ -215,3 +215,6 @@ Phase 4I verified: c1ca8f1 passed all five jobs at https://github.com/aroradpk/G
 
 
 - Qualification candidate CI 45908240343: 727 frontend tests and build passed, safety/pipeline/audit passed; browser failed at exact accessible label Canadian credential owner. Added explicit accessible names to dynamic evidence selects and credential link selector, preserving exact browser assertions. Main 948e97d post-merge CI 45908123871 green. Candidate re-verification pending.
+
+
+- 2026-11-27: added explicit test owner selector (unknown remains unknown), first/second/spouse link slots with opposite-language enforcement for applicant, spouse-owner isolation, live deletion/expiry/owner-change invalidation, manual draft restoration and clear Canada inputs unlinking age as well. Official IRCC language tests and CRS criteria rechecked: https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/language-test.html and https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/check-score/crs-criteria.html; no scoring table change. Existing in-memory language records without owner must be reviewed before linking. Manual benchmarks remain self-reported. 13 new regression cases and browser flow at three widths; CI pending. Qualification accessibility fix 5291340 being verified separately. Multiple credentials, specialized ECA, occupation catalogue expansion, cross-country mappings, comparison and all remaining gates open. No new dependencies, persistence or deployment; 0/16 formally accepted.
