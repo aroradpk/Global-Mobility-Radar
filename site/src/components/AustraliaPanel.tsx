@@ -1,6 +1,8 @@
 import { useState } from "react";
 import ProfileAgeControl from "./ProfileAgeControl";
 import {withProfileAge} from "../engine/unifiedProfile";
+import {lookupAustraliaOccupation,mapAustraliaSkill,withAustraliaSkill,australiaOccupationSources} from "../engine/australiaOccupation";
+import type {EvidenceRecord} from "../engine/profileEvidence";
 import { assessAustralia } from "../engine/australia.js";
 
 const ROOT = "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/";
@@ -8,15 +10,21 @@ const ROUTES = [{id:"189",label:"189 · Skilled Independent",path:"skilled-indep
 const YES_NO = [["yes","Yes — confirmed"],["no","No"]] as const;
 const STATUS = {requirements_not_met:"Requirements not met / still outstanding",review_required:"Review required",potential_eoi_candidate:"Potential EOI candidate — not invited",meets_self_reported_screen:"Meets self-reported screen only"} as const;
 
-export default function AustraliaPanel({today,profileAge}:{today:string;profileAge:string}){
+export default function AustraliaPanel({today,profileAge,evidence}:{today:string;profileAge:string;evidence:EvidenceRecord[]}){
   const [manualInput,setInput]=useState<Record<string,string>>({});
   const [linked,setLinked]=useState(false);
-  const input=withProfileAge(manualInput,"age",linked,profileAge);
+  const [skillId,setSkillId]=useState("");
+  const [code,setCode]=useState("");
+  const [regionalPath,setRegionalPath]=useState("");
+  const selected=evidence.find(r=>String(r.id)===skillId&&r.kind==="skillsAssessment");
+  const skill=mapAustraliaSkill(selected,today);
+  const occupation=skillId?lookupAustraliaOccupation(selected?.values.occupation??"",selected?.values.australiaSkillClassification??"",today):lookupAustraliaOccupation(code,"ANZSCO 2013",today);
+  const input=withAustraliaSkill(withProfileAge(manualInput,"age",linked,profileAge),skillId,evidence,today,regionalPath);
   const [submitted,setSubmitted]=useState(false);
   const result=submitted?assessAustralia(input,today):null;
   const update=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
-  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} value={input[key]??""} onChange={e=>update(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
-  const field=(key:string,label:string,type="number")=><label key={key}>{label}<input type={type} disabled={key==="age"&&linked} value={input[key]??""} onChange={e=>update(key,e.target.value)} min={type==="number"?0:undefined} step={type==="number"?1:undefined}/></label>;
+  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} disabled={!!skillId&&(key==="skills"||key==="skillsValid"||key.startsWith("occupation"))} value={input[key]??""} onChange={e=>update(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
+  const field=(key:string,label:string,type="number")=><label key={key}>{label}<input type={type} disabled={(key==="age"&&linked)||(key==="skillsDate"&&!!skillId)} value={input[key]??""} onChange={e=>update(key,e.target.value)} min={type==="number"?0:undefined} step={type==="number"?1:undefined}/></label>;
   return <section className="card stack" aria-labelledby="australia-title">
     <h2 id="australia-title">Australia — skilled migration points</h2>
     <p>Compare 189 and 190 permanent visas with 491 regional provisional residence. This is a private, self-reported scenario, not a visa decision. 65 points is a minimum, not a guarantee of invitation.</p>
@@ -44,6 +52,12 @@ export default function AustraliaPanel({today,profileAge}:{today:string;profileA
       {input.professional==="yes"&&field("professionalDate","Professional Year completion date","date")}
     </details>
     <details open><summary>3. Required evidence and route conditions</summary>
+      <div className="card stack"><h3>Occupation and ACS assessment</h3><p>ANZSCO 2013 subset, reviewed 27 November 2026. <a href={australiaOccupationSources.instrument} target="_blank" rel="noopener noreferrer">Federal occupation legislation</a> · <a href={australiaOccupationSources.list} target="_blank" rel="noopener noreferrer">Full occupation list</a>. State criteria and actual invitations remain independent.</p>
+      <label>Use saved Australian skills assessment<select aria-label="Use saved Australian skills assessment" value={skillId} onChange={e=>{setSkillId(e.target.value);setRegionalPath("");setSubmitted(false);}}><option value="">Independent manual assessment</option>{skillId&&!selected&&<option value={skillId}>Previously selected record removed</option>}{evidence.filter(r=>r.kind==="skillsAssessment"&&r.values.australiaSkillOwner==="applicant").map(r=><option key={r.id} value={String(r.id)}>{r.values.occupation} — record {r.id}</option>)}</select></label>
+      <label>ANZSCO 2013 code<input value={skillId?(selected?.values.occupation??""):code} disabled={!!skillId} maxLength={6} onChange={e=>setCode(e.target.value)}/></label>
+      <p role="status">{occupation.ok?occupation.code+" — "+occupation.title+" — "+occupation.list+"; assessing authority ACS. Federal list only: 189 "+(occupation.independent?"listed":"not listed")+", 190 listed, 491 state listed, 491 family "+(occupation.family491?"listed":"not listed")+".":occupation.reason}</p>
+      {skillId&&<><label>491 occupation-list pathway<select aria-label="491 occupation-list pathway" value={regionalPath} onChange={e=>{setRegionalPath(e.target.value);setSubmitted(false);}}><option value="">Unknown / select</option><option value="state">State or territory nominated</option><option value="family">Family sponsored</option></select></label><p role="status">{skill.ok?"Suitable self-reported ACS assessment; last valid date "+skill.lastValid+".":skill.reason} Unlink to restore independent inputs.</p></>}
+      </div>
       {select("skills","Suitable skills assessment in nominated occupation")}
       {input.skills==="yes"&&<>{field("skillsDate","Skills assessment issue date","date")}{select("skillsValid","Still valid under assessor's shorter expiry if applicable; not for subclass 485")}</>}
       {select("health","Health requirements met (self-reported)")}
@@ -58,7 +72,7 @@ export default function AustraliaPanel({today,profileAge}:{today:string;profileA
       </fieldset>)}
     </details>
     <button type="button" className="btn primary" onClick={()=>setSubmitted(true)}>Compare visa pathways</button>
-    <button type="button" className="btn ghost" onClick={()=>{setInput({});setSubmitted(false);}}>Clear Australia inputs</button>
+    <button type="button" className="btn ghost" onClick={()=>{setInput({});setLinked(false);setSkillId("");setCode("");setRegionalPath("");setSubmitted(false);}}>Clear Australia inputs</button>
     {result&&<div role="status" className="stack">
       <h3>Base points: {result.basePoints??"Unknown"}</h3>
       {Object.entries(result.factors).map(([k,v])=><p key={k}>{k.replace(/([A-Z])/g," $1")}: {v}</p>)}

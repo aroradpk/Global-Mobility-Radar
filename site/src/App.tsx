@@ -55,7 +55,7 @@ export default function App() {
       </div>
       <div key={"profile-"+resetKey} hidden={view!=="profile"}><ProfilePanel evidence={evidence} onEvidence={setEvidence} profile={careerConfirmed?profile:null} answers={careerConfirmed?savedAnswers:null} age={age} today={today} onAge={setAge} onCareer={editCareer} onPreferences={()=>{setView("jobs");setStep("interview");}}/></div>
       <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
-      <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today} profileAge={profileAge}/></div>
+      <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
       <div key={"germany-"+resetKey} hidden={view!=="germany"}><GermanyPanel today={today} profileAge={profileAge}/></div>
       <div key={"ireland-"+resetKey} hidden={view!=="ireland"}><EuropePermitPanel country="ireland" today={today} profileAge={profileAge}/></div>
       <div key={"netherlands-"+resetKey} hidden={view!=="netherlands"}><EuropePermitPanel country="netherlands" today={today} profileAge={profileAge}/></div>

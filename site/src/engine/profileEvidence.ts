@@ -8,10 +8,11 @@ export const evidenceFields = {
  family: [{key:"relationship",label:"Relationship (e.g. partner, child)",required:true},{key:"count",label:"Number of dependants",format:"count"},{key:"accompanying",label:"Accompanying / not accompanying / unknown"},{key:"qualification",label:"Partner qualification (if applicable)"},{key:"language",label:"Partner language evidence (if applicable)"}],
  funds: [{key:"amount",label:"Available amount",required:true,format:"amount"},{key:"currency",label:"Currency (3-letter code)",required:true,format:"currency"},{key:"asOf",label:"Balance date",format:"date"},{key:"basis",label:"Funds evidence type"}],
  salary: [{key:"amount",label:"Salary amount",required:true,format:"amount"},{key:"currency",label:"Currency (3-letter code)",required:true,format:"currency"},{key:"period",label:"Pay period (annual, monthly, etc.)",required:true},{key:"basis",label:"Gross / net / unknown"},{key:"asOf",label:"Salary observation date",format:"date"}],
+ skillsAssessment: [{key:"occupation",label:"Assessed occupation code",required:true},{key:"australiaSkillClassification",label:"Australian skills classification"},{key:"australiaSkillOwner",label:"Australian assessment owner"},{key:"australiaSkillAuthority",label:"Australian assessing authority"},{key:"australiaSkillOutcome",label:"Australian assessment outcome"},{key:"assessmentDate",label:"Skills assessment issue date",format:"date"},{key:"expiry",label:"Assessment expiry (if known)",format:"date"},{key:"australiaSkillConfirmed",label:"Australian assessment checked"}],
  authorization: [{key:"country",label:"Jurisdiction",required:true},{key:"status",label:"Permit / work authorization type",required:true},{key:"start",label:"Start date",format:"date"},{key:"expiry",label:"Expiry date (if known)",format:"date"},{key:"conditions",label:"Work restrictions / conditions"}],
 } as const satisfies Record<string,readonly Field[]>;
 export type EvidenceKind = keyof typeof evidenceFields;
-export const evidenceLabels:Record<EvidenceKind,string>={employment:"Employment history",education:"Education and recognition",language:"Language test",family:"Family circumstances",funds:"Available funds",salary:"Salary",authorization:"Work authorization"};
+export const evidenceLabels:Record<EvidenceKind,string>={employment:"Employment history",education:"Education and recognition",language:"Language test",family:"Family circumstances",funds:"Available funds",salary:"Salary",skillsAssessment:"Australian skills assessment",authorization:"Work authorization"};
 export type EvidenceRecord = {id:number;kind:EvidenceKind;values:Record<string,string>;confirmedOn:string};
 export const maxEvidenceRecords=100;
 const validDate=(value:string)=>/^\d{4}-\d{2}-\d{2}$/.test(value)&&dateValue(value)!==null;
@@ -39,7 +40,7 @@ export function reviewEvidence(kind:EvidenceKind,values:Record<string,string>,to
 }
 export function evidenceState(record:EvidenceRecord,today:string):"expired"|"expiry unknown"|"self-reported"{
  if(record.values.expiry&&validDate(today)&&record.values.expiry<today)return "expired";
- return ["education","language","authorization"].includes(record.kind)&&!record.values.expiry?"expiry unknown":"self-reported";
+ return ["education","language","skillsAssessment","authorization"].includes(record.kind)&&!record.values.expiry?"expiry unknown":"self-reported";
 }
 // Export only reviewed facts, never an uncommitted editor draft or a CV.
 export function serializeEvidence(records:readonly EvidenceRecord[],today:string):string{

@@ -1,0 +1,20 @@
+import {describe,it,expect} from "vitest";
+import {lookupAustraliaOccupation,mapAustraliaSkill,withAustraliaSkill} from "./australiaOccupation";
+import type {EvidenceRecord} from "./profileEvidence";
+const today="2026-11-27";
+const record:EvidenceRecord={id:1,kind:"skillsAssessment",confirmedOn:today,values:{occupation:"261312",australiaSkillClassification:"ANZSCO 2013",australiaSkillOwner:"applicant",australiaSkillAuthority:"ACS",australiaSkillOutcome:"suitable",australiaSkillConfirmed:"confirmed",assessmentDate:"2025-01-01"}};
+const change=(patch:Record<string,string>):EvidenceRecord=>({...record,values:{...record.values,...patch}});
+describe("Australian occupation and ACS evidence",()=>{
+ it("maps MLTSSL to all federal occupation lists",()=>expect(lookupAustraliaOccupation("261312","ANZSCO 2013",today)).toMatchObject({ok:true,list:"MLTSSL",independent:true,state190:true,state491:true,family491:true}));
+ it("distinguishes STSOL from 189 and family 491",()=>expect(lookupAustraliaOccupation("261212","ANZSCO 2013",today)).toMatchObject({ok:true,list:"STSOL",independent:false,state190:true,state491:true,family491:false}));
+ it("rejects unsupported code instead of inferring",()=>expect(lookupAustraliaOccupation("261316","ANZSCO 2013",today).ok).toBe(false));
+ it("rejects 2022 classification for these routes",()=>expect(lookupAustraliaOccupation("261312","ANZSCO 2022",today).ok).toBe(false));
+ it("rejects stale reference",()=>expect(lookupAustraliaOccupation("261312","ANZSCO 2013","2026-12-27").ok).toBe(false));
+ it("maps positive current ACS evidence",()=>expect(mapAustraliaSkill(record,today)).toMatchObject({ok:true,issue:"2025-01-01",lastValid:"2026-12-31"}));
+ for(const [label,patch] of Object.entries<Record<string,string>>({wrongOwner:{australiaSkillOwner:"spouse"},unknownOwner:{australiaSkillOwner:""},wrongAuthority:{australiaSkillAuthority:"VETASSESS"},pending:{australiaSkillOutcome:"unknown"},unsuitable:{australiaSkillOutcome:"unsuitable"},unconfirmed:{australiaSkillConfirmed:""},future:{assessmentDate:"2026-11-28"},invalid:{assessmentDate:"2025-02-30"},missing:{assessmentDate:""},exactTwoYears:{assessmentDate:"2024-11-27"},expiry:{expiry:"2026-11-26"},conflict:{expiry:"2024-01-01"}}))it("rejects "+label,()=>expect(mapAustraliaSkill(change(patch),today).ok).toBe(false));
+ it("respects shorter stated validity",()=>expect(mapAustraliaSkill(change({expiry:"2026-12-01"}),today)).toMatchObject({ok:true,lastValid:"2026-12-01"}));
+ it("keeps nomination and invitation independent",()=>expect(withAustraliaSkill({support190:"no",invited189:"no"},"1",[record],today,"state")).toMatchObject({skills:"yes",occupation189:"yes",occupation190:"yes",occupation491:"yes",support190:"no",invited189:"no"}));
+ it("requires explicit regional path",()=>expect(withAustraliaSkill({occupation491:"yes"},"1",[record],today,"").occupation491).toBe(""));
+ it("distinguishes STSOL regional paths",()=>{const st=change({occupation:"261212"});expect(withAustraliaSkill({},"1",[st],today,"state")).toMatchObject({occupation189:"no",occupation491:"yes"});expect(withAustraliaSkill({},"1",[st],today,"family").occupation491).toBe("no");});
+ it("fails closed on removal and restores manual on unlink",()=>{const manual={skills:"no",occupation189:"yes"};expect(withAustraliaSkill(manual,"1",[],today,"state")).toMatchObject({skills:"",occupation189:""});expect(withAustraliaSkill(manual,"",[],today,"")).toEqual(manual);});
+});
