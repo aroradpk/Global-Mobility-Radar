@@ -546,6 +546,57 @@ async function run(viewport) {
     await panel(page).getByLabel("Use saved second-language evidence",{exact:true}).selectOption("");
     await inputValue(second,"none");
     pass(viewport.width+" owner-aware second and spouse language evidence links");
+    await openSection(page,"Profile");
+    await panel(page).getByLabel("Evidence category").selectOption("education");
+    async function saveCredential(name,institution,award,issue,level){
+      await panel(page).getByLabel("Qualification",{exact:true}).fill(name);
+      await panel(page).getByLabel("Institution",{exact:true}).fill(institution);
+      await panel(page).getByLabel("Country",{exact:true}).fill("India");
+      await panel(page).getByLabel("Award date",{exact:true}).fill(award);
+      await panel(page).getByLabel("Assessment date",{exact:true}).fill(issue);
+      await panel(page).getByLabel("Canadian credential owner",{exact:true}).selectOption("applicant");
+      await panel(page).getByLabel("Canadian credential evidence basis",{exact:true}).selectOption("eca");
+      await panel(page).getByLabel("Confirmed Canadian-equivalent education level",{exact:true}).selectOption(level);
+      await panel(page).getByLabel("Canadian ECA issuing organization (foreign only)",{exact:true}).selectOption("WES");
+      await panel(page).getByLabel("Canadian credential evidence checked",{exact:true}).selectOption("confirmed");
+      await panel(page).getByLabel("I reviewed these facts; they are self-reported, not independently verified.").check();
+      await panel(page).getByRole("button",{name:"Save evidence record",exact:true}).click();
+    }
+    await saveCredential("Example bachelor","Example University","2018-06-01","2023-01-01","three-plus");
+    await saveCredential("Example diploma","Example College","2020-01-01","2022-01-01","two-year");
+    await openSection(page,"Canada PR");
+    await panel(page).getByLabel("Use saved applicant education",{exact:true}).selectOption("8");
+    const additional=panel(page).getByLabel("Additional applicant credential",{exact:true});
+    assert.equal(await additional.locator('option[value="8"]').count(),0);
+    await additional.selectOption("9");
+    await inputValue(edu,"");
+    const confirmPair=panel(page).getByLabel("Confirm two distinct applicant credentials",{exact:true});
+    await confirmPair.check();
+    await inputValue(edu,"5");
+    await inputValue(credential,"2022-01-01");
+    await visible(panel(page).getByText(/ECA last valid date 2026-12-31/));
+    await noOverflow(page,"Canadian multiple credentials");
+    await openSection(page,"Profile");
+    await panel(page).getByRole("button",{name:"Edit record 9",exact:true}).click();
+    await panel(page).getByLabel("Qualification",{exact:true}).fill("Updated example diploma");
+    await panel(page).getByLabel("Canadian credential evidence checked",{exact:true}).selectOption("confirmed");
+    await panel(page).getByLabel("I reviewed these facts; they are self-reported, not independently verified.").check();
+    await panel(page).getByRole("button",{name:"Save evidence record",exact:true}).click();
+    await openSection(page,"Canada PR");
+    assert.equal(await confirmPair.isChecked(),false);
+    await inputValue(edu,"");
+    await confirmPair.check();
+    await inputValue(edu,"5");
+    await openSection(page,"Profile");
+    page.once("dialog",dialog=>dialog.accept());
+    await panel(page).getByRole("button",{name:"Remove record 9",exact:true}).click();
+    await openSection(page,"Canada PR");
+    await inputValue(edu,"");
+    await additional.selectOption("");
+    await inputValue(edu,"4");
+    await panel(page).getByLabel("Use saved applicant education",{exact:true}).selectOption("");
+    await inputValue(edu,"7");
+    pass(viewport.width+" multiple credential attestation, edit invalidation, deletion and unlink");
 
 
     page.once("dialog",dialog=>dialog.accept());

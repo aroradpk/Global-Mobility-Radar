@@ -4,8 +4,8 @@ import type {EvidenceRecord} from "./profileEvidence";
 export const canadaEducationSource="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/documents/education-assessment.html";
 export const canadaEducationReview={reviewedOn:"2026-11-27",from:"2026-11-26",through:"2026-12-25"};
 // The user selects an IRCC education category after reading the actual credential/ECA.
-// No inference from foreign degree names or academic years. Multiple credentials and
-// entry-to-practice professional degrees are deliberately left to separate manual review.
+// No inference from foreign degree names or academic years. Specialized
+// entry-to-practice professional degrees remain manual.
 const categories=[
  ["secondary","1","Secondary school"],
  ["one-year","2","One-year postsecondary credential"],
@@ -66,4 +66,40 @@ export function withCanadaEducation(input:Record<string,string>,selected:string,
  const levelKey=owner==="applicant"?"education":"spouseEducation";
  const credentialKey=owner==="applicant"?"credential":"spouseCredential";
  return {...input,[levelKey]:mapped.ok?mapped.level:"",[credentialKey]:mapped.ok?mapped.credential:""};
+}
+
+// Pair confirmation is tied to the exact reviewed records, not just their IDs.
+// Any edit invalidates the attestation until the user checks both originals again.
+export function credentialPairKey(first:string,second:string,records:readonly EvidenceRecord[]):string{
+ if(!first||!second)return "";
+ const a=records.find(r=>String(r.id)===first),b=records.find(r=>String(r.id)===second);
+ return a&&b?JSON.stringify([a,b]):"";
+}
+const normalize=(s:string)=>s.normalize("NFKC").trim().toLowerCase().replace(/[\s\p{P}]+/gu,"");
+export function mapCanadaEducationPair(first:EvidenceRecord|undefined,second:EvidenceRecord|undefined,today:string,confirmed:boolean,owner:"applicant"|"spouse"="applicant"):Result{
+ const fail=(reason:string):Result=>({ok:false,reason});
+ if(!first||!second||first.id===second.id)return fail("Select two distinct saved credentials.");
+ const a=mapCanadaEducation(first,today,owner),b=mapCanadaEducation(second,today,owner);
+ if(!a.ok)return fail("First credential: "+a.reason);
+ if(!b.ok)return fail("Second credential: "+b.reason);
+ const key=(r:EvidenceRecord)=>[r.values.institution,r.values.qualification,r.values.awarded].map(v=>normalize(v??""));
+ const x=key(first),y=key(second);
+ if(x.some(v=>!v)||y.some(v=>!v))return fail("Enter institution, qualification and award date for both credentials.");
+ if(x.every((v,i)=>v===y[i]))return fail("These records appear to describe the same credential.");
+ if(!["2","3","4"].includes(a.level)||!["2","3","4"].includes(b.level)||![a.level,b.level].includes("4"))return fail("Use two postsecondary credentials, at least one assessed as three years or longer. For master's or doctorate use the supported single-credential category or manual review.");
+ if(!confirmed)return fail("Confirm that these are distinct completed credentials and each foreign credential has a valid immigration ECA.");
+ const dates=[a.credential,b.credential].filter(v=>v!=="canadian").sort();
+ const expiry=[a.validUntil,b.validUntil].filter((v):v is string=>v!==null).sort();
+ return {ok:true,level:"5",label:"Two or more postsecondary credentials (one three years or longer)",credential:dates[0]??"canadian",validUntil:expiry[0]??null};
+}
+export function resolveEducationSelection(first:string,second:string,attestation:string,records:readonly EvidenceRecord[],today:string,owner:"applicant"|"spouse"="applicant"):Result{
+ const a=records.find(r=>String(r.id)===first);
+ if(!second)return mapCanadaEducation(a,today,owner);
+ const key=credentialPairKey(first,second,records);
+ return mapCanadaEducationPair(a,records.find(r=>String(r.id)===second),today,!!key&&key===attestation,owner);
+}
+export function withCanadaEducationSelection(input:Record<string,string>,first:string,second:string,attestation:string,records:readonly EvidenceRecord[],today:string,owner:"applicant"|"spouse"="applicant"):Record<string,string>{
+ if(!first&&!second)return input;
+ const mapped=resolveEducationSelection(first,second,attestation,records,today,owner);
+ return {...input,[owner==="applicant"?"education":"spouseEducation"]:mapped.ok?mapped.level:"",[owner==="applicant"?"credential":"spouseCredential"]:mapped.ok?mapped.credential:""};
 }
