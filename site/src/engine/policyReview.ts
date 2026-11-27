@@ -48,11 +48,11 @@ export function validatePolicyDraft(draft:PolicyDraft,today:string):Result<Polic
  if(facts.effectiveOn&&!valid(facts.effectiveOn))return fail("Invalid effective date.");
  if(facts.phase==="in_force"&&(!facts.effectiveOn||facts.effectiveOn>draft.observedOn))return fail("In-force observations require an effective date on or before observation.");
  if(!facts.excerpt)return fail("Enter a short supporting excerpt from the official source.");
- for(const prefix of ["fee","funds"] as const){
-  const amount=facts[prefix+"Amount"],currency=facts[prefix+"Currency"],basis=facts[prefix+"Basis"];
+ for(const [prefix,amountKey,currencyKey,basisKey] of [["fee","feeAmount","feeCurrency","feeBasis"],["funds","fundsAmount","fundsCurrency","fundsBasis"]] as const){
+  const amount=facts[amountKey],currency=facts[currencyKey],basis=facts[basisKey];
   if(amount||currency||basis){
    if(!/^\d{1,9}(?:\.\d{1,2})?$/.test(amount)||!(/^[A-Za-z]{3}$/.test(currency))||!basis)return fail("For "+prefix+" supply amount, three-letter currency and exact scope, or leave all three unknown.");
-   facts[prefix+"Currency"]=currency.toUpperCase();
+   facts[currencyKey]=currency.toUpperCase();
   }
  }
  return success(facts);

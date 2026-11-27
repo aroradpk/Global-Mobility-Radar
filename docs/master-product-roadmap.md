@@ -229,3 +229,6 @@ Weighted engineering estimates by gate M01–M16 respectively: 70,35,60,0,30,45,
 
 
 - Follow-up: bounded (2 MB, 200 observations, 400 review events) offline audit restore, exact registered URL and schema, sequential event replay, SHA-256 recomputation, no unknown fields imported or active calculator rules. Restored approvals withheld until explicit fresh manual review, existing failure/rollback states preserved. Empty ledger only, confirmation, epoch protection against late restore after reset. Eight additional unit cases and three-width restore regression; CI pending. This is file-based restoration, not persistent server storage or authenticated evidence.
+
+
+- CI 46047776456: 856 frontend tests passed, pipeline/audit/safety passed, but strict TS7053 failed both production and browser builds for four dynamic PolicyFacts financial key accesses. Replaced string concatenation with exact typed tuples. No relaxed checks. Restore increment included in corrected candidate; exact-head CI required before promotion.
