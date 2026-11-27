@@ -441,3 +441,6 @@ input[type="file"], input[type="date"] { max-width: 100%; min-width: 0; }
 .card details, .card fieldset, .card label, .card .stack { min-width: 0; max-width: 100%; }
 .card label > select, .card label > input:not([type="checkbox"]):not([type="radio"]), .card label > textarea { min-width: 0; width: 100%; max-width: 100%; }
 .card details > summary { min-width: 0; overflow-wrap: anywhere; }
+
+/* Multi-row navigation must not obscure controls on small viewports. */
+@media (max-width: 760px), (max-height: 640px) { .top { position: static; } }

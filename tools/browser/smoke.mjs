@@ -79,6 +79,12 @@ async function run(viewport) {
     await file.setInputFiles({name:"bad.json",mimeType:"application/json",buffer:Buffer.from("{")});
     await visible(page.getByText(/Previous snapshot retained/));
     await visible(page.getByRole("link",{name:"Synthetic Software Engineer",exact:true}));
+    await visible(page.getByRole("heading",{name:"Your opportunity intelligence",exact:true}));
+    await visible(page.getByRole("heading",{name:"Employer opportunity review queue",exact:true}));
+    await page.getByLabel("Opportunity evidence filter",{exact:true}).selectOption("review_priority");
+    await visible(page.getByText("No leads in this evidence category.",{exact:true}));
+    await page.getByLabel("Opportunity evidence filter",{exact:true}).selectOption("all");
+    await noOverflow(page,"opportunity intelligence");
     await page.getByRole("button",{name:"Shortlist Synthetic Software Engineer",exact:true}).click();
     assert.equal(await page.getByRole("button",{name:"Shortlisted Synthetic Software Engineer",exact:true}).isDisabled(),true);
     await openSection(page,"Application tracker");

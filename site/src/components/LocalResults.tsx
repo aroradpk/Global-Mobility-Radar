@@ -1,4 +1,8 @@
 import { useMemo, useState } from "react";
+import OpportunityIntelligence from "./OpportunityIntelligence";
+import type {EvidenceRecord} from "../engine/profileEvidence";
+import type {PolicyLedger} from "../engine/policyReview";
+import type {RadarCountry} from "../engine/routeRadar";
 import { COUNTRIES, KNOWLEDGE_AS_OF, skillLabel } from "../data";
 import { matchJobs } from "../engine/jobs";
 import { MAX_FILE_BYTES, parseLocalJobs, isRecentObservation, type LocalJobs } from "../localJobs";
@@ -13,7 +17,7 @@ const SIGNAL: Record<string, string> = {
   relocation: "Relocation only", unknown: "Unknown", blocked: "Excluded", "employer-no": "Excluded",
 };
 
-export default function LocalResults({ profile, answers, onBack,onEditProfile,onShortlist,isShortlisted }: { profile: Profile; answers: Answers; onBack: () => void; onEditProfile:()=>void;onShortlist:(target:Target)=>void;isShortlisted:(target:Target)=>boolean }) {
+export default function LocalResults({ profile, answers, onBack,onEditProfile,onShortlist,isShortlisted,confirmedAnswers,profileAge,evidence,policy,today,onOpenCountry }: { profile: Profile; answers: Answers; onBack: () => void; onEditProfile:()=>void;onShortlist:(target:Target)=>void;isShortlisted:(target:Target)=>boolean;confirmedAnswers:Answers|null;profileAge:string;evidence:EvidenceRecord[];policy:PolicyLedger;today:string;onOpenCountry:(country:RadarCountry)=>void }) {
   const [snapshot, setSnapshot] = useState<LocalJobs | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,6 +44,7 @@ export default function LocalResults({ profile, answers, onBack,onEditProfile,on
     <div className="row"><button className="btn ghost" onClick={onBack}>Edit preferences</button><button className="btn ghost" onClick={onEditProfile}>Edit career profile</button></div>
     <h1>Global mobility dashboard</h1>
     <p className="muted">Local development preview. No account, external API, automatic polling or live verification.</p>
+    {confirmedAnswers&&<OpportunityIntelligence profile={profile} answers={confirmedAnswers} age={profileAge} evidence={evidence} policy={policy} today={today} snapshot={snapshot} onOpen={onOpenCountry} onShortlist={onShortlist} isShortlisted={isShortlisted}/>}
     <div className="card stack">
       <h2>Local job snapshot</h2>
       <p>Import an authorised pipeline jobs.json file. Data stays in this tab. Imported records, including sponsor labels and salaries, are unverified leads, not confirmed open vacancies or visa eligibility.</p>

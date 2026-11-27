@@ -1,0 +1,22 @@
+import {describe,it,expect} from "vitest";
+import {assessProfileRoutes,assessJobOpportunities,sponsorshipEvidence} from "./opportunityIntelligence";
+import {blankPolicyLedger,recordPolicyFailure} from "./policyReview";
+import type {Answers,Profile,Job} from "../types";
+import type {LocalJobs,LocalEvidence} from "../localJobs";
+const today="2026-11-26",now=Date.parse(today+"T12:00:00Z"),stamp=today+"T00:00:00Z";
+const profile:Profile={skills:["javascript"],years:8,level:"senior",degree:"bachelor",certs:[],languages:[],families:["software"],titles:[],textLength:0};
+const answers:Answers={citizenships:["IN"],livesIn:"IN",targets:[],priorities:[],direction:"stay",family:"software",niche:"",learnLanguage:"maybe",hoursPerWeek:5,budget:"medium",horizon:12,withFamily:false};
+const job:Job={id:"example",title:"Synthetic engineer",company:"Synthetic employer",location:"Berlin",countries:["DE"],url:"https://example.com/jobs/1",posted:today,firstSeen:today,family:"software",seniority:"senior",remote:0,visa:"explicit",registerIn:[],skills:["javascript"],langs:[],salary:"gross base EUR 60000 per year"};
+const evidence:LocalEvidence={sourceId:"synthetic",sourceUrl:job.url,observedAt:stamp,descriptionCheckedAt:stamp,positive:"Synthetic sponsorship wording",negative:"",relocation:"",status:"unverified_lead"};
+const snapshot=(j=job,e=evidence):LocalJobs=>({generatedAt:stamp,jobs:[j],duplicateCount:0,evidence:new Map([[j.id,e]])});
+describe("Unified opportunity intelligence",()=>{
+ it("does not treat missing direct migration facts as failure or eligibility",()=>{const r=assessProfileRoutes(answers,"",[],blankPolicyLedger(),today);expect(r.find(x=>x.key==="canada:fsw")?.status).toBe("Evidence needed");expect(r.every(x=>x.status!=="Self-reported screening only")).toBe(true);});
+ it("uses confirmed age and country filter",()=>{const r=assessProfileRoutes({...answers,targets:["AU"]},"45",[],blankPolicyLedger(),today);expect(r).toHaveLength(3);expect(r.every(x=>x.failed.some(y=>y.includes("18–44")))).toBe(true);});
+ it("policy failure holds shared Australia assessment",()=>{const l=recordPolicyFailure(blankPolicyLedger(),"australia:491",today,"Synthetic",today);if(!l.ok)throw Error(l.error);expect(assessProfileRoutes({...answers,targets:["AU"]},"32",[],l.value,today).every(x=>x.status==="Rule review required")).toBe(true);});
+ it("explicit fresh wording is review priority only",()=>{const x=assessJobOpportunities(snapshot(),profile,answers,blankPolicyLedger(),today,now)[0];expect(x.status).toBe("review_priority");expect(x.routes[0].route.id).toBe("blue");expect(x.salaries.length).toBeGreaterThan(0);});
+ it("missing, stale or relocation only wording cannot become explicit",()=>{expect(sponsorshipEvidence(job,snapshot(job,{...evidence,descriptionCheckedAt:""}),now).state).toBe("unknown");expect(sponsorshipEvidence(job,snapshot(job,{...evidence,positive:"",relocation:"Moving support"}),now).state).toBe("relocation_only");});
+ it("negative and conflicting wording are not explicit",()=>{expect(sponsorshipEvidence(job,snapshot(job,{...evidence,negative:"Restriction"}),now).state).toBe("conditional");expect(assessJobOpportunities(snapshot(job,{...evidence,positive:"",negative:"No sponsorship"}),profile,answers,blankPolicyLedger(),today,now)[0].status).toBe("excluded");});
+ it("language requirement is separated from career ranking",()=>expect(assessJobOpportunities(snapshot({...job,langs:["de"]}),profile,answers,blankPolicyLedger(),today,now)[0].status).toBe("language_review"));
+ it("policy hold suppresses salary comparisons",()=>{const l=recordPolicyFailure(blankPolicyLedger(),"germany:blue",today,"Synthetic",today);if(!l.ok)throw Error(l.error);expect(assessJobOpportunities(snapshot(),profile,answers,l.value,today,now)[0].salaries).toEqual([]);});
+ it("does not invent vacancies without snapshot",()=>expect(assessJobOpportunities(null,profile,answers,blankPolicyLedger(),today,now)).toEqual([]));
+});
