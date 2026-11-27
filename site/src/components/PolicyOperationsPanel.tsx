@@ -1,10 +1,10 @@
 import {useState,type Dispatch,type SetStateAction} from "react";
 import {countryNames} from "../engine/routeRadar";
 import {policySources,type PolicyLedger} from "../engine/policyReview";
-import {ruleVersions,duePolicyChecks,reconcileNotices,acknowledgeNotice,savePolicyCheckpoint,loadPolicyCheckpoint,clearPolicyCheckpoint,type LocalNotice} from "../engine/policyOperations";
-export default function PolicyOperationsPanel({ledger,setLedger,today,history,setHistory,onReview}:{ledger:PolicyLedger;setLedger:Dispatch<SetStateAction<PolicyLedger>>;today:string;history:LocalNotice[];setHistory:Dispatch<SetStateAction<LocalNotice[]>>;onReview:()=>void}){
+import {ruleVersions,duePolicyChecks,reconcileNotices,acknowledgeNotice,savePolicyCheckpoint,loadPolicyCheckpoint,clearPolicyCheckpoint,type LocalNotice,type DueCheck} from "../engine/policyOperations";
+export default function PolicyOperationsPanel({ledger,setLedger,today,history,setHistory,onReview,applicationChecks,onTracker}:{ledger:PolicyLedger;setLedger:Dispatch<SetStateAction<PolicyLedger>>;today:string;history:LocalNotice[];setHistory:Dispatch<SetStateAction<LocalNotice[]>>;onReview:()=>void;applicationChecks:DueCheck[];onTracker:()=>void}){
  const [message,setMessage]=useState(""),[busy,setBusy]=useState(false),[filter,setFilter]=useState("unread"),[country,setCountry]=useState("");
- const checks=duePolicyChecks(ledger,today);
+ const checks=[...duePolicyChecks(ledger,today),...applicationChecks];
  const list=history.filter(n=>filter==="all"||filter==="active"&&!n.resolvedOn||filter==="unread"&&!n.resolvedOn&&!n.readOn);
  const save=()=>{if(!window.confirm("Save only public policy observations and review history in this browser? The checkpoint survives reloads. Do not include personal information. Existing checkpoint will be replaced."))return;try{const r=savePolicyCheckpoint(window.localStorage,ledger,today);setMessage(r.ok?"Policy checkpoint saved locally.":r.error);}catch{setMessage("Browser storage is unavailable.");}};
  const load=async()=>{if(ledger.observations.length||ledger.reviews.length){setMessage("Restore requires an empty policy history. Export first and reload.");return;}if(!window.confirm("Restore the saved policy history? Prior approvals require fresh review."))return;setBusy(true);const epoch=ledger.epoch;try{const r=await loadPolicyCheckpoint(window.localStorage,today,epoch);if(r.ok){setLedger(prev=>prev.epoch===epoch&&!prev.observations.length&&!prev.reviews.length?r.value:prev);setMessage("Policy checkpoint restored; fresh approval required.");}else setMessage(r.error);}catch{setMessage("Browser storage unavailable.");}finally{setBusy(false);}};
@@ -18,6 +18,7 @@ export default function PolicyOperationsPanel({ledger,setLedger,today,history,se
  <h3>Source health and review checks</h3><p>{policySources.length} registered references · {checks.length} checks need attention · automated collection disabled.</p>
  <button type="button" className="btn" onClick={()=>{setHistory(old=>reconcileNotices(old,checks,today));setMessage("Local review check completed for "+today+". No network request made.");}}>Run local review check</button>
  <button type="button" className="btn" onClick={onReview}>Open policy review workspace</button>
+ <button type="button" className="btn" onClick={onTracker}>Open application tracker</button>
  <h3>Notification history</h3>
  <label>Notification filter<select aria-label="Notification filter" value={filter} onChange={e=>setFilter(e.target.value)}><option value="unread">Unread</option><option value="active">All active</option><option value="all">All history</option></select></label>
  {list.length===0&&<p>No notifications in this view.</p>}

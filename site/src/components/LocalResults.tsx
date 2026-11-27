@@ -4,6 +4,7 @@ import { matchJobs } from "../engine/jobs";
 import { MAX_FILE_BYTES, parseLocalJobs, isRecentObservation, type LocalJobs } from "../localJobs";
 import type { Answers, Profile } from "../types";
 import JobScreeningPanel from "./JobScreeningPanel";
+import {jobTarget,type Target} from "../engine/applicationTracker";
 import { advertisedSalary } from "../engine/advertisedSalary";
 
 const SIGNAL: Record<string, string> = {
@@ -12,7 +13,7 @@ const SIGNAL: Record<string, string> = {
   relocation: "Relocation only", unknown: "Unknown", blocked: "Excluded", "employer-no": "Excluded",
 };
 
-export default function LocalResults({ profile, answers, onBack,onEditProfile }: { profile: Profile; answers: Answers; onBack: () => void; onEditProfile:()=>void }) {
+export default function LocalResults({ profile, answers, onBack,onEditProfile,onShortlist,isShortlisted }: { profile: Profile; answers: Answers; onBack: () => void; onEditProfile:()=>void;onShortlist:(target:Target)=>void;isShortlisted:(target:Target)=>boolean }) {
   const [snapshot, setSnapshot] = useState<LocalJobs | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -80,6 +81,7 @@ export default function LocalResults({ profile, answers, onBack,onEditProfile }:
           {e.negative && <p>Restrictive wording: {e.negative}</p>}
           {e.relocation && <p>Relocation wording: {e.relocation}</p>}
         </details> : <p>No per-vacancy observation evidence supplied.</p>}
+        <button type="button" className="btn" disabled={isShortlisted(jobTarget(m.job))} onClick={()=>onShortlist(jobTarget(m.job))}>{isShortlisted(jobTarget(m.job))?"Shortlisted "+m.job.title:"Shortlist "+m.job.title}</button>
         <p>Matched skills: {m.matchedSkills.map(skillLabel).join(", ") || "None recorded"} · Missing: {m.missingSkills.map(skillLabel).join(", ") || "None recorded"}</p>
         {m.languageBlock.length > 0 && <p>Language requirement not met or unknown: {m.languageBlock.join(", ")}</p>}
       </article>; })}

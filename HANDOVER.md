@@ -3,7 +3,7 @@
 Updated: 2026-11-28
 Repository: aroradpk/Global-Mobility-Radar
 Review baseline: 7df403c5545c5704227ed75561f5ec4a08f5db9c
-Active branch: development/phase6-policy-operations (candidate from verified main)
+Active branch: development/phase7-application-tracker (candidate from verified main)
 
 ## Current state
 - Fork access and initial static audit verified; upstream MIT licence read.
@@ -251,3 +251,7 @@ Weighted engineering estimates by gate M01–M16 respectively: 70,35,60,0,30,45,
 
 
 - Additional offline operations increment: Python stdlib SQLite archive (default ignored pipeline/data path), explicit ingest/export, bounded JSON and content digest validation, archive integrity, historical-only imported evidence, transactional idempotent daily tick keyed by UTC day + archive digest, persistent local notice read/resolution and run history, no network or external delivery. Ten synthetic Python regression tests. CLI is a scheduler-ready command, not an installed or enabled schedule. Imported registry is archive provenance only, not permission or authority; browser restore still validates exact current compiled registry and replay. No profile or applicant data intended. Source acquisition and authenticated server storage/monitoring still pending. CI pending.
+
+
+## Phase 7 application tracker — 2026-11-28
+- Verified policy operations 4e2fa87 CI https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/46065852974: 880 frontend + 56 pipeline + 4 safety = 940 tests, 84 browser checkpoints, all 5 jobs green and zero audit vulnerabilities. Fast-forward main. Phase 7 candidate: application tracker integrated directly into imported job leads and 11-country route radar; manual opportunity entry, dedupe, statuses/history, editable notes/deadlines, checklists, filter/search, explicit deletion, UTC due/overdue checks in existing local notification inbox. Session-only by default; explicit AES-GCM encrypted checkpoint and encrypted JSON export/import with PBKDF2-SHA256 (310000 iterations), random salt/nonce, no passphrase retention, strict bounded restore, epoch protection and global clear removes dedicated checkpoint. No auto-submit, no profile/document upload, no external notifications. 16 unit regressions and browser flows added; CI pending. M11 in progress, all 16 gates retained, 0 formally accepted. Next verify merge, add tracker restore and deadline controls if needed, then live job-source verification and AI assistance.
