@@ -3,7 +3,7 @@
 Updated: 2026-11-27
 Repository: aroradpk/Global-Mobility-Radar
 Review baseline: 7df403c5545c5704227ed75561f5ec4a08f5db9c
-Active branch: development/phase5b-australia-occupation (candidate from verified main)
+Active branch: development/phase5b-cross-country (candidate from verified main)
 
 ## Current state
 - Fork access and initial static audit verified; upstream MIT licence read.
@@ -230,3 +230,7 @@ Phase 4I verified: c1ca8f1 passed all five jobs at https://github.com/aroradpk/G
 
 ## Whole-product planning estimate — 2026-11-27
 Weighted engineering estimates by gate M01–M16 respectively: 70,35,60,0,30,45,45,55,0,0,0,0,45,30,60,35 percent. Multiply each by the fixed roadmap weight and sum = 33.6/100 (rounded 34%). End-user readiness subjective estimate 25% (local preview, not hosted or continuously updated); 66% development and 75% readiness remaining. Formal verified acceptance remains 0/16, 0/100; no module fully meets all criteria. These estimates are not time forecasts or audited measurements. Prior 98% relates only to Canadian integration, not whole product. Prioritize vertical slices: complete essential shared mappings, unified route and comparison radar, verified live jobs, policy monitoring/alerts, tracker and AI assistance, deployment and final acceptance. No scope removal or paid/deployment permission implied.
+
+
+## Cross-country profile and route radar batch — 2026-11-27
+- 2026-11-27: Australian ACS candidate 247e985 CI 46032319135 passed all five jobs, 780 frontend +46 pipeline +4 safety =830 tests, 69 browser checkpoints, zero reported audit vulnerabilities. Promoted exact verified commit to main. Batched candidate: Australian IELTS Academic/General, PTE Academic pre/post 7 Aug 2025, CELPIP General post-change component thresholds, confirmed applicant/test format and three-year date guard; unsupported tests/retakes manual. German applicant recognition linked separately to Opportunity Card and Blue Card; explicit positive dual Anabin/ZAB/German academic or partial/state proof, no automatic recognition, partial not Blue Card proof, deletion fail closed. Source review: Home Affairs competent/proficient/superior English pages and Make-it-in-Germany academic recognition/Opportunity Card/Blue Card pages, 2026-11-27. Unified radar reuses existing route definitions for 11 countries; country/search filters, up to three route reference comparison, country navigation, date warning, fees/windows/processing unknown rather than invented. No automatic eligibility rankings, live monitoring or current availability claims; no new deps/persistence/deployment. Candidate unit/browser tests added, CI pending. M09 now in progress; remaining official route gaps, cost/processing/settlement comparisons, other occupation/qualification mappings, live policy/jobs, tracker/AI/alerts and acceptance open. 0/16 formal gates. Next prioritize policy snapshot/approval pipeline and source-backed radar enrichment instead of indefinite country-specific refinements.

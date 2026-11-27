@@ -3,6 +3,7 @@ import ProfileAgeControl from "./ProfileAgeControl";
 import {withProfileAge} from "../engine/unifiedProfile";
 import {lookupAustraliaOccupation,mapAustraliaSkill,withAustraliaSkill,australiaOccupationSources} from "../engine/australiaOccupation";
 import type {EvidenceRecord} from "../engine/profileEvidence";
+import {mapAustraliaEnglish,withAustraliaEnglish,australianEnglishSources} from "../engine/australiaEnglish";
 import { assessAustralia } from "../engine/australia.js";
 
 const ROOT = "https://immi.homeaffairs.gov.au/visas/getting-a-visa/visa-listing/";
@@ -14,18 +15,22 @@ export default function AustraliaPanel({today,profileAge,evidence}:{today:string
   const [manualInput,setInput]=useState<Record<string,string>>({});
   const [linked,setLinked]=useState(false);
   const [skillId,setSkillId]=useState("");
+  const [englishId,setEnglishId]=useState("");
   const [code,setCode]=useState("");
   const [regionalPath,setRegionalPath]=useState("");
   const [regionalSupport,setRegionalSupport]=useState("");
   const selected=evidence.find(r=>String(r.id)===skillId&&r.kind==="skillsAssessment");
   const skill=mapAustraliaSkill(selected,today);
   const occupation=skillId?lookupAustraliaOccupation(selected?.values.occupation??"",selected?.values.australiaSkillClassification??"",today):lookupAustraliaOccupation(code,"ANZSCO 2013",today);
-  const input=withAustraliaSkill(withProfileAge(skillId?{...manualInput,support491:regionalPath?regionalSupport:""}:manualInput,"age",linked,profileAge),skillId,evidence,today,regionalPath);
+  const skillInput=withAustraliaSkill(withProfileAge(skillId?{...manualInput,support491:regionalPath?regionalSupport:""}:manualInput,"age",linked,profileAge),skillId,evidence,today,regionalPath);
+  const input=withAustraliaEnglish(skillInput,englishId,evidence,today);
+  const englishRecord=evidence.find(r=>String(r.id)===englishId);
+  const englishResult=mapAustraliaEnglish(englishRecord,today);
   const [submitted,setSubmitted]=useState(false);
   const result=submitted?assessAustralia(input,today):null;
   const update=(key:string,value:string)=>{if(key==="support491"&&skillId)setRegionalSupport(value);else setInput(old=>({...old,[key]:value}));setSubmitted(false);};
-  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} disabled={!!skillId&&(key==="skills"||key==="skillsValid"||key.startsWith("occupation")||(key==="support491"&&!regionalPath))} value={input[key]??""} onChange={e=>update(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
-  const field=(key:string,label:string,type="number")=><label key={key}>{label}<input type={type} disabled={(key==="age"&&linked)||(key==="skillsDate"&&!!skillId)} value={input[key]??""} onChange={e=>update(key,e.target.value)} min={type==="number"?0:undefined} step={type==="number"?1:undefined}/></label>;
+  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} disabled={(!!englishId&&(key==="english"||key==="englishEvidence"))||!!skillId&&(key==="skills"||key==="skillsValid"||key.startsWith("occupation")||(key==="support491"&&!regionalPath))} value={input[key]??""} onChange={e=>update(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
+  const field=(key:string,label:string,type="number")=><label key={key}>{label}<input type={type} disabled={(key==="age"&&linked)||(key==="skillsDate"&&!!skillId)||(key==="englishDate"&&!!englishId)} value={input[key]??""} onChange={e=>update(key,e.target.value)} min={type==="number"?0:undefined} step={type==="number"?1:undefined}/></label>;
   return <section className="card stack" aria-labelledby="australia-title">
     <h2 id="australia-title">Australia — skilled migration points</h2>
     <p>Compare 189 and 190 permanent visas with 491 regional provisional residence. This is a private, self-reported scenario, not a visa decision. 65 points is a minimum, not a guarantee of invitation.</p>
@@ -33,6 +38,9 @@ export default function AustraliaPanel({today,profileAge,evidence}:{today:string
     <details open><summary>1. Your points</summary>
       <ProfileAgeControl age={profileAge} linked={linked} onChange={v=>{setLinked(v);setSubmitted(false);}}/>
       {field("age","Age in completed years")}
+      <label>Use saved Australian English evidence<select aria-label="Use saved Australian English evidence" value={englishId} onChange={e=>{setEnglishId(e.target.value);setSubmitted(false);}}><option value="">Independent manual input</option>{englishId&&(!englishRecord||englishRecord.values.australiaEnglishOwner!=="applicant")&&<option value={englishId}>Previously selected record unavailable</option>}{evidence.filter(r=>r.kind==="language"&&r.values.australiaEnglishOwner==="applicant").map(r=><option key={r.id} value={String(r.id)}>{r.values.test} — record {r.id}</option>)}</select></label>
+      {englishId&&<p role="status">{englishResult.ok?"Linked English level: "+englishResult.level:englishResult.reason}. Unlink to restore manual inputs.</p>}
+      <p className="small muted">Australian thresholds: {australianEnglishSources.map((url,i)=><span key={url}><a href={url} target="_blank" rel="noopener noreferrer">{["Competent","Proficient","Superior"][i]}</a> · </span>)} reviewed 27 November 2026.</p>
       {select("english","Confirmed English level",[["below","Below competent"],["competent","Competent — 0 points"],["proficient","Proficient — 10 points"],["superior","Superior — 20 points"]])}
       {select("englishEvidence","English evidence",[["passport","Eligible citizenship and valid passport (competent only)"],["test","Approved test with verified scores"],["none","None"]])}
       {input.englishEvidence==="test"&&field("englishDate","Approved test date","date")}
@@ -73,7 +81,7 @@ export default function AustraliaPanel({today,profileAge,evidence}:{today:string
       </fieldset>)}
     </details>
     <button type="button" className="btn primary" onClick={()=>setSubmitted(true)}>Compare visa pathways</button>
-    <button type="button" className="btn ghost" onClick={()=>{setInput({});setLinked(false);setSkillId("");setCode("");setRegionalPath("");setRegionalSupport("");setSubmitted(false);}}>Clear Australia inputs</button>
+    <button type="button" className="btn ghost" onClick={()=>{setInput({});setLinked(false);setSkillId("");setEnglishId("");setCode("");setRegionalPath("");setRegionalSupport("");setSubmitted(false);}}>Clear Australia inputs</button>
     {result&&<div role="status" className="stack">
       <h3>Base points: {result.basePoints??"Unknown"}</h3>
       {Object.entries(result.factors).map(([k,v])=><p key={k}>{k.replace(/([A-Z])/g," $1")}: {v}</p>)}

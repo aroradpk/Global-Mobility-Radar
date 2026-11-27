@@ -1,0 +1,31 @@
+import {describe,it,expect} from "vitest";
+import {mapAustraliaEnglish,withAustraliaEnglish} from "./australiaEnglish";
+import {mapGermanyRecognition,withGermanyRecognition} from "./germanyRecognition";
+import type {EvidenceRecord} from "./profileEvidence";
+const today="2026-11-27";
+const language=(patch:Record<string,string>={}):EvidenceRecord=>({id:1,kind:"language",confirmedOn:today,values:{test:"PTE Academic",taken:"2026-01-01",listening:"69",reading:"70",writing:"85",speaking:"88",australiaEnglishOwner:"applicant",australiaEnglishConfirmed:"confirmed",...patch}});
+const degree=(patch:Record<string,string>={}):EvidenceRecord=>({id:2,kind:"education",confirmedOn:today,values:{qualification:"Example degree",institution:"Example university",country:"India",awarded:"2018-01-01",assessmentDate:"2026-01-01",germanyCredentialOwner:"applicant",germanyRecognitionBasis:"anabin",germanyRecognitionConfirmed:"confirmed",...patch}});
+describe("Australia approved English evidence",()=>{
+ it("uses modern PTE component thresholds",()=>expect(mapAustraliaEnglish(language(),today)).toMatchObject({ok:true,level:"superior"}));
+ it("one lower component reduces tier",()=>expect(mapAustraliaEnglish(language({speaking:"87"}),today)).toMatchObject({ok:true,level:"proficient"}));
+ it("uses old PTE thresholds before change",()=>expect(mapAustraliaEnglish(language({taken:"2025-08-06",listening:"79",reading:"79",writing:"79",speaking:"79"}),today)).toMatchObject({level:"superior"}));
+ it("uses new PTE thresholds on change date",()=>expect(mapAustraliaEnglish(language({taken:"2025-08-07",listening:"79",reading:"79",writing:"79",speaking:"79"}),today)).toMatchObject({level:"proficient"}));
+ it("IELTS requires every component",()=>expect(mapAustraliaEnglish(language({test:"IELTS General Training",listening:"8",reading:"8",writing:"7",speaking:"8"}),today)).toMatchObject({level:"proficient"}));
+ it("CELPIP uses distinct Australian cutoffs",()=>expect(mapAustraliaEnglish(language({test:"CELPIP-General",listening:"9",reading:"8",writing:"10",speaking:"8"}),today)).toMatchObject({level:"proficient"}));
+ for(const [label,patch] of Object.entries<Record<string,string>>({oldCELPIP:{test:"CELPIP-General",taken:"2025-08-06"},core:{test:"PTE Core"},owner:{australiaEnglishOwner:"spouse"},unconfirmed:{australiaEnglishConfirmed:""},expiry:{taken:"2023-11-27"},future:{taken:"2026-11-28"},invalid:{writing:"91"},fraction:{writing:"85.5"},missing:{speaking:""},conflict:{language:"French"}}))it("rejects "+label,()=>expect(mapAustraliaEnglish(language(patch),today).ok).toBe(false));
+ it("below competent is explicit",()=>expect(mapAustraliaEnglish(language({speaking:"20"}),today)).toMatchObject({level:"below"}));
+ it("stale rules fail closed",()=>expect(mapAustraliaEnglish(language(),"2026-12-27").ok).toBe(false));
+ it("deletion clears linked fields and unlink restores",()=>{const manual={english:"competent",englishEvidence:"passport"};expect(withAustraliaEnglish(manual,"1",[],today)).toMatchObject({english:"",englishEvidence:"",englishDate:""});expect(withAustraliaEnglish(manual,"",[],today)).toEqual(manual);});
+});
+describe("Germany recognition",()=>{
+ it("maps positive dual Anabin evidence",()=>expect(mapGermanyRecognition(degree(),today)).toMatchObject({ok:true,opQualification:"recognised",blueDegree:true}));
+ it("maps positive ZAB",()=>expect(mapGermanyRecognition(degree({germanyRecognitionBasis:"zab"}),today)).toMatchObject({blueDegree:true}));
+ it("German degree has no foreign proof requirement",()=>expect(mapGermanyRecognition(degree({country:"DE",germanyRecognitionBasis:"german",assessmentDate:""}),today)).toMatchObject({blueDegree:true}));
+ it("partial recognition is not full recognition",()=>expect(mapGermanyRecognition(degree({germanyRecognitionBasis:"partial"}),today)).toMatchObject({opQualification:"partial",blueDegree:false}));
+ it("foreign state recognition not Blue Card equivalence",()=>expect(mapGermanyRecognition(degree({germanyRecognitionBasis:"foreign"}),today)).toMatchObject({opQualification:"foreign",blueDegree:false}));
+ for(const [label,patch] of Object.entries<Record<string,string>>({owner:{germanyCredentialOwner:"spouse"},unconfirmed:{germanyRecognitionConfirmed:""},unknown:{germanyRecognitionBasis:""},missingInstitution:{institution:""},future:{awarded:"2026-11-28"},missingDate:{assessmentDate:""},dateConflict:{assessmentDate:"2017-01-01"},expiry:{expiry:"2026-11-26"},countryConflict:{country:"Germany"}}))it("rejects "+label,()=>expect(mapGermanyRecognition(degree(patch),today).ok).toBe(false));
+ it("Blue Card partial evidence stays unknown",()=>expect(withGermanyRecognition({blueQualification:"itExperience"},"2",[degree({germanyRecognitionBasis:"partial"})],today,"blue")).toMatchObject({blueQualification:"",blueDegreeProof:""}));
+ it("does not alter other scenario fields",()=>expect(withGermanyRecognition({blueOffer:"no",opAge:"32"},"2",[degree()],today,"blue")).toMatchObject({blueQualification:"degree",blueDegreeProof:"yes",blueOffer:"no",opAge:"32"}));
+ it("deletion and unlink preserve manual scenario",()=>{const manual={opQualification:"none"};expect(withGermanyRecognition(manual,"2",[],today,"opportunity").opQualification).toBe("");expect(withGermanyRecognition(manual,"",[],today,"opportunity")).toEqual(manual);});
+ it("stale rules fail closed",()=>expect(mapGermanyRecognition(degree(),"2026-12-27").ok).toBe(false));
+});

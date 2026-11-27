@@ -11,11 +11,12 @@ import GermanyPanel from "./components/GermanyPanel";
 import EuropePermitPanel from "./components/EuropePermitPanel";
 import { useAssessmentDate } from "./useAssessmentDate";
 import ProfilePanel from "./components/ProfilePanel";
+import RouteRadar from "./components/RouteRadar";
 import type {EvidenceRecord} from "./engine/profileEvidence";
 import {blankJobProfile,currentAge,type ConfirmedAge} from "./engine/unifiedProfile";
 
 type Step = "upload" | "review" | "interview" | "results";
-const SECTIONS = {jobs:"Jobs",profile:"Profile",canada:"Canada PR",australia:"Australia skilled visas",germany:"Germany visas",ireland:"Ireland permits",netherlands:"Netherlands permits",newzealand:"New Zealand visas",uk:"UK visas",hongkong:"Hong Kong visas",singapore:"Singapore passes",uae:"UAE visas",us:"US visas"} as const;
+const SECTIONS = {jobs:"Jobs",profile:"Profile",radar:"Visa and PR radar",canada:"Canada PR",australia:"Australia skilled visas",germany:"Germany visas",ireland:"Ireland permits",netherlands:"Netherlands permits",newzealand:"New Zealand visas",uk:"UK visas",hongkong:"Hong Kong visas",singapore:"Singapore passes",uae:"UAE visas",us:"US visas"} as const;
 type View = keyof typeof SECTIONS;
 
 export default function App() {
@@ -54,9 +55,10 @@ export default function App() {
       {hasResults && profile && effective && <div hidden={step!=="results"}><LocalResults profile={profile} answers={effective} onBack={() => setStep("interview")} onEditProfile={()=>setStep("review")}/></div>}
       </div>
       <div key={"profile-"+resetKey} hidden={view!=="profile"}><ProfilePanel evidence={evidence} onEvidence={setEvidence} profile={careerConfirmed?profile:null} answers={careerConfirmed?savedAnswers:null} age={age} today={today} onAge={setAge} onCareer={editCareer} onPreferences={()=>{setView("jobs");setStep("interview");}}/></div>
+      <div key={"radar-"+resetKey} hidden={view!=="radar"}><RouteRadar today={today} onOpen={setView}/></div>
       <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
       <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
-      <div key={"germany-"+resetKey} hidden={view!=="germany"}><GermanyPanel today={today} profileAge={profileAge}/></div>
+      <div key={"germany-"+resetKey} hidden={view!=="germany"}><GermanyPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
       <div key={"ireland-"+resetKey} hidden={view!=="ireland"}><EuropePermitPanel country="ireland" today={today} profileAge={profileAge}/></div>
       <div key={"netherlands-"+resetKey} hidden={view!=="netherlands"}><EuropePermitPanel country="netherlands" today={today} profileAge={profileAge}/></div>
       <div key={"newzealand-"+resetKey} hidden={view!=="newzealand"}><EuropePermitPanel country="newzealand" today={today} profileAge={profileAge}/></div>

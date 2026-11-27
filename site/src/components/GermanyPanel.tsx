@@ -1,6 +1,8 @@
 import { useState } from "react";
 import ProfileAgeControl from "./ProfileAgeControl";
 import {withProfileAge} from "../engine/unifiedProfile";
+import {mapGermanyRecognition,withGermanyRecognition,germanyRecognitionSource} from "../engine/germanyRecognition";
+import type {EvidenceRecord} from "../engine/profileEvidence";
 import { assessGermany, DE_THRESHOLDS } from "../engine/germany.js";
 
 const BASE = "https://www.make-it-in-germany.com/en/";
@@ -14,17 +16,20 @@ const GERMAN = [["none","None / below A1"],["A1","A1"],["A2","A2"],["B1","B1"],[
 const STATUS = {review_required:"Review required",requirements_not_met:"Requirements not met / outstanding",meets_self_reported_screen:"Meets self-reported screen only"};
 const eur = (v:number) => v.toLocaleString("en-IE",{style:"currency",currency:"EUR"});
 
-export default function GermanyPanel({today,profileAge}:{today:string;profileAge:string}){
+export default function GermanyPanel({today,profileAge,evidence}:{today:string;profileAge:string;evidence:EvidenceRecord[]}){
   const [manualInput,setInput]=useState<Record<string,string>>({});
   const [linked,setLinked]=useState(false);
-  const input=withProfileAge(manualInput,"opAge",linked,profileAge);
+  const [opId,setOpId]=useState("");
+  const [blueId,setBlueId]=useState("");
+  const input=withGermanyRecognition(withGermanyRecognition(withProfileAge(manualInput,"opAge",linked,profileAge),opId,evidence,today,"opportunity"),blueId,evidence,today,"blue");
   const [active,setActive]=useState<"opportunity"|"blue"|"settlement">("opportunity");
   const [submitted,setSubmitted]=useState(false);
   const change=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
   const field=(key:string,label:string,decimal=false)=><label key={key}>{label}<input type="number" min={0} step={decimal?"0.01":"1"} disabled={key==="opAge"&&linked} value={input[key]??""} onChange={e=>change(key,e.target.value)}/></label>;
-  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} value={input[key]??""} onChange={e=>change(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([value,text])=><option value={value} key={value}>{text}</option>)}</select></label>;
+  const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} disabled={(!!opId&&(key==="opQualification"||key==="opForeignProof"))||(!!blueId&&(key==="blueQualification"||key==="blueDegreeProof"))} value={input[key]??""} onChange={e=>change(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([value,text])=><option value={value} key={value}>{text}</option>)}</select></label>;
   const result=submitted?assessGermany(input,today).find(r=>r.id===active):undefined;
   const route=ROUTES.find(r=>r.id===active)!;
+  const recognitionLink=(mode:"opportunity"|"blue")=>{const id=mode==="opportunity"?opId:blueId;const setId=mode==="opportunity"?setOpId:setBlueId;const label=mode==="opportunity"?"Use saved Opportunity Card qualification":"Use saved Blue Card qualification";const selected=evidence.find(r=>String(r.id)===id);const mapped=mapGermanyRecognition(selected,today);return <><label>{label}<select aria-label={label} value={id} onChange={e=>{setId(e.target.value);setSubmitted(false);}}><option value="">Independent manual input</option>{id&&(!selected||selected.values.germanyCredentialOwner!=="applicant")&&<option value={id}>Previously selected record unavailable</option>}{evidence.filter(r=>r.kind==="education"&&r.values.germanyCredentialOwner==="applicant").map(r=><option key={r.id} value={String(r.id)}>{r.values.qualification} — record {r.id}</option>)}</select></label>{id&&<p role="status">{mapped.ok?(mode==="blue"&&!mapped.blueDegree?"Not sufficient for linked Blue Card degree route":mapped.basis):mapped.reason}. Unlink to restore manual inputs.</p>}<p className="small muted"><a href={germanyRecognitionSource} target="_blank" rel="noopener noreferrer">Official recognition guidance</a>. Self-reported evidence only.</p></>;};
   return <section className="card stack" aria-labelledby="germany-title">
     <h2 id="germany-title">Germany — job search, employment and settlement</h2>
     <p>Choose the pathway you want to assess. All facts are self-reported and remain in this browser. Rules reviewed 26 November 2026; fresh through 26 December 2026 for this preview. Not a grant decision.</p>
@@ -32,6 +37,7 @@ export default function GermanyPanel({today,profileAge}:{today:string;profileAge
     <a href={route.source} target="_blank" rel="noopener noreferrer">Official requirements for {route.label}</a>
     {active==="opportunity"&&<>
       <p>Temporary job-search permission, initially up to 12 months. A job offer is not required. The blocked-account benchmark is {eur(DE_THRESHOLDS.monthlyFunds)} per month; accepted alternatives need official confirmation.</p>
+      {recognitionLink("opportunity")}
       {select("opQualification","Qualification route",[["recognised","German or fully recognised qualification"],["partial","Official partial recognition / compensation notice"],["foreign","Foreign credential recognised in country of acquisition"],["none","No qualifying credential"]])}
       {input.opQualification==="foreign"&&select("opForeignProof","Official proof (Anabin/ZAB/DAB as applicable); vocational training at least two years")}
       {input.opQualification==="partial"||input.opQualification==="foreign"?<>
@@ -53,6 +59,7 @@ export default function GermanyPanel({today,profileAge}:{today:string;profileAge
     </>}
     {active==="blue"&&<>
       <p>Qualified employment with a specific job offer. 2026 annual gross thresholds: {eur(DE_THRESHOLDS.standard)} standard; {eur(DE_THRESHOLDS.reduced)} only for qualifying reduced routes.</p>
+      {recognitionLink("blue")}
       {select("blueQualification","Qualification route",[["degree","Eligible comparable academic / equivalent tertiary qualification"],["itExperience","Qualifying IT experience without eligible formal qualification"],["none","Neither"]])}
       {input.blueQualification==="degree"&&select("blueDegreeProof","Official degree comparability or eligible 3-year tertiary level-6 credential confirmed")}
       {input.blueQualification==="itExperience"&&<>{field("blueITMonths","Qualifying IT work months in last 7 years")}{select("blueITLevel","Academic-level experience and matching ISCO 133 or 25 occupation confirmed")}</>}
@@ -79,7 +86,7 @@ export default function GermanyPanel({today,profileAge}:{today:string;profileAge
       {select("settlementGeneral","Other applicable settlement requirements reviewed")}
     </>}
     <button type="button" className="btn primary" onClick={()=>setSubmitted(true)}>Assess {route.label}</button>
-    <button type="button" className="btn ghost" onClick={()=>{setInput({});setSubmitted(false);}}>Clear Germany inputs</button>
+    <button type="button" className="btn ghost" onClick={()=>{setInput({});setLinked(false);setOpId("");setBlueId("");setSubmitted(false);}}>Clear Germany inputs</button>
     {result&&<section className="card stack" role="status">
       <h3>{result.label}</h3><strong>{STATUS[result.status]}</strong>
       {result.details.path&&<p>{result.details.path}</p>}
