@@ -1,4 +1,7 @@
 import { useState } from "react";
+import type {PolicyLedger} from "../engine/policyReview";
+import {countryRuleHold} from "../engine/policyOperations";
+import RuleVersionNotice from "./RuleVersionNotice";
 import ProfileAgeControl from "./ProfileAgeControl";
 import {withProfileAge} from "../engine/unifiedProfile";
 import {lookupAustraliaOccupation,mapAustraliaSkill,withAustraliaSkill,australiaOccupationSources} from "../engine/australiaOccupation";
@@ -11,7 +14,7 @@ const ROUTES = [{id:"189",label:"189 · Skilled Independent",path:"skilled-indep
 const YES_NO = [["yes","Yes — confirmed"],["no","No"]] as const;
 const STATUS = {requirements_not_met:"Requirements not met / still outstanding",review_required:"Review required",potential_eoi_candidate:"Potential EOI candidate — not invited",meets_self_reported_screen:"Meets self-reported screen only"} as const;
 
-export default function AustraliaPanel({today,profileAge,evidence}:{today:string;profileAge:string;evidence:EvidenceRecord[]}){
+export default function AustraliaPanel({today,profileAge,evidence,policy}:{today:string;profileAge:string;evidence:EvidenceRecord[];policy:PolicyLedger}){
   const [manualInput,setInput]=useState<Record<string,string>>({});
   const [linked,setLinked]=useState(false);
   const [skillId,setSkillId]=useState("");
@@ -27,12 +30,14 @@ export default function AustraliaPanel({today,profileAge,evidence}:{today:string
   const englishRecord=evidence.find(r=>String(r.id)===englishId);
   const englishResult=mapAustraliaEnglish(englishRecord,today);
   const [submitted,setSubmitted]=useState(false);
-  const result=submitted?assessAustralia(input,today):null;
+  const hold=countryRuleHold(policy,"australia",today);
+  const result=submitted&&!hold?assessAustralia(input,today):null;
   const update=(key:string,value:string)=>{if(key==="support491"&&skillId)setRegionalSupport(value);else setInput(old=>({...old,[key]:value}));setSubmitted(false);};
   const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} disabled={(!!englishId&&(key==="english"||key==="englishEvidence"))||!!skillId&&(key==="skills"||key==="skillsValid"||key.startsWith("occupation")||(key==="support491"&&!regionalPath))} value={input[key]??""} onChange={e=>update(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
   const field=(key:string,label:string,type="number")=><label key={key}>{label}<input type={type} disabled={(key==="age"&&linked)||(key==="skillsDate"&&!!skillId)||(key==="englishDate"&&!!englishId)} value={input[key]??""} onChange={e=>update(key,e.target.value)} min={type==="number"?0:undefined} step={type==="number"?1:undefined}/></label>;
   return <section className="card stack" aria-labelledby="australia-title">
     <h2 id="australia-title">Australia — skilled migration points</h2>
+    <RuleVersionNotice route="australia:189" ledger={policy} today={today} hold={hold}/>
     <p>Compare 189 and 190 permanent visas with 491 regional provisional residence. This is a private, self-reported scenario, not a visa decision. 65 points is a minimum, not a guarantee of invitation.</p>
     <p>Rules reviewed 26 November 2026; recheck after 26 December 2026. Assess facts as of today; invitation-date assessment may differ.</p>
     <details open><summary>1. Your points</summary>

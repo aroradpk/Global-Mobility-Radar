@@ -47,7 +47,7 @@ export default function PolicyReviewPanel({today,ledger,setLedger}:{today:string
  };
  return <section className="card stack" aria-labelledby="policy-title">
  <h2 id="policy-title">Policy review and source health</h2>
- <p>Manual, local review only. No automatic source access is approved. Record public official evidence, not applicant details. Approval updates reference information in the route radar; calculator rules are unchanged.</p>
+ <p>Manual, local review only. No automatic source access is approved. Record public official evidence, not applicant details. Approval updates reference information in the route radar; affected compiled calculators are held for maintainer reconciliation.</p>
  <h3>Review inbox ({alerts.length})</h3>
  {alerts.length===0?<p>No outstanding observed policy changes. Unchecked sources are not confirmed current.</p>:alerts.map(a=><p key={a.source.key}><button type="button" className="btn small" disabled={busy} onClick={()=>{if(draft.confirmed||draft.excerpt){if(!window.confirm("Discard unsaved policy draft?"))return;}setDraft(blankPolicyDraft(a.source.key,today));setReviewConfirm(false);setMessage("");}}>{countryNames[a.source.country]} — {a.source.route}</button> {policyStateLabels[a.state]}</p>)}
  <h3>Official reference registry</h3>
@@ -72,6 +72,6 @@ export default function PolicyReviewPanel({today,ledger,setLedger}:{today:string
  {reviews.map(r=><p key={r.id}>{r.reviewedOn} · {r.action} · observation {r.target}</p>)}
  <button type="button" className="btn" disabled={!ledger.observations.length||busy} onClick={exportAudit}>Export policy audit (JSON)</button>
  <label>Restore policy audit (JSON)<input aria-label="Restore policy audit (JSON)" type="file" accept=".json,application/json" disabled={busy||ledger.observations.length>0||ledger.reviews.length>0} onChange={e=>{const file=e.target.files?.[0];e.target.value="";void restoreAudit(file);}}/></label>
- <p className="small muted">History is session-only. Export before reloading; restore requires an empty history and fresh approval. Rollback never asserts that a prior policy is currently in force. In-app review inbox is not scheduled monitoring or external notification.</p>
+ <p className="small muted">History is session-only unless you explicitly save a policy checkpoint in Policy operations. Export before reloading; restore requires an empty history and fresh approval. Rollback never asserts that a prior policy is currently in force. In-app review inbox is not scheduled monitoring or external notification.</p>
  </section>;
 }

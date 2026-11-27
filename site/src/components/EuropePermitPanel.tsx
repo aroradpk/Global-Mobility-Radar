@@ -1,11 +1,14 @@
 import { useState } from "react";
+import type {PolicyLedger} from "../engine/policyReview";
+import {ruleReviewHold} from "../engine/policyOperations";
+import RuleVersionNotice from "./RuleVersionNotice";
 import ProfileAgeControl from "./ProfileAgeControl";
 import {withProfileAge} from "../engine/unifiedProfile";
 import { assessPermit, PERMIT_ROUTES, REVIEWED, REVIEW_BY, type Country, type Facts } from "../engine/europePermits";
 
 const LABELS={review_required:"Review required",requirements_not_met:"Requirements not met / outstanding",meets_self_reported_screen:"Meets self-reported screen only"} as const;
 
-export default function EuropePermitPanel({country,today,profileAge}:{country:Country;today:string;profileAge:string}){
+export default function EuropePermitPanel({country,today,profileAge,policy}:{country:Country;today:string;profileAge:string;policy:PolicyLedger}){
   const routes=PERMIT_ROUTES[country];
   const [active,setActive]=useState(routes[0].id);
   const [scenarios,setScenarios]=useState<Record<string,Facts>>({});
@@ -15,12 +18,15 @@ export default function EuropePermitPanel({country,today,profileAge}:{country:Co
   const linked=linkedRoutes[active]===true;
   const input=withProfileAge(scenarios[active]??{},"age",linked,profileAge);
   const update=(key:string,value:string)=>{setScenarios(old=>({...old,[active]:{...old[active],[key]:value}}));setSubmitted(false);};
-  const result=submitted?assessPermit(country,active,input,today):null;
+  const ruleKey=country+":"+active;
+  const hold=ruleReviewHold(policy,ruleKey,today);
+  const result=submitted&&!hold?assessPermit(country,active,input,today):null;
   const name={ireland:"Ireland",netherlands:"Netherlands",newzealand:"New Zealand",uk:"United Kingdom",hongkong:"Hong Kong",singapore:"Singapore",uae:"United Arab Emirates",us:"United States"}[country];
   return <section className="card stack" aria-labelledby={country+"-title"}>
     <h2 id={country+"-title"}>{name} — employment and residence pathways</h2>
     <p>Current-date self-reported screening for ordinary skilled workers. No profile is uploaded. Review date: {REVIEWED}; review again after {REVIEW_BY}. Unknown facts are not assumed true. This is not an official decision.</p>
     <nav className="section-nav" aria-label={name+" pathways"}>{routes.map(r=><button type="button" className="btn small" key={r.id} aria-pressed={active===r.id} onClick={()=>{setActive(r.id);setSubmitted(false);}}>{r.title}</button>)}</nav>
+    <RuleVersionNotice route={ruleKey} ledger={policy} today={today}/>
     <h3>{route.title}</h3><p><strong>{route.kind}</strong></p><p>{route.intro}</p>
     <p><a href={route.source} target="_blank" rel="noopener noreferrer">Official requirements</a>{route.links?.map(([label,url])=><span key={url}> · <a href={url} target="_blank" rel="noopener noreferrer">{label}</a></span>)}</p>
     {route.fields.some(f=>f.key==="age"&&(!f.when||f.when(input)))&&<ProfileAgeControl age={profileAge} linked={linked} onChange={v=>{setLinkedRoutes(old=>({...old,[active]:v}));setSubmitted(false);}}/>}

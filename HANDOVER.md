@@ -1,9 +1,9 @@
 # Development handover
 
-Updated: 2026-11-27
+Updated: 2026-11-28
 Repository: aroradpk/Global-Mobility-Radar
 Review baseline: 7df403c5545c5704227ed75561f5ec4a08f5db9c
-Active branch: development/phase6-policy-review (candidate from verified main)
+Active branch: development/phase6-policy-operations (candidate from verified main)
 
 ## Current state
 - Fork access and initial static audit verified; upstream MIT licence read.
@@ -244,3 +244,7 @@ Weighted engineering estimates by gate M01–M16 respectively: 70,35,60,0,30,45,
 
 
 - CI 46047776456: 856 frontend tests passed, pipeline/audit/safety passed, but strict TS7053 failed both production and browser builds for four dynamic PolicyFacts financial key accesses. Replaced string concatenation with exact typed tuples. No relaxed checks. Restore increment included in corrected candidate; exact-head CI required before promotion.
+
+
+## Phase 6 policy operations — 2026-11-28
+- Verified policy candidate 6ceab6a CI https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/46047951472: 864 frontend + 46 pipeline + 4 safety =914 tests; 81 browser checkpoints; all five jobs and both audits green, promoted exact SHA to main. New Phase 6 operations candidate: explicit policy-only browser checkpoint (save/restore/delete, no automatic load, restored historical approvals withheld; global reset deletes dedicated key), local notification history with event dedupe, acknowledgement/resolution, review-due checks driven by existing UTC date update and ledger changes, manual offline check, compiled route version inventory and affected calculator result holds across 11 countries. A policy approval cannot activate unreviewed arithmetic; all Australian routes held together because shared base score. Rule holds scoped to current session and manually restored history; no auto server storage or legal rule activation. Unobserved sources not verified current, default no background network/scheduler, external delivery or deployment. 16 unit regressions and three-width browser checks added; exact-head CI pending. No new runtime dependencies. All 16 gates retained, 0 formally accepted. Next: durable owner-controlled offline audit repository, scheduler/approved-source collection and notifications, then application tracker and live job validation.

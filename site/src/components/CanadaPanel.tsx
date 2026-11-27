@@ -1,4 +1,7 @@
 import { useState } from "react";
+import type {PolicyLedger} from "../engine/policyReview";
+import {ruleReviewHold} from "../engine/policyOperations";
+import RuleVersionNotice from "./RuleVersionNotice";
 import ProfileAgeControl from "./ProfileAgeControl";
 import {withProfileAge} from "../engine/unifiedProfile";
 import {resolveCanadaLanguage,withCanadaLanguage,type LanguageSlot} from "../engine/canadaLanguage";
@@ -9,7 +12,7 @@ import { assessCanada } from "../engine/canada.js";
 const ROOT="https://www.canada.ca/en/immigration-refugees-citizenship/services/immigrate-canada/express-entry/";
 const education=["Less than secondary","Secondary","One-year postsecondary","Two-year postsecondary","Bachelor / 3+ year credential","Two or more, one 3+ years","Master / eligible professional degree","Doctorate"].map((l,i)=>[String(i),l] as const);
 const yn=[["yes","Yes — confirmed"],["no","No"]] as const;
-export default function CanadaPanel({today,profileAge,evidence}:{today:string;profileAge:string;evidence:EvidenceRecord[]}){
+export default function CanadaPanel({today,profileAge,evidence,policy}:{today:string;profileAge:string;evidence:EvidenceRecord[];policy:PolicyLedger}){
   const [manualInput,setInput]=useState<Record<string,string>>({});
   const [linked,setLinked]=useState(false);
   const [languageId,setLanguageId]=useState("");
@@ -30,7 +33,8 @@ export default function CanadaPanel({today,profileAge,evidence}:{today:string;pr
   const baseInput=withCanadaLanguage(secondInput,spouseLanguageId,evidence,today,"spouseLanguage");
   const input=withCanadaEducationSelection(withCanadaEducationSelection(baseInput,educationId,educationSecond,educationAttestation,evidence,today),spouseEducationId,spouseEducationSecond,spouseEducationAttestation,evidence,today,"spouse");
   const [submitted,setSubmitted]=useState(false);
-  const result=submitted?assessCanada(input,today):null;
+  const hold=ruleReviewHold(policy,"canada:fsw",today);
+  const result=submitted&&!hold?assessCanada(input,today):null;
   const set=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
   const field=(key:string,label:string,placeholder="",type="text")=><label key={key}>{label}<input type={type} disabled={(key==="age"&&linked)||((key==="first"||key==="firstDate")&&!!languageId)||((key==="second"||key==="secondDate")&&!!secondLanguageId)||((key==="spouseLanguage"||key==="spouseLanguageDate")&&!!spouseLanguageId)||(key==="credential"&&!!educationId)||(key==="spouseCredential"&&!!spouseEducationId)} value={input[key]??""} placeholder={placeholder} maxLength={40} onChange={e=>set(key,e.target.value)}/></label>;
   const select=(key:string,label:string,opts:readonly (readonly [string,string])[])=><label key={key}>{label}<select aria-label={label} disabled={(key==="education"&&!!educationId)||(key==="spouseEducation"&&!!spouseEducationId)} value={input[key]??""} onChange={e=>set(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([v,l])=><option value={v} key={v}>{l}</option>)}</select></label>;
@@ -61,6 +65,7 @@ export default function CanadaPanel({today,profileAge,evidence}:{today:string;pr
     {id&&<p role="status">{mapped.ok?mapped.label+(mapped.validUntil?"; ECA last valid date "+mapped.validUntil:"; Canadian credential(s) (no ECA required)")+". Self-reported evidence only.":mapped.reason} Unlink to restore your independent input.</p>}</>;
   };
   return <div className="card stack">
+    <RuleVersionNotice route="canada:fsw" ledger={policy} today={today}/>
     <h2>Canada — FSW and CRS scenario</h2>
     <p>Official rules reviewed 25 November 2026. Enter confirmed facts; this is a self-reported scenario, not an official decision. No data leaves this browser. Change inputs to compare scenarios; unknown is not zero.</p>
     <p><a href={ROOT+"who-can-apply/federal-skilled-workers.html"} target="_blank" rel="noopener noreferrer">FSW requirements</a> · <a href={ROOT+"check-score/crs-criteria.html"} target="_blank" rel="noopener noreferrer">CRS criteria</a> · <a href={ROOT+"check-score/high-wage.html"} target="_blank" rel="noopener noreferrer">High-wage NOC list</a></p>

@@ -737,6 +737,27 @@ async function run(viewport) {
     await visible(panel(page).getByText(/Source status: Source check failed/));
     await noOverflow(page,"policy review history");
     pass(viewport.width+" policy snapshots approval diff rollback source failure and audit export");
+    await openSection(page,"Germany visas");
+    await panel(page).getByRole("button",{name:"EU Blue Card",exact:true}).click();
+    await panel(page).getByRole("button",{name:"Assess EU Blue Card",exact:true}).click();
+    await visible(panel(page).getByText("Calculator review required.",{exact:true}));
+    assert.equal(await panel(page).getByText("Meets self-reported screen only",{exact:true}).count(),0);
+    await openSection(page,"Policy operations");
+    await visible(panel(page).getByRole("heading",{name:"Notification history",exact:true}));
+    await panel(page).getByRole("button",{name:"Run local review check",exact:true}).click();
+    const mark=panel(page).getByRole("button",{name:"Mark EU Blue Card read",exact:true});
+    await visible(mark);
+    await mark.click();
+    await panel(page).getByRole("button",{name:"Run local review check",exact:true}).click();
+    assert.equal(await mark.count(),0);
+    await panel(page).getByLabel("Notification filter",{exact:true}).selectOption("all");
+    await visible(panel(page).getByText("Read 2026-11-26",{exact:true}));
+    page.once("dialog",dialog=>dialog.accept());
+    await panel(page).getByRole("button",{name:"Save policy checkpoint",exact:true}).click();
+    await visible(panel(page).getByText("Policy checkpoint saved locally.",{exact:true}));
+    assert.equal(await page.evaluate(()=>localStorage.getItem("gmr.policy.audit.v1")!==null),true);
+    await noOverflow(page,"policy operations");
+    pass(viewport.width+" rule hold deduplicated notifications and explicit policy checkpoint");
 
 
     page.once("dialog",dialog=>dialog.accept());
@@ -745,6 +766,7 @@ async function run(viewport) {
     await openSection(page,"Profile");
     await visible(panel(page).getByText("No evidence records saved.",{exact:true}));
     assert.equal(await panel(page).getByRole("button",{name:"Export complete saved profile (JSON)",exact:true}).isDisabled(),true);
+    assert.equal(await page.evaluate(()=>localStorage.getItem("gmr.policy.audit.v1")),null);
     await openSection(page,"Policy review");
     await visible(panel(page).getByText("No observations recorded for this route.",{exact:true}));
     assert.equal(await panel(page).getByRole("button",{name:"Export policy audit (JSON)",exact:true}).isDisabled(),true);

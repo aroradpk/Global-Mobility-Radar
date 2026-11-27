@@ -1,4 +1,7 @@
 import { useState } from "react";
+import type {PolicyLedger} from "../engine/policyReview";
+import {ruleReviewHold} from "../engine/policyOperations";
+import RuleVersionNotice from "./RuleVersionNotice";
 import ProfileAgeControl from "./ProfileAgeControl";
 import {withProfileAge} from "../engine/unifiedProfile";
 import {mapGermanyRecognition,withGermanyRecognition,germanyRecognitionSource} from "../engine/germanyRecognition";
@@ -16,7 +19,7 @@ const GERMAN = [["none","None / below A1"],["A1","A1"],["A2","A2"],["B1","B1"],[
 const STATUS = {review_required:"Review required",requirements_not_met:"Requirements not met / outstanding",meets_self_reported_screen:"Meets self-reported screen only"};
 const eur = (v:number) => v.toLocaleString("en-IE",{style:"currency",currency:"EUR"});
 
-export default function GermanyPanel({today,profileAge,evidence}:{today:string;profileAge:string;evidence:EvidenceRecord[]}){
+export default function GermanyPanel({today,profileAge,evidence,policy}:{today:string;profileAge:string;evidence:EvidenceRecord[];policy:PolicyLedger}){
   const [manualInput,setInput]=useState<Record<string,string>>({});
   const [linked,setLinked]=useState(false);
   const [opId,setOpId]=useState("");
@@ -27,13 +30,16 @@ export default function GermanyPanel({today,profileAge,evidence}:{today:string;p
   const change=(key:string,value:string)=>{setInput(old=>({...old,[key]:value}));setSubmitted(false);};
   const field=(key:string,label:string,decimal=false)=><label key={key}>{label}<input type="number" min={0} step={decimal?"0.01":"1"} disabled={key==="opAge"&&linked} value={input[key]??""} onChange={e=>change(key,e.target.value)}/></label>;
   const select=(key:string,label:string,opts:readonly (readonly [string,string])[]=YES_NO)=><label key={key}>{label}<select aria-label={label} disabled={(!!opId&&(key==="opQualification"||key==="opForeignProof"))||(!!blueId&&(key==="blueQualification"||key==="blueDegreeProof"))} value={input[key]??""} onChange={e=>change(key,e.target.value)}><option value="">Unknown / select</option>{opts.map(([value,text])=><option value={value} key={value}>{text}</option>)}</select></label>;
-  const result=submitted?assessGermany(input,today).find(r=>r.id===active):undefined;
+  const ruleKey="germany:"+active;
+  const hold=ruleReviewHold(policy,ruleKey,today);
+  const result=submitted&&!hold?assessGermany(input,today).find(r=>r.id===active):undefined;
   const route=ROUTES.find(r=>r.id===active)!;
   const recognitionLink=(mode:"opportunity"|"blue")=>{const id=mode==="opportunity"?opId:blueId;const setId=mode==="opportunity"?setOpId:setBlueId;const label=mode==="opportunity"?"Use saved Opportunity Card qualification":"Use saved Blue Card qualification";const selected=evidence.find(r=>String(r.id)===id);const mapped=mapGermanyRecognition(selected,today);return <><label>{label}<select aria-label={label} value={id} onChange={e=>{setId(e.target.value);setSubmitted(false);}}><option value="">Independent manual input</option>{id&&(!selected||selected.values.germanyCredentialOwner!=="applicant")&&<option value={id}>Previously selected record unavailable</option>}{evidence.filter(r=>r.kind==="education"&&r.values.germanyCredentialOwner==="applicant").map(r=><option key={r.id} value={String(r.id)}>{r.values.qualification} — record {r.id}</option>)}</select></label>{id&&<p role="status">{mapped.ok?(mode==="blue"&&!mapped.blueDegree?"Not sufficient for linked Blue Card degree route":mapped.basis):mapped.reason}. Unlink to restore manual inputs.</p>}<p className="small muted"><a href={germanyRecognitionSource} target="_blank" rel="noopener noreferrer">Official recognition guidance</a>. Self-reported evidence only.</p></>;};
   return <section className="card stack" aria-labelledby="germany-title">
     <h2 id="germany-title">Germany — job search, employment and settlement</h2>
     <p>Choose the pathway you want to assess. All facts are self-reported and remain in this browser. Rules reviewed 26 November 2026; fresh through 26 December 2026 for this preview. Not a grant decision.</p>
     <nav aria-label="German immigration pathways" className="section-nav">{ROUTES.map(r=><button type="button" className="btn small" key={r.id} aria-pressed={active===r.id} onClick={()=>{setActive(r.id);setSubmitted(false);}}>{r.label}</button>)}</nav>
+    <RuleVersionNotice route={ruleKey} ledger={policy} today={today}/>
     <a href={route.source} target="_blank" rel="noopener noreferrer">Official requirements for {route.label}</a>
     {active==="opportunity"&&<>
       <p>Temporary job-search permission, initially up to 12 months. A job offer is not required. The blocked-account benchmark is {eur(DE_THRESHOLDS.monthlyFunds)} per month; accepted alternatives need official confirmation.</p>
