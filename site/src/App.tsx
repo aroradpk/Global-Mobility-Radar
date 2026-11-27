@@ -12,17 +12,21 @@ import EuropePermitPanel from "./components/EuropePermitPanel";
 import { useAssessmentDate } from "./useAssessmentDate";
 import ProfilePanel from "./components/ProfilePanel";
 import RouteRadar from "./components/RouteRadar";
+import PolicyReviewPanel from "./components/PolicyReviewPanel";
+import {blankPolicyLedger,policyAlerts} from "./engine/policyReview";
 import type {EvidenceRecord} from "./engine/profileEvidence";
 import {blankJobProfile,currentAge,type ConfirmedAge} from "./engine/unifiedProfile";
 
 type Step = "upload" | "review" | "interview" | "results";
-const SECTIONS = {jobs:"Jobs",profile:"Profile",radar:"Visa and PR radar",canada:"Canada PR",australia:"Australia skilled visas",germany:"Germany visas",ireland:"Ireland permits",netherlands:"Netherlands permits",newzealand:"New Zealand visas",uk:"UK visas",hongkong:"Hong Kong visas",singapore:"Singapore passes",uae:"UAE visas",us:"US visas"} as const;
+const SECTIONS = {jobs:"Jobs",profile:"Profile",radar:"Visa and PR radar",policy:"Policy review",canada:"Canada PR",australia:"Australia skilled visas",germany:"Germany visas",ireland:"Ireland permits",netherlands:"Netherlands permits",newzealand:"New Zealand visas",uk:"UK visas",hongkong:"Hong Kong visas",singapore:"Singapore passes",uae:"UAE visas",us:"US visas"} as const;
 type View = keyof typeof SECTIONS;
 
 export default function App() {
   const [view, setView] = useState<View>("jobs");
   const today = useAssessmentDate();
   const [resetKey, setResetKey] = useState(0);
+  const [policy,setPolicy]=useState(()=>blankPolicyLedger());
+  const policyInbox=policyAlerts(policy,today).length;
   const [step, setStep] = useState<Step>("upload");
   const [hasResults, setHasResults] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -38,13 +42,13 @@ export default function App() {
   const restartProfile = () => { setHasResults(false); setProfile(null); setCareerConfirmed(false); setManualReview(false); setAnswers(null); setSavedAnswers(null); setStep("upload"); };
   const startManual=()=>{setProfile(blankJobProfile());setCareerConfirmed(false);setManualReview(true);setAnswers(null);setSavedAnswers(null);setStep("review");};
   const editCareer=()=>{setView("jobs");if(profile){setStep("review");}else startManual();};
-  const reset = () => { setView("jobs"); setResetKey(k=>k+1); setAge(null); setEvidence([]); restartProfile(); };
+  const reset = () => { setView("jobs"); setResetKey(k=>k+1); setAge(null); setEvidence([]); setPolicy(p=>blankPolicyLedger(p.epoch+1)); restartProfile(); };
   return <LangContext.Provider value="en">
     <header className="top"><div className="wrap top-in">
       <strong>Global Mobility Radar</strong>
       <span className="muted">Local preview</span>
-      <nav aria-label="Application sections" className="section-nav">{(Object.keys(SECTIONS) as View[]).map(v=><button type="button" className="btn small" key={v} aria-pressed={view===v} onClick={()=>setView(v)}>{SECTIONS[v]}</button>)}</nav>
-      <button type="button" className="btn ghost small" onClick={()=>{if(window.confirm("Clear all local profiles, job imports and immigration scenarios?"))reset();}}>Clear all local data</button>
+      <nav aria-label="Application sections" className="section-nav">{(Object.keys(SECTIONS) as View[]).map(v=><button type="button" className="btn small" key={v} aria-label={SECTIONS[v]} aria-pressed={view===v} onClick={()=>setView(v)}>{SECTIONS[v]}{v==="policy"&&policyInbox>0?" ("+policyInbox+")":""}</button>)}</nav>
+      <button type="button" className="btn ghost small" onClick={()=>{if(window.confirm("Clear all local profiles, job imports, immigration scenarios and policy review history?"))reset();}}>Clear all local data</button>
     </div></header>
     <main className="wrap main">
       <div key={"jobs-"+resetKey} hidden={view!=="jobs"}>
@@ -55,7 +59,8 @@ export default function App() {
       {hasResults && profile && effective && <div hidden={step!=="results"}><LocalResults profile={profile} answers={effective} onBack={() => setStep("interview")} onEditProfile={()=>setStep("review")}/></div>}
       </div>
       <div key={"profile-"+resetKey} hidden={view!=="profile"}><ProfilePanel evidence={evidence} onEvidence={setEvidence} profile={careerConfirmed?profile:null} answers={careerConfirmed?savedAnswers:null} age={age} today={today} onAge={setAge} onCareer={editCareer} onPreferences={()=>{setView("jobs");setStep("interview");}}/></div>
-      <div key={"radar-"+resetKey} hidden={view!=="radar"}><RouteRadar today={today} onOpen={setView}/></div>
+      <div key={"radar-"+resetKey} hidden={view!=="radar"}><RouteRadar today={today} onOpen={setView} ledger={policy}/></div>
+      <div key={"policy-"+resetKey} hidden={view!=="policy"}><PolicyReviewPanel today={today} ledger={policy} setLedger={setPolicy}/></div>
       <div key={"canada-"+resetKey} hidden={view!=="canada"}><CanadaPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
       <div key={"australia-"+resetKey} hidden={view!=="australia"}><AustraliaPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
       <div key={"germany-"+resetKey} hidden={view!=="germany"}><GermanyPanel today={today} profileAge={profileAge} evidence={evidence}/></div>
@@ -69,7 +74,7 @@ export default function App() {
       <div key={"us-"+resetKey} hidden={view!=="us"}><EuropePermitPanel country="us" today={today} profileAge={profileAge}/></div>
     </main>
     <footer className="wrap foot">
-      <p>Local preview: profile, imported job data and immigration scenarios are held in memory, cleared on reload or Clear all local data. No profile uploads, paid features or accounts. Opening a link visits an external site.</p>
+      <p>Local preview: profile, imported job data, immigration scenarios and policy reviews are held in memory, cleared on reload or Clear all local data. No profile uploads, paid features or accounts. Opening a link visits an external site.</p>
       <p>Not immigration advice. Inherited reference data and matching signals require independent verification. Based on MIT-licensed <a href="https://github.com/talls2/visa-job-atlas" target="_blank" rel="noopener noreferrer">Visa Job Atlas</a>.</p>
     </footer>
   </LangContext.Provider>;
