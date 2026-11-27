@@ -620,8 +620,10 @@ async function run(viewport) {
     const occupation491=panel(page).locator("fieldset").filter({has:page.getByText("491 · Skilled Work Regional",{exact:true})}).getByLabel("Occupation on relevant skilled occupation list for this pathway",{exact:true});
     await regionalPath.selectOption("family");
     await inputValue(occupation491,"no");
+    await panel(page).getByLabel("Current accepted 491 family sponsorship",{exact:true}).selectOption("yes");
     await regionalPath.selectOption("state");
     await inputValue(occupation491,"yes");
+    await inputValue(panel(page).getByLabel("Current 491 state or territory nomination",{exact:true}),"");
     await noOverflow(page,"Australian ACS evidence");
     await openSection(page,"Profile");
     page.once("dialog",dialog=>dialog.accept());
