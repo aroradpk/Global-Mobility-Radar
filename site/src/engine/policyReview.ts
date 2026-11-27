@@ -18,8 +18,8 @@ export type Snapshot={kind:"snapshot";id:number;route:string;source:string;obser
 export type Failure={kind:"failure";id:number;route:string;source:string;observedOn:string;reason:string};
 export type Observation=Snapshot|Failure;
 export type Review={id:number;route:string;target:number;action:"approve"|"reject"|"rollback";reviewedOn:string};
-export type PolicyLedger={epoch:number;observations:Observation[];reviews:Review[]};
-export const blankPolicyLedger=(epoch=0):PolicyLedger=>({epoch,observations:[],reviews:[]});
+export type PolicyLedger={epoch:number;restoredThrough:number;observations:Observation[];reviews:Review[]};
+export const blankPolicyLedger=(epoch=0):PolicyLedger=>({epoch,restoredThrough:0,observations:[],reviews:[]});
 export function blankPolicyDraft(route:string,today:string):PolicyDraft{
  return {...Object.fromEntries(policyFields.map(([key])=>[key,""])) as PolicyFacts,route,observedOn:today,confirmed:false,phase:"unknown",availability:"unknown"};
 }
@@ -88,7 +88,7 @@ export function recordPolicyFailure(l:PolicyLedger,route:string,observedOn:strin
  return addPolicyObservation(l,{kind:"failure",route,source:sourceFor(route)?.url??"",observedOn,reason:reason.trim()},today);
 }
 export function reviewPolicy(l:PolicyLedger,route:string,target:number,action:Review["action"],today:string):Result<PolicyLedger>{
- if(!valid(today)||!sourceFor(route)||l.reviews.length>=400)return fail("Invalid review or review limit reached.");
+ if(!valid(today)||!sourceFor(route)||!["approve","reject","rollback"].includes(action)||l.reviews.length>=400)return fail("Invalid review or review limit reached.");
  const s=l.observations.find((o):o is Snapshot=>o.kind==="snapshot"&&o.route===route&&o.id===target);
  const prior=lastReview(l,route),current=latest(l,route);
  if(!s||s.observedOn>today||prior&&prior.reviewedOn>today)return fail("No valid matching snapshot.");
@@ -96,25 +96,26 @@ export function reviewPolicy(l:PolicyLedger,route:string,target:number,action:Re
   if(!prior||prior.target===target||!l.reviews.some(r=>r.route===route&&r.target===target&&r.action==="approve"))return fail("Rollback requires an earlier approved version.");
  }else{
   if(current?.id!==target)return fail("Review the latest observation; older versions cannot become current directly.");
-  if(prior?.target===target&&prior.action===action)return fail("This decision is already recorded.");
+  if(prior?.target===target&&prior.action===action&&action!=="approve")return fail("This decision is already recorded.");
   if(action==="approve"&&(!fresh(s,today)||s.facts.phase!=="in_force"||!valid(s.facts.effectiveOn)||s.facts.effectiveOn>today))return fail("Only fresh, effective in-force evidence can be approved for current reference.");
  }
  return success({...l,reviews:[...l.reviews,{id:nextId(l),route,target,action,reviewedOn:today}]});
 }
-export type PolicyState="unobserved"|"source_failure"|"pending_review"|"not_in_force"|"rejected"|"stale"|"rollback_reference"|"reviewed";
+export type PolicyState="unobserved"|"source_failure"|"pending_review"|"not_in_force"|"rejected"|"stale"|"rollback_reference"|"restored_review"|"reviewed";
 export function policyView(l:PolicyLedger,route:string,today:string):{state:PolicyState;snapshot:Snapshot|null;latest:Observation|undefined}{
  const observation=latest(l,route),decision=lastReview(l,route);
  const result=(state:PolicyState,snapshot:Snapshot|null=null)=>({state,snapshot,latest:observation});
  if(!observation)return result("unobserved");
  if(observation.kind==="failure")return result("source_failure");
- if(decision?.action==="rollback")return result("rollback_reference");
+ if(decision?.action==="rollback"&&decision.id>observation.id)return result("rollback_reference");
  if(!fresh(observation,today))return result("stale");
  if(observation.facts.phase!=="in_force"||observation.facts.effectiveOn>today)return result("not_in_force");
  if(decision?.target!==observation.id)return result("pending_review");
  if(decision.action==="reject")return result("rejected");
+ if(decision.id<=l.restoredThrough)return result("restored_review");
  return result("reviewed",observation);
 }
-export const policyStateLabels:Record<PolicyState,string>={unobserved:"Not checked in this session",source_failure:"Source check failed",pending_review:"Pending review",not_in_force:"Not confirmed in force",rejected:"Rejected — recheck required",stale:"Review overdue",rollback_reference:"Rolled back — recheck required",reviewed:"Manually reviewed reference"};
+export const policyStateLabels:Record<PolicyState,string>={unobserved:"Not checked in this session",source_failure:"Source check failed",pending_review:"Pending review",not_in_force:"Not confirmed in force",rejected:"Rejected — recheck required",stale:"Review overdue",rollback_reference:"Rolled back — recheck required",restored_review:"Restored history — approval requires fresh review",reviewed:"Manually reviewed reference"};
 export function policyDiff(l:PolicyLedger,snapshot:Snapshot){
  const before=l.observations.filter((o):o is Snapshot=>o.kind==="snapshot"&&o.route===snapshot.route&&o.id<snapshot.id).slice(-1)[0];
  return policyFields.filter(([key])=>!before||before.facts[key]!==snapshot.facts[key]).map(([key,label])=>({key,label,before:before?.facts[key]??"",after:snapshot.facts[key]}));
@@ -125,4 +126,49 @@ export function policyAlerts(l:PolicyLedger,today:string){
 export function policyRouteReference(l:PolicyLedger,r:RadarRoute,today:string){return policyView(l,routeKey(r),today);}
 export function serializePolicy(l:PolicyLedger,today:string):string{
  return JSON.stringify({schemaVersion:1,exportedOn:today,scope:"Manually reviewed reference only; no eligibility rule activation",sources:policySources,observations:l.observations,reviews:l.reviews},null,2);
+}
+
+// Import is a replay of the bounded audit, never deserialization into trusted state.
+// Each digest is recomputed from allowlisted fields. Restored approvals remain
+// historical until a new explicit approval against the registered source.
+export const policyAuditMaxBytes=2_000_000;
+const isObject=(x:unknown):x is Record<string,unknown>=>x!==null&&typeof x==="object"&&!Array.isArray(x);
+export async function restorePolicyAudit(raw:string,today:string,epoch=0):Promise<Result<PolicyLedger>>{
+ if(typeof raw!=="string"||new TextEncoder().encode(raw).length>policyAuditMaxBytes||!valid(today))return fail("Invalid or oversized audit file.");
+ try{
+  const data:unknown=JSON.parse(raw);
+  if(!isObject(data)||data.schemaVersion!==1||typeof data.exportedOn!=="string"||!valid(data.exportedOn)||data.exportedOn>today||!Array.isArray(data.observations)||!Array.isArray(data.reviews)||data.observations.length>200||data.reviews.length>400)return fail("Unsupported policy audit schema or dates.");
+  const exportedOn=data.exportedOn;
+  const events=[...data.observations.map((item:unknown)=>({item,observation:true})),...data.reviews.map((item:unknown)=>({item,observation:false}))];
+  if(events.some(e=>!isObject(e.item)||!Number.isSafeInteger(e.item.id)))return fail("Invalid audit event identifier.");
+  events.sort((a,b)=>Number((a.item as Record<string,unknown>).id)-Number((b.item as Record<string,unknown>).id));
+  let ledger=blankPolicyLedger(epoch);
+  for(const event of events){
+   const item=event.item as Record<string,unknown>;
+   if(item.id!==nextId(ledger)||typeof item.route!=="string"||!sourceFor(item.route))return fail("Audit history contains invalid or missing events.");
+   const route=item.route;
+   if(event.observation){
+    if(typeof item.observedOn!=="string"||!valid(item.observedOn)||item.observedOn>exportedOn||item.source!==sourceFor(route)?.url)return fail("Audit observation source or date is invalid.");
+    let added:Result<PolicyLedger>;
+    if(item.kind==="failure"){
+     if(typeof item.reason!=="string")return fail("Invalid source failure.");
+     added=recordPolicyFailure(ledger,route,item.observedOn,item.reason,exportedOn);
+    }else if(item.kind==="snapshot"&&isObject(item.facts)&&typeof item.sha256==="string"){
+     const facts={} as PolicyFacts;
+     for(const [key] of policyFields){const v=item.facts[key];if(typeof v!=="string")return fail("Invalid snapshot field.");facts[key]=v;}
+     const prepared=await preparePolicySnapshot({...facts,route,observedOn:item.observedOn,confirmed:true},exportedOn);
+     if(!prepared.ok||prepared.value.sha256!==item.sha256)return fail("Snapshot digest mismatch or invalid content.");
+     added=addPolicyObservation(ledger,prepared.value,exportedOn);
+    }else return fail("Unknown observation type.");
+    if(!added.ok)return added;
+    ledger=added.value;
+   }else{
+    if(typeof item.reviewedOn!=="string"||!valid(item.reviewedOn)||item.reviewedOn>exportedOn||typeof item.target!=="number"||!Number.isSafeInteger(item.target)||!(item.action==="approve"||item.action==="reject"||item.action==="rollback"))return fail("Invalid review event.");
+    const reviewed=reviewPolicy(ledger,route,item.target,item.action,item.reviewedOn);
+    if(!reviewed.ok)return reviewed;
+    ledger=reviewed.value;
+   }
+  }
+  return success({...ledger,restoredThrough:nextId(ledger)-1});
+ }catch{return fail("Could not read or validate policy audit.");}
 }

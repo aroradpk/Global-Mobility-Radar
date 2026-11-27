@@ -748,6 +748,15 @@ async function run(viewport) {
     await openSection(page,"Policy review");
     await visible(panel(page).getByText("No observations recorded for this route.",{exact:true}));
     assert.equal(await panel(page).getByRole("button",{name:"Export policy audit (JSON)",exact:true}).isDisabled(),true);
+    page.once("dialog",dialog=>dialog.accept());
+    await panel(page).getByLabel("Restore policy audit (JSON)",{exact:true}).setInputFiles({name:"synthetic-policy.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(policyExport))});
+    await visible(panel(page).getByText("Policy history restored; previous approvals require fresh review.",{exact:true}));
+    await panel(page).getByLabel("Policy route",{exact:true}).selectOption("germany:blue");
+    await visible(panel(page).getByText(/Source status: Rolled back/));
+    await noOverflow(page,"restored policy audit");
+    pass(viewport.width+" validated policy audit restore preserves rollback");
+    page.once("dialog",dialog=>dialog.accept());
+    await page.getByRole("button",{name:"Clear all local data",exact:true}).click();
     await openSection(page,"Jobs");
     pass(viewport.width+" manual onboarding without CV and global reset");
     // Delay only this synthetic file read, then release it after a confirmed reset.

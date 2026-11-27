@@ -1,5 +1,5 @@
 import {useState,type Dispatch,type SetStateAction} from "react";
-import {blankPolicyDraft,policySources,preparePolicySnapshot,addPolicyObservation,recordPolicyFailure,reviewPolicy,policyView,policyDiff,policyStateLabels,policyAlerts,serializePolicy,policyFields,type PolicyLedger,type PolicyDraft,type PolicyField,type Review} from "../engine/policyReview";
+import {blankPolicyDraft,policySources,preparePolicySnapshot,addPolicyObservation,recordPolicyFailure,reviewPolicy,policyView,policyDiff,policyStateLabels,policyAlerts,serializePolicy,policyFields,restorePolicyAudit,policyAuditMaxBytes,type PolicyLedger,type PolicyDraft,type PolicyField,type Review} from "../engine/policyReview";
 import {countryNames} from "../engine/routeRadar";
 const choices:Partial<Record<PolicyField,readonly (readonly [string,string])[]>>={
  phase:[["unknown","Unknown"],["proposed","Proposed"],["enacted","Enacted, not yet in force"],["in_force","In force"],["withdrawn","Withdrawn"]],
@@ -32,6 +32,14 @@ export default function PolicyReviewPanel({today,ledger,setLedger}:{today:string
   if(!reviewConfirm){setMessage("Confirm the review decision first.");return;}
   apply(reviewPolicy(ledger,draft.route,id,action,today),"Review decision recorded.");
  };
+ const restoreAudit=async(file:File|undefined)=>{
+  if(!file)return;
+  if(ledger.observations.length||ledger.reviews.length){setMessage("Restore requires an empty policy history. Export first and clear local data explicitly.");return;}
+  if(file.size>policyAuditMaxBytes){setMessage("Policy audit exceeds the 2 MB limit.");return;}
+  if(!window.confirm("Restore this policy audit in memory? Historical approvals require a fresh review before reference information becomes visible."))return;
+  setBusy(true);setMessage("");const epoch=ledger.epoch;
+  try{const r=await restorePolicyAudit(await file.text(),today,epoch);if(r.ok){setLedger(prev=>prev.epoch===epoch&&!prev.observations.length&&!prev.reviews.length?r.value:prev);setReviewConfirm(false);setMessage("Policy history restored; previous approvals require fresh review.");}else setMessage(r.error);}catch{setMessage("Could not read policy audit.");}finally{setBusy(false);}
+ };
  const exportAudit=()=>{
   const url=URL.createObjectURL(new Blob([serializePolicy(ledger,today)],{type:"application/json"}));
   const a=document.createElement("a");a.href=url;a.download="mobility-policy-audit.json";document.body.appendChild(a);
@@ -63,6 +71,7 @@ export default function PolicyReviewPanel({today,ledger,setLedger}:{today:string
  <h3>Review audit ({reviews.length})</h3>
  {reviews.map(r=><p key={r.id}>{r.reviewedOn} · {r.action} · observation {r.target}</p>)}
  <button type="button" className="btn" disabled={!ledger.observations.length||busy} onClick={exportAudit}>Export policy audit (JSON)</button>
- <p className="small muted">History is session-only. Export before reloading. Rollback never asserts that a prior policy is currently in force. In-app review inbox is not scheduled monitoring or external notification.</p>
+ <label>Restore policy audit (JSON)<input aria-label="Restore policy audit (JSON)" type="file" accept=".json,application/json" disabled={busy||ledger.observations.length>0||ledger.reviews.length>0} onChange={e=>{const file=e.target.files?.[0];e.target.value="";void restoreAudit(file);}}/></label>
+ <p className="small muted">History is session-only. Export before reloading; restore requires an empty history and fresh approval. Rollback never asserts that a prior policy is currently in force. In-app review inbox is not scheduled monitoring or external notification.</p>
  </section>;
 }

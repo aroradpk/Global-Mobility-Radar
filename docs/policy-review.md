@@ -7,4 +7,7 @@ Cross-country candidate 0dd91f7 verified CI https://github.com/aroradpk/Global-M
 - Snapshots are normalized structured transcriptions, not original HTML captures. SHA-256 detects content identity, not authenticity. Observation date is outside the content hash, so the same policy can be re-observed.
 - Latest observation gates published data. Proposed, enacted-not-effective, withdrawn, unknown, expired, failed, rejected or rolled-back observations do not populate current financial or availability reference. Rollback is audit-only pending fresh review.
 - Policy facts are not rule-pack updates. Existing calculators retain compiled review windows. No production eligibility decision, legal advice or cross-currency cost ranking.
-- Session state is deliberately volatile. Export is explicit; no import of arbitrary policy data or external network calls. No real personal data in fixtures.
+- Session state is deliberately volatile. Export is explicit; validated audit replay only, no arbitrary rule import or external network calls. No real personal data in fixtures.
+
+
+- Follow-up: bounded (2 MB, 200 observations, 400 review events) offline audit restore, exact registered URL and schema, sequential event replay, SHA-256 recomputation, no unknown fields imported or active calculator rules. Restored approvals withheld until explicit fresh manual review, existing failure/rollback states preserved. Empty ledger only, confirmation, epoch protection against late restore after reset. Eight additional unit cases and three-width restore regression; CI pending. This is file-based restoration, not persistent server storage or authenticated evidence.
