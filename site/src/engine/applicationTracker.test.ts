@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {blankTracker,addTarget,updateEntry,changeTask,removeEntry,serializeTracker,restoreTracker,trackerDueChecks,routeTarget,type Tracker,type Target} from "./applicationTracker";
+import {blankTracker,addTarget,updateEntry,changeTask,removeEntry,serializeTracker,restoreTracker,trackerDueChecks,routeTarget,type Target} from "./applicationTracker";
 import {radarRoutes} from "./routeRadar";
 import {encryptTracker,decryptTracker,storeTrackerVault,clearTrackerVault,trackerVaultKey} from "./trackerVault";
 const today="2026-11-26",manual:Target={kind:"manual",key:"",title:"Synthetic opportunity",location:"Example",url:"https://example.com/jobs"};

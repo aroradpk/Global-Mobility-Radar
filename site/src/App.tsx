@@ -37,7 +37,7 @@ export default function App() {
   const policyInbox=policyAlerts(policy,today).length;
   const [notices,setNotices]=useState<LocalNotice[]>([]);
   const unread=notices.filter(n=>!n.resolvedOn&&!n.readOn).length;
-  useEffect(()=>{setNotices(old=>reconcileNotices(old,[...duePolicyChecks(policy,today),...trackerDueChecks(tracker,today)],today));},[policy,tracker,today]);
+  useEffect(()=>{setNotices(old=>reconcileNotices(old.filter(n=>!n.route.startsWith("tracker:")||tracker.entries.some(e=>"tracker:"+e.id===n.route)),[...duePolicyChecks(policy,today),...trackerDueChecks(tracker,today)],today));},[policy,tracker,today]);
   const [step, setStep] = useState<Step>("upload");
   const [hasResults, setHasResults] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);

@@ -11,11 +11,11 @@ export default function PolicyOperationsPanel({ledger,setLedger,today,history,se
  const remove=()=>{if(!window.confirm("Delete saved policy checkpoint? In-memory history is retained until reset."))return;try{setMessage(clearPolicyCheckpoint(window.localStorage)?"Saved policy checkpoint deleted.":"Could not delete checkpoint; clear browser site data.");}catch{setMessage("Could not delete checkpoint; clear browser site data.");}};
  return <section className="card stack" aria-labelledby="ops-title">
  <h2 id="ops-title">Policy operations and notifications</h2>
- <p>Local in-app monitoring while this app is open. No background network collection, external notification or schedule is enabled. A daily UTC check and observation changes refresh the inbox.</p>
+ <p>Local policy and application-deadline monitoring while this app is open. No background network collection, external notification or schedule is enabled. A daily UTC check and observation changes refresh the inbox.</p>
  <h3>Policy-only local checkpoint</h3><p>Optional explicit save. No CV, profile, job data or personal scenario is stored. Reload starts an empty session; restore is manual and revalidates the audit.</p>
  <div className="row"><button type="button" className="btn" disabled={busy||!ledger.observations.length} onClick={save}>Save policy checkpoint</button><button type="button" className="btn" disabled={busy||!!ledger.observations.length} onClick={()=>void load()}>Restore saved policy checkpoint</button><button type="button" className="btn ghost" disabled={busy} onClick={remove}>Delete saved policy checkpoint</button></div>
  <p role="status">{message}</p>
- <h3>Source health and review checks</h3><p>{policySources.length} registered references · {checks.length} checks need attention · automated collection disabled.</p>
+ <h3>Source health and review checks</h3><p>{policySources.length} registered references · {checks.length} policy or application checks need attention · automated collection disabled.</p>
  <button type="button" className="btn" onClick={()=>{setHistory(old=>reconcileNotices(old,checks,today));setMessage("Local review check completed for "+today+". No network request made.");}}>Run local review check</button>
  <button type="button" className="btn" onClick={onReview}>Open policy review workspace</button>
  <button type="button" className="btn" onClick={onTracker}>Open application tracker</button>

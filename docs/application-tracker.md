@@ -4,3 +4,6 @@ Verified policy operations 4e2fa87 CI https://github.com/aroradpk/Global-Mobilit
 
 - A shortlist is a self-managed lead, not verified availability or a submitted application. Status history is self-reported, date-only and editable by recording another status. Checklist items are personal tasks, not verified document requirements.
 - Save changes before backup or reminders. No automatic personal-data storage. Explicit encrypted checkpoint survives reload; restore requires passphrase and empty tracker. Encrypted exports contain saved tracker entries only, not CV or profile. Keep backups and passphrase private. No recovery key or password reset. AES-GCM integrity is not a substitute for device security or authentication. No external calls. UTC calendar-day reminders are in-app only, not scheduled when closed. Global clear deletes local checkpoint and memory but not previously exported files.
+
+
+- Follow-up: remove unused strict-TS import, normalize saved notes in editor, purge application notification history when its entry is deleted, and browser encrypted-file roundtrip with restored status/notes/checklist, removal and global checkpoint deletion. No secret or actual applicant data in fixtures; CI pending.
