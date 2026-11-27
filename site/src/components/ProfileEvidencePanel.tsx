@@ -41,7 +41,7 @@ export default function ProfileEvidencePanel({today,exportContext,records,setRec
  };
  return <div className="card stack">
   <h2>Immigration evidence records</h2>
-  <p>Record optional details separately from job-matching facts. These are self-reported, not verified legal evidence. Blank optional fields remain unknown. Canada can explicitly link reviewed language, occupation and supported education records; other fields remain independent.</p>
+  <p>Record optional details separately from job-matching facts. These are self-reported, not verified legal evidence. Blank optional fields remain unknown. Canada can explicitly link reviewed language, occupation and supported education records. Australia can link supported ACS skills assessments. Other fields remain independent.</p>
   <form className="stack" onSubmit={e=>{e.preventDefault();save();}}>
    <label>Evidence category<select value={kind} disabled={editing!==null} onChange={e=>{if(!mayDiscard())return;setKind(e.target.value as EvidenceKind);clearDraft();setStatus("");}}>{(Object.keys(evidenceLabels) as EvidenceKind[]).map(k=><option key={k} value={k}>{evidenceLabels[k]}</option>)}</select></label>
    <p className="small muted">{editing===null?"Add a record":"Editing a saved record"}. Do not include passport numbers, account numbers or document images.</p>
