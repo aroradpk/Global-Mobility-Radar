@@ -2,6 +2,8 @@ import datetime as dt
 import json
 import unittest
 import urllib.error
+import tempfile
+from pathlib import Path
 from jobtracker import jobsearch_preview as preview
 
 NOW = dt.datetime(2026, 11, 25, tzinfo=dt.timezone.utc)
@@ -64,3 +66,31 @@ class JobSearchTests(unittest.TestCase):
 
     def test_redirect_refused(self):
         self.assertIsNone(preview.NoRedirect().redirect_request(None, None, 302, '', {}, 'https://example.com'))
+
+    def test_refresh_merges_fixed_queries_without_duplicates(self):
+        calls = []
+        def get(url, limit):
+            calls.append(url)
+            return b'User-agent: *\nDisallow:' if url.endswith('/robots.txt') else json.dumps({'hits': [HIT]}).encode()
+        result = preview.refresh(get, NOW)
+        self.assertEqual(len(calls), 6)
+        self.assertEqual(len(result['rows']), 1)
+
+    def test_refresh_failure_preserves_previous_snapshot_and_reports_unknown(self):
+        with tempfile.TemporaryDirectory() as d:
+            out, health = Path(d) / 'jobs.json', Path(d) / 'health.json'
+            out.write_text('previous')
+            def fail(url, limit):
+                raise urllib.error.URLError('synthetic failure')
+            self.assertFalse(preview.run_refresh(out, health, fail, NOW))
+            self.assertEqual(out.read_text(), 'previous')
+            self.assertEqual(json.loads(health.read_text())['coverage'], 'unknown')
+
+    def test_refresh_successful_empty_is_not_exhaustive(self):
+        with tempfile.TemporaryDirectory() as d:
+            out, health = Path(d) / 'jobs.json', Path(d) / 'health.json'
+            def get(url, limit):
+                return b'User-agent: *\nDisallow:' if url.endswith('/robots.txt') else b'{"hits":[]}'
+            self.assertTrue(preview.run_refresh(out, health, get, NOW))
+            self.assertEqual(json.loads(health.read_text())['coverage'], 'bounded_search_not_exhaustive')
+            self.assertEqual(json.loads(out.read_text())['rows'], [])

@@ -60,8 +60,22 @@ export function assessJobOpportunities(snapshot:LocalJobs|null,profile:Profile,a
   const fresh=!!e&&isRecentObservation(snapshot.generatedAt,now)&&isRecentObservation(e.observedAt,now)&&isRecentObservation(e.descriptionCheckedAt,now);
   const salaries=advertisedSalary(job.countries,job.salary,fresh,today).filter(s=>routes.some(r=>!r.hold&&(s.rule.id.startsWith("de-")&&routeKey(r.route)==="germany:blue"||s.rule.id.startsWith("nl-blue")&&routeKey(r.route)==="netherlands:blue"||s.rule.id.startsWith("nl-")&&!s.rule.id.startsWith("nl-blue")&&routeKey(r.route)==="netherlands:hsm")));
   const blocked=job.visa==="blocked"||job.visa==="employer-no"||sponsor.state==="excluded";
-  const status=blocked?"excluded":m.languageBlock.length?"language_review":!fresh?"stale_or_unknown":sponsor.state==="explicit_wording"?"review_priority":"evidence_needed";
-  const action=blocked?"Do not prioritise without resolving restrictive wording":m.languageBlock.length?"Check required language against your actual proficiency":!fresh?"Reopen the original vacancy and verify availability and description":sponsor.state!=="explicit_wording"?"Ask employer about role-specific sponsorship":!salaries.length?"Confirm applicable immigration route and contractual salary":"Verify salary criterion, contract, employer and immigration conditions";
+  const supported=routes.some(r=>!r.hold),salaryBelow=salaries.length>0&&salaries.every(s=>s.status==="advertised_below");
+  const status=blocked?"excluded":m.languageBlock.length?"language_review":!fresh?"stale_or_unknown":salaryBelow?"salary_review":sponsor.state==="explicit_wording"&&supported&&m.matchedSkills.length>0?"review_priority":"evidence_needed";
+  const action=blocked?"Do not prioritise without resolving restrictive wording":m.languageBlock.length?"Check required language against your actual proficiency":!fresh?"Reopen the original vacancy and verify availability and description":salaryBelow?"Advertised range is below all compared floors; verify applicable criterion and contract":!supported?"No current supported vacancy-specific route; investigate official rules first":sponsor.state!=="explicit_wording"?"Ask employer about role-specific sponsorship":!salaries.length?"Confirm applicable immigration route and contractual salary":"Verify salary criterion, contract, employer and immigration conditions";
   return {job,match:m,sponsor,routes,salaries,status,action,fresh};
- }).sort((a,b)=>{const order=["review_priority","evidence_needed","stale_or_unknown","language_review","excluded"];return order.indexOf(a.status)-order.indexOf(b.status)||b.match.score-a.match.score||a.job.id.localeCompare(b.job.id);});
+ }).sort((a,b)=>{const order=["review_priority","evidence_needed","stale_or_unknown","salary_review","language_review","excluded"];return order.indexOf(a.status)-order.indexOf(b.status)||b.match.score-a.match.score||a.job.id.localeCompare(b.job.id);});
+}
+
+export type OpportunityNotice={key:string;title:string;company:string;url:string;firstSeen:string;read:boolean;active:boolean};
+export function updateOpportunityNotices(old:readonly OpportunityNotice[],leads:ReturnType<typeof assessJobOpportunities>,today:string):OpportunityNotice[]{
+ const priority=leads.filter(l=>l.status==="review_priority");
+ const keys=new Set(priority.map(l=>l.job.id));
+ const next=old.map(n=>({...n,active:keys.has(n.key)}));
+ for(const l of priority){
+  const current=next.find(n=>n.key===l.job.id);
+  if(current){current.title=l.job.title;current.company=l.job.company;current.url=l.job.url;}
+  else next.push({key:l.job.id,title:l.job.title,company:l.job.company,url:l.job.url,firstSeen:today,read:false,active:true});
+ }
+ return next.slice(-500);
 }

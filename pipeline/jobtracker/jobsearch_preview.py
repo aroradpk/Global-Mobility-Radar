@@ -3,6 +3,7 @@ import argparse
 import datetime as dt
 import json
 import re
+import os
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -103,13 +104,65 @@ def snapshot(payload, now):
     return {'generatedAt': stamp, 'fields': FIELDS, 'rows': rows, 'evidence': evidence}
 
 
+def refresh(getter=get, now=None):
+    """Three fixed public queries; failed query invalidates the refresh."""
+    now = now or dt.datetime.now(dt.timezone.utc)
+    result = {"generatedAt": now.astimezone(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ'),
+              "fields": FIELDS, "rows": [], "evidence": {}}
+    seen = set()
+    for query in QUERIES:
+        current = snapshot(fetch_search(query, getter), now)
+        for row in current["rows"]:
+            uid = row[0]
+            if uid in seen:
+                continue
+            seen.add(uid)
+            result["rows"].append(row)
+            result["evidence"][uid] = current["evidence"][uid]
+    return result
+
+
+def atomic_json(path, data):
+    path.parent.mkdir(parents=True, exist_ok=True)
+    import tempfile
+    fd, tmp = tempfile.mkstemp(prefix=path.name + ".", suffix=".tmp", dir=path.parent)
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            json.dump(data, stream, ensure_ascii=False)
+        os.replace(tmp, path)
+    finally:
+        Path(tmp).unlink(missing_ok=True)
+
+
+def run_refresh(output, health, getter=get, now=None):
+    now = now or dt.datetime.now(dt.timezone.utc)
+    checked = now.astimezone(dt.timezone.utc).strftime('%Y-%m-%dT%H:%M:%SZ')
+    try:
+        result = refresh(getter, now)
+        atomic_json(output, result)
+    except (OSError, ValueError, TypeError, UnicodeError):
+        atomic_json(health, {"sourceId": SOURCE, "checkedAt": checked, "status": "failed",
+                             "coverage": "unknown", "previousSnapshotRetained": output.exists()})
+        return False
+    atomic_json(health, {"sourceId": SOURCE, "checkedAt": checked, "status": "success",
+                         "coverage": "bounded_search_not_exhaustive", "leads": len(result["rows"])})
+    return True
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--query', choices=QUERIES, default=QUERIES[0])
     parser.add_argument('--live', action='store_true', help='Explicitly perform one public API search')
+    parser.add_argument('--refresh', action='store_true', help='Run all three fixed public searches; requires --live')
     args = parser.parse_args()
     if not args.live:
         print('No requests made. Review the source documentation before using --live.')
+        return
+    if args.refresh:
+        folder = Path(__file__).resolve().parent.parent / 'data'
+        if not run_refresh(folder / 'jobsearch-preview.json', folder / 'jobsearch-health.json'):
+            parser.exit(1, 'Source refresh failed; coverage unknown. Prior snapshot retained if available.\n')
+        print('Bounded source refresh complete. Import the private jobsearch-preview.json file; leads are unverified.')
         return
     result = snapshot(fetch_search(args.query), dt.datetime.now(dt.timezone.utc))
     out = Path(__file__).resolve().parent.parent / 'data' / 'jobsearch-preview.json'

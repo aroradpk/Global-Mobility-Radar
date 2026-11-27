@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {assessProfileRoutes,assessJobOpportunities,sponsorshipEvidence} from "./opportunityIntelligence";
+import {assessProfileRoutes,assessJobOpportunities,sponsorshipEvidence,updateOpportunityNotices} from "./opportunityIntelligence";
 import {blankPolicyLedger,recordPolicyFailure} from "./policyReview";
 import type {Answers,Profile,Job} from "../types";
 import type {LocalJobs,LocalEvidence} from "../localJobs";
@@ -19,4 +19,11 @@ describe("Unified opportunity intelligence",()=>{
  it("language requirement is separated from career ranking",()=>expect(assessJobOpportunities(snapshot({...job,langs:["de"]}),profile,answers,blankPolicyLedger(),today,now)[0].status).toBe("language_review"));
  it("policy hold suppresses salary comparisons",()=>{const l=recordPolicyFailure(blankPolicyLedger(),"germany:blue",today,"Synthetic",today);if(!l.ok)throw Error(l.error);expect(assessJobOpportunities(snapshot(),profile,answers,l.value,today,now)[0].salaries).toEqual([]);});
  it("does not invent vacancies without snapshot",()=>expect(assessJobOpportunities(null,profile,answers,blankPolicyLedger(),today,now)).toEqual([]));
+});
+
+describe("Opportunity review notices",()=>{
+ it("deduplicates repeat observations and retains read status",()=>{const leads=assessJobOpportunities(snapshot(),profile,answers,blankPolicyLedger(),today,now);const n=updateOpportunityNotices([],leads,today);expect(n).toHaveLength(1);expect(updateOpportunityNotices([{...n[0],read:true}],leads,today)).toMatchObject([{read:true,active:true}]);});
+ it("does not alert for all below-floor salaries",()=>{const leads=assessJobOpportunities(snapshot({...job,salary:"gross base EUR 10000 per year"}),profile,answers,blankPolicyLedger(),today,now);expect(leads[0].status).toBe("salary_review");expect(updateOpportunityNotices([],leads,today)).toEqual([]);});
+ it("no confirmed skill overlap is not prioritised",()=>{const leads=assessJobOpportunities(snapshot(),{...profile,skills:[]},answers,blankPolicyLedger(),today,now);expect(leads[0].status).toBe("evidence_needed");});
+ it("stale lead becomes inactive without erasing history",()=>{const n=updateOpportunityNotices([],assessJobOpportunities(snapshot(),profile,answers,blankPolicyLedger(),today,now),today);expect(updateOpportunityNotices(n,assessJobOpportunities(snapshot(),profile,answers,blankPolicyLedger(),today,now+3*86400000),today)).toMatchObject([{active:false}]);});
 });
