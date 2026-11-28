@@ -25,3 +25,6 @@ Keep the upstream MIT license and copyright notice intact.
 
 ## Product priority (owner-approved 2026-11-28)
 Deliver personalised international opportunity intelligence: live trustworthy discovery, role-specific sponsorship evidence, integrated profile/visa/PR/salary requirements, actionable recommendations and alerts. Prioritize one end-to-end real source-to-decision flow before expanding standalone calculators/admin functionality. Never claim source coverage from fixtures. Preserve all release gates and safety boundaries.
+
+## Commercial feasibility (owner-approved 2026-11-28)
+Separate commercial gates in docs/commercial-feasibility.md from all 16 original acceptance gates. No broad SaaS implementation; software and data rights, real supply, demand validation in parallel. ₹499/30-day founding offer, explicit renewal, only after legal/operational checks. No paid commitments, outreach, customer data, deployment or recurring jobs without founder approval. Temporary explicitly bounded CC0 research smoke may run on isolated branch, never promote its one-shot CI job. See docs/commercial-licensing.md.
