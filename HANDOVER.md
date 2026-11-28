@@ -3,7 +3,7 @@
 Updated: 2026-11-28
 Repository: aroradpk/Global-Mobility-Radar
 Review baseline: 7df403c5545c5704227ed75561f5ec4a08f5db9c
-Active branch: development/phase7-application-tracker (candidate from verified main)
+Active branch: development/commercial-feasibility (evaluation branch; main and previous candidate retained)
 
 ## Current state
 - Fork access and initial static audit verified; upstream MIT licence read.
@@ -269,3 +269,7 @@ Weighted engineering estimates by gate M01–M16 respectively: 70,35,60,0,30,45,
 
 ## Commercial stage-gated validation — 2026-11-28
 - Commercial feasibility branch from verified candidate: root MIT and lockfile audit, source rights matrix and employer permission queue, manual public-page evaluation, 14-day procedure and gate tracking documented in docs/commercial-licensing.md and docs/commercial-feasibility.md. One-shot Swedish CC0 source evaluation reuses bounded adapter; aggregate counts, private ephemeral sample, three synthetic profiles through current TS matching; no external customer data, raw descriptions, approved commercial sources, paid service or schedule. One-shot CI restricted to this branch and marker commit; remove job before any promotion. Candidate review: separate snapshot/health and notice identity limitations; no commercial promotion. CI/live check pending.
+
+
+## First live commercial-feasibility observation (evaluation only)
+- Verified feasibility run https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/46131311447 (fa31cfa): standard 909 frontend +64 Python +4 safety=977 tests passed, 1 opt-in skipped in normal suite; separate opt-in live matching test passed, total 978 executions; 90 browser checkpoints, all six jobs success, dependency audit zero reported vulnerabilities. Live job https://github.com/aroradpk/Global-Mobility-Radar/actions/runs/46131311447/job/140936896662 at 2026-11-28 09:37:25 UTC: 3/3 fixed queries successful, elapsed 9.078s, raw 60, 46 retained unique with dates and descriptions, 43 with skill signals, 0 duplicate retained across queries (not full raw duplicate count), English-oriented heuristic 45 unknown / 1 relocation-only / zero positive, conflict or restriction detections. Zero independently verified vacancies/explicit sponsorship. Existing TS engine processed 46 family/destination matches each for synthetic JS/Java/Python profiles, respectively 20/21/26 with >=1 matching skill, 31 each language review, 0 review-priority. Static audit afterwards found nodejs and postgresql are not catalogue IDs (node/postgres are); fixed identifiers and added catalogue assertion for future live runs. First two observed overlap counts are conservative/incomplete; no corrected measurement claimed, no repeat same-day call. Raw sample deleted; no customer data. Remove temporary CI job by restoring exact original workflow. No new automated collection, source activation, spend or commercial launch. Day 1 only; commercial gates 0/8, original 0/16. Main and prior candidate unchanged. Next: rights/permission and representative 14-day source supply + demand experiment, not SaaS.

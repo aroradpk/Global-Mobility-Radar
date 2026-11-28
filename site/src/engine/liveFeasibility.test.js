@@ -11,7 +11,10 @@ describe("CC0 feasibility integration (aggregate only)",()=>{
   const now=Date.now(),today=new Date(now).toISOString().slice(0,10);
   const base={years:8,level:"senior",degree:"bachelor",certs:[],languages:[{code:"en",level:"fluent"}],families:["software"],titles:[],textLength:0};
   const answers={citizenships:["IN"],livesIn:"IN",targets:["SE"],priorities:["visa"],direction:"stay",family:"software",niche:"",learnLanguage:"maybe",hoursPerWeek:5,budget:"medium",horizon:12,withFamily:false};
-  const profiles=[{id:"js_fullstack",skills:["javascript","typescript","react","nodejs"]},{id:"java_backend",skills:["java","spring","sql","postgresql"]},{id:"python_backend",skills:["python","sql","docker","kubernetes"]}];
+  const profiles=[{id:"js_fullstack",skills:["javascript","typescript","react","node"]},{id:"java_backend",skills:["java","spring","sql","postgres"]},{id:"python_backend",skills:["python","sql","docker","kubernetes"]}];
+  const catalogue=JSON.parse(readFileSync(new URL("../../../knowledge/skills.json",import.meta.url),"utf8"));
+  const known=new Set((Array.isArray(catalogue)?catalogue:catalogue.skills).map(s=>s.id));
+  expect(profiles.every(p=>p.skills.every(s=>known.has(s)))).toBe(true);
   expect(sample.jobs.every(j=>j.visa==="unknown"&&j.countries.length===1&&j.countries[0]==="SE")).toBe(true);
   const output=profiles.map(p=>{
    const leads=assessJobOpportunities(sample,{...base,skills:p.skills},answers,blankPolicyLedger(),today,now);
